@@ -1,0 +1,7 @@
+packages: .
+
+source-repository-package
+    type: git
+    location: https://github.com/lucasdicioccio/prodapi.git
+    tag: 3ef9d83412550e3b5dbbfcac1c8a9d058ac5ff16
+    subdir: prodapi
