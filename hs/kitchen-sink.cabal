@@ -45,7 +45,7 @@ library
                     , TypeApplications
                     , NoImplicitPrelude
     -- other-extensions:
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base >=4.14.3.0
                     , aeson
                     , async
                     , bytestring
@@ -76,7 +76,7 @@ library
                     , wai
                     , warp
                     , wai-extra
-                    , fsnotify
+                    , fsnotify >= 0.4.0.0
 
     hs-source-dirs:   src
     default-language: Haskell2010
@@ -85,7 +85,7 @@ library
 
 executable kitchen-sink
     main-is:          Main.hs
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base >=4.14.3.0
                     , kitchen-sink
     ghc-options: -O2 -threaded
     hs-source-dirs:   app

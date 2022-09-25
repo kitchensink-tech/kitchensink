@@ -15,13 +15,12 @@ scaffolding/  -- helper scripts and data to scaffold a project
 
 ## requirements
 
-- some Haskell installation with cabal (tested with GHC 8.10.7)
+- some Haskell installation with cabal (tested with GHC 9.2.4)
 - (optional) graphviz for generating images from dot-sources
 
 ## build and install
 
 ```
-cabal configure
 cabal build
 cabal install
 ```

@@ -10,7 +10,7 @@ import GHC.Generics (Generic)
 import Data.Aeson (ToJSON)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import Prelude (succ, (>), (-), otherwise)
+import Prelude (succ, (-))
 
 import KitchenSink.Blog.Basics
 import KitchenSink.Blog.Section
@@ -242,12 +242,11 @@ sectionSkyLine s =
       in (hdrs', item : xs)
 
     updateHeaders :: Int -> [Int] -> [Int]
-    updateHeaders level counters
-      | level > length counters = 1 : counters
-      | otherwise =
-           let cnt:levelcounters = List.drop (List.length counters - level) counters
-           in succ cnt : levelcounters
-
+    updateHeaders level counters =
+      case List.drop (List.length counters - level) counters of
+        [] -> 1 : counters
+        cnt:levelcounters -> succ cnt : levelcounters
+      
     go il = List.sum [ f c | c <- inlineChunks il ]
     f x = case x of
             Str t -> wc t

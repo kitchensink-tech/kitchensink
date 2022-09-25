@@ -14,7 +14,8 @@ import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LText
 import qualified Data.List as List
 import Data.Time.Clock (UTCTime)
-import Data.Time.Format (formatTime, defaultTimeLocale, iso8601DateFormat)
+import Data.Time.Format (formatTime, defaultTimeLocale)
+import Data.Time.Format.ISO8601 (iso8601Show)
 import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 
 import KitchenSink.Blog.Target
@@ -209,7 +210,7 @@ metaheaders extra dloc jsondloc art = do
     , Just $ meta_ [ name_ "ks:article_json" , content_ $ urlForJSONPage ]
     ] <> [ meta_ [ name_ "article:tag", content_ k ]  | k <- maybe [] topicKeywords topic ]
   where
-    fmtUTC = Text.pack . formatTime defaultTimeLocale (iso8601DateFormat Nothing)
+    fmtUTC = Text.pack . iso8601Show
     property_ = Lucid.makeAttribute "property"
     urlForPage = publishBaseURL extra <> destinationUrl dloc
     urlForJSONPage = destinationUrl jsondloc
