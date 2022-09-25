@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
 module KitchenSink.Blog.Site where
 
 import Data.Text (Text)

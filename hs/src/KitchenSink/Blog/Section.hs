@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
-
 module KitchenSink.Blog.Section (SectionType(..), Format(..), Section(..), extract, extract', section, sectionType, Parser)
 where
 

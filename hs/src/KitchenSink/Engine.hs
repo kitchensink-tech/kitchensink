@@ -1,10 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE BangPatterns #-}
 module KitchenSink.Engine where
 
 import Data.Time.Clock (diffUTCTime, getCurrentTime)

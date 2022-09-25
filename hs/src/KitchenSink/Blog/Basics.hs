@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
 
 module KitchenSink.Blog.Basics where
 

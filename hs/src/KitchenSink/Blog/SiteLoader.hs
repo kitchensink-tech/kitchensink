@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 module KitchenSink.Blog.SiteLoader (module KitchenSink.Blog.Site, loadSite, LogMsg(..))where
 

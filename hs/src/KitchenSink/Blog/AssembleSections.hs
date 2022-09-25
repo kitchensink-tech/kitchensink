@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module KitchenSink.Blog.AssembleSections where
 
 import qualified Commonmark

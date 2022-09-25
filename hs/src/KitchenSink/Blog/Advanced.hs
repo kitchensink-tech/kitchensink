@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
 module KitchenSink.Blog.Advanced (filecounts, topicsgraph, articleCMarks, analyzeArticle, ArticleInfos(..), LinkInfo(..), ImageInfo(..), Tag, TopicStats(..), buildTopicStats, allTags) where

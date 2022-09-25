@@ -1,8 +1,4 @@
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
-module KitchenSink.Blog.Assembler (Assembler(..), AssemblerError(..))
-where
+module KitchenSink.Blog.Assembler (Assembler(..), AssemblerError(..)) where
 
 import qualified Commonmark
 

@@ -1,8 +1,4 @@
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
-module KitchenSink.Blog.Generator (Generator(..), GeneratorError(..))
-where
+module KitchenSink.Blog.Generator (Generator(..), GeneratorError(..)) where
 
 import Data.ByteString (ByteString)
 
