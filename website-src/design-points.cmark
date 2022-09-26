@@ -1,0 +1,57 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Design points"
+}
+
+=base:topic.json
+{"tags":["philosophy", "design"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+=base:summary.cmark
+
+This article gives a number of design points.
+
+=base:main-content.cmark
+
+
+# it's a kitchen sink
+
+- no organization upfront, we don't really solve pressing problems by inventing another globbing mechanism
+- just put prefixing in filenames
+- reduce annoyance of conflicts in names
+- reduces churning of urls
+
+# lack of overloading (repeating things across articles)
+
+- infrequent to add new pages (50 a year is already a feat)
+- enable exploration
+
+# layouts are hard to change
+
+- Wordpress, Blogspot are a testimonial that tuning layouts may not be that much
+- just CSS can do wonders a lot nowadays
+- you can do SPAs if you need something fancy
+
+# generators don't take input
+
+- design is still unclear to me (static-website with dynamic envy)
+- sequence of steps may be better handled outside the generator
+- definitely a security risk

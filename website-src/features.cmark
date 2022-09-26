@@ -1,0 +1,49 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Features list"
+}
+
+=base:topic.json
+{"tags":["haskell", "authoring articles", "philosophy"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+
+=base:summary.cmark
+
+This article lists the main features of Kitchen Sink. We do not really compare it to the vast amount of other static-site generators.
+
+=base:main-content.cmark
+
+- live-reload or one-time builtins
+- a few pre-built layouts (customizable as a library)
+- categories using tags
+- article summaries
+- commonmark as main input articles
+- tunable CSS, JS per page
+- microscriptable in Dhall
+- open-graph and twitter-card metas
+- dev-server
+- advanced content analysis features
+- rather fast considering all it does
+- syntax highlighting with skylighting
+- site listing and search-box
+- sitemap graph
+- article skylines

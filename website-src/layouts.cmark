@@ -1,0 +1,35 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Layouts"
+}
+
+=base:topic.json
+{"tags":["haskell", "modding"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+
+=base:summary.cmark
+
+This article answers questions like: how do you change the layout of the blog?
+
+=base:main-content.cmark
+
+# layouts are implemented in Haskell

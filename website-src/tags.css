@@ -1,0 +1,60 @@
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+.main {
+  max-width: 70ch;
+  padding: 3em 1em;
+  margin: auto;
+  line-height: 1.75;
+  font-size: 1.25em;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  margin: 3em 0 1em;
+}
+
+p,ul,ol {
+  margin-bottom: 2em;
+  font-family: sans-serif;
+}
+
+/*~~ taglist ~~~~~~~~~~~~~~~~~~~~*/
+
+div.taglist {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+div.tag {
+  width: 12em;
+  display: table-cell;
+  text-align: center;
+  margin-right: 1em;
+  margin-bottom: 1em;
+  padding: 0.25em;
+  background-color: #e3e3e3;
+  padding: calc(min(0.25em, 12px));
+  border-radius: 6px;
+}
+
+a.tag-link {
+  text-decoration: none;
+  font-size: 0.75em;
+  font-weight: bold;
+}
+
+a.tag-link:hover {
+  text-decoration: none;
+  font-size: 0.75em;
+}
+
+span.tag-name {
+   text-transform: uppercase;
+}
+
+span.tag-count {
+  margin-left: 0.75em;
+}
+

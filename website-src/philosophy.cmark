@@ -1,0 +1,39 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Philosophy"
+}
+
+=base:topic.json
+{"tags":["philosophy"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+
+=base:summary.cmark
+
+This article answers questions like: why Kitchen-Sink exists? what sort of niche does it fill?
+
+=base:main-content.cmark
+
+# why yet-another static-site generator?
+
+# what niche does it fill?
+
+# the separation of layout, and article meat

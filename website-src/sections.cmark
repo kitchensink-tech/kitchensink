@@ -1,0 +1,142 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "The section-based format"
+}
+
+=base:topic.json
+{"tags":["authoring articles", "how-to", "sections"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+
+=base:summary.cmark
+
+This article explains the section-based authoring format.
+
+=base:main-content.cmark
+
+# general rules
+
+sections with actual content can be repeated
+sections for helping the Kitchen-Sink layout engine cannot (the engine is not guaranteed to complain)
+
+# current sections
+
+### build-info
+
+an important section to let Kitchen-Sink know which layout to apply
+
+__example__
+
+    =base:build-info.json
+    {"layout":"article"
+    ,"publicationStatus":"Public"
+    }
+
+### preamble
+
+the title and authorship, optionally some link to a representative image
+
+__example__
+
+    =base:preamble.json
+    {"author": "Lucas DiCioccio"
+    ,"title": "The section-based format"
+    }
+
+### topics
+
+categorization of articles by tags/labels/topics
+
+- tags: for internally-generated section and listings
+- keywords: for HTML meta headers
+
+__example__
+
+    =base:topic.json
+    {"tags":["authoring articles", "how-to", "sections"]
+    ,"keywords":["static-site generators", "design"]
+    }
+
+### social
+
+listing of social-profiles on various sites, will drive the inclusion of links and some Twitter meta headers
+
+__example__
+
+    =base:social.json
+    {"twitter": "lucasdicioccio"
+    ,"linkedin": "lucasdicioccio"
+    ,"github": "lucasdicioccio"
+    }
+
+### cmark
+
+__example__
+
+    =base:main-content.cmark
+    
+    some commonmark
+    
+### taken-off cmark
+
+like cmark but for text you want to leave out of the generated output, for instance some draft section or paragraph you want to keep around for another future article
+
+__example__
+
+    =base:taken-off.cmark
+    
+    some commonmark
+    
+### css
+
+some inline-CSS, includes are supported via the `@import` CSS directive
+
+__example__
+
+    =base:main-css.css
+    @import "css/colors.css";
+    @import "css/article.css";
+
+    h1 {
+      margin: auto;
+    }
+
+## advanced
+
+### dhall
+
+for applying a template onto a dataset
+
+### commands
+
+add some complicated routes for generating content via shell commands
+
+i recommend it mostly for generating metadata (e.g., git-hash)
+
+beware things like local envs with different command flavors installed
+
+__example__
+
+    =generator:cmd.json
+    {"cmd": "echo"
+    ,"args": ["this is an example command"]
+    ,"target":"example"
+    }

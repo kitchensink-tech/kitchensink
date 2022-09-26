@@ -1,0 +1,44 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "The kitchen-sink-dot-json file"
+}
+
+=base:topic.json
+{"tags":["how-to"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+
+=base:summary.cmark
+
+The `kitchen-sink.json` file is quite important.
+
+=base:main-content.cmark
+
+An example of kitchen-sink.json
+
+```json
+{ "title": "Kitchen Sink Default Page"
+, "publishURL": "https://kitchensink.github.io"
+, "twitterLogin": "lucasdicioccio"
+}
+
+```
+
