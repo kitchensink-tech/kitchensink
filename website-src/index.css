@@ -35,6 +35,17 @@ nav:first-of-type >.articles-listing-list {
 
 /*~~ topics listing  ~~~~~~~~~~~~~*/
 
+.topics-listing {
+  margin: 2em 2em 0 2em;
+  padding: 5px 1em 8em 1em;
+  background-color: var(--color-highlight-background);
+  border-radius: 1em 1em 0 0;
+}
+
+.topics-listing > h2 {
+  text-align: center;
+}
+
 .topics-listing-list {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
