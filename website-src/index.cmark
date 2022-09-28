@@ -11,7 +11,10 @@
 
 =base:main-content.cmark
 
-Kitchen-Sink is a static-site generator.
+Kitchen-Sink is a [_frivolous_](/philosophy.html)  static-site generator.
+
+We don't clame to be the best organized nor the fastest nor the prettiest. We
+just want to generate web pages and move on.
 
 <script src="js/echarts.min.js"></script>
 <script src="js/site-graph.js"></script>

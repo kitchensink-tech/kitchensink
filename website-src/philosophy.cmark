@@ -1,11 +1,11 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Public"
+,"publicationStatus":"Upcoming"
 }
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "Philosophy"
+,"title": "The Kitchen Sink: a philosophy"
 }
 
 =base:topic.json
@@ -29,6 +29,67 @@
 =base:summary.cmark
 
 This article answers questions like: why Kitchen-Sink exists? what sort of niche does it fill?
+
+=base:main-content.cmark
+
+# The Kitchen-Sink tenets
+
+The name of the blog-engine is not just a pun. There's some philosophy behind
+it that grew with experience: a mix of frivolity, defeatism, and awe -- applied
+to small static sites and blogs.
+
+__Frivolity__. When you are too lazy to wash and sort plates, you drop them in
+the kitchen sink. You'll come back later. In short, _take it easy_.  really
+need to rest a bit and take it easy on yourselves. The world is tough enough to
+add extra-high expectation onto oneself. Blogging should be the similarly
+lightweight. Unless you want to make a career out of blogging, you should be
+frivolous about your online site.
+
+__Defeatism__. Humans often fall in for the same traps. Rather than doing
+something, we find roundabout ways for not doing them. A sure-fire way for
+engineers to lose time is while trying to organize things in large hierarchies
+and inter-connected ontologies ... when there is alomost no content to
+organize. Blogging is the primary use-case for Kitchen-sink. In this context, I
+feel afraid that people spend time organizing and preparing a blog but then
+write no articles. Rather, I think the key value of blogs is in having content
+from people voicing their unique opinions.  If it's only in text files with no
+colors, then so be it.
+
+__Awe__. I have a huge respect for scrapy and low-tech solutions providing
+outsized results. Such solutions typically _do not scale_ and require
+engineering to step up in intrisinc (or perceived) quality.  When asked to grow
+a low-tech solution into some more professional service, engineers tend to
+codify processes and invent complex hierarchies before having any content to
+arrange (cf. the above point on defeatism). Being frivolous, a tool that only
+works for the easy-mode will feel awesome because these will be the ones you'll
+encounter most of the time. Regarding blogging this tenet means that the world
+improves when articles are written, even if these articles lack perfection.
+
+These three tenets have a number of implications regarding the design and the
+usage of Kitchen-sink.
+
+## implications and non-implications
+
+There are so many things I would like to list and that we could derive from
+thre three tenets of the Kitchen-Sink philosophy.
+
+- be kind onto yourself
+- don't compare yourself too much, from an engineering standpoint yes, from who has the longest feature-list: no
+- favor versatility, even if it means bending the system a bit
+- does not mean that Kitchen-Sink should be irritatingly slow and full of bugs
+- when you take inspiration from something awesome, try to credit people
+
+## illustrating the tenets in the features
+
+If you are already familiar with [Kitchen Sink Features](/features.html).
+
+- The section-based format is a defeatist echo: I grew tired of templates of
+  templates of templates. An article should mostly be a file, and when tuning
+something on an article I should not pass conditionals across languages between
+systems.
+- A number of features are advertised even if they are not really complete. The wordcount is wonky and skips titles (at the time of writing). Still, I should not put this error in the way of writing articles. The goals of the wordcount is to be approximatively correct to help readers know whether the article can be read on the potty or over the commute. 
+- Open-graph, twitter meta tags and other meta information are simple and awesome ways to propagate information around even if the solution seem unsatisfying: it does the job.
+- Markdown and Commonmark: they do the job, I can write, I get most of the HTML I care for a long blog-post: awesome.
 
 =base:main-content.cmark
 

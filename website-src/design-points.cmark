@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Public"
+,"publicationStatus":"Upcoming"
 }
 
 =base:preamble.json
@@ -31,8 +31,6 @@ This article gives a number of design points.
 
 =base:main-content.cmark
 
-
-# it's a kitchen sink
 
 - no organization upfront, we don't really solve pressing problems by inventing another globbing mechanism
 - just put prefixing in filenames
