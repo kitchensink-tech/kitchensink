@@ -1,5 +1,6 @@
-{ "title": "Kitchen Sink Default Page"
-, "publishURL": "https://kitchensink.github.io"
+{ "title": "The Kitchen Sink Blog Generator"
+, "publishURL": "https://kitchensink-tech.github.io"
 , "twitterLogin": "lucasdicioccio"
+, "publishScript": "./scripts/publish.sh"
 }
 
