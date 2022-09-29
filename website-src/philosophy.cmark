@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -28,15 +28,24 @@
 
 =base:summary.cmark
 
-This article answers questions like: why Kitchen-Sink exists? what sort of niche does it fill?
+In these pages, I sometimes use "__It's a kitchen-sink!__" as a placeholder for
+apologetic or unapologetic statements regarding the lack of sophistication of
+Kitchen-Sink. This article answers questions like: why Kitchen-Sink exists?
+what sort of features and experience to expect from using it?
 
 =base:main-content.cmark
+
+In these pages, I sometimes use "__It's a kitchen-sink!__" as a placeholder for
+apologetic or unapologetic statements regarding the lack of sophistication of
+Kitchen-Sink. I lament when something is suboptimal but ought to be improved. I
+duck out when something is suboptimal but ought to be left out scope. Let me
+explain the three Kitchen-Sink tenets.
 
 # The Kitchen-Sink tenets
 
 The name of the blog-engine is not just a pun. There's some philosophy behind
-it that grew with experience: a mix of frivolity, defeatism, and awe -- applied
-to small static sites and blogs.
+the name, a philosophy that I grew out of experience: a mix of frivolity,
+defeatism, and awe -- applied to small static sites and blogs.
 
 __Frivolity__. When you are too lazy to wash and sort plates, you drop them in
 the kitchen sink. You'll come back later. In short, _take it easy_.  really
@@ -55,18 +64,58 @@ write no articles. Rather, I think the key value of blogs is in having content
 from people voicing their unique opinions.  If it's only in text files with no
 colors, then so be it.
 
-__Awe__. I have a huge respect for scrapy and low-tech solutions providing
-outsized results. Such solutions typically _do not scale_ and require
+__Awe__. I have a huge amount of respect for scrapy and low-tech solutions
+providing outsized results. Such solutions typically _do not scale_ and require
 engineering to step up in intrisinc (or perceived) quality.  When asked to grow
 a low-tech solution into some more professional service, engineers tend to
 codify processes and invent complex hierarchies before having any content to
-arrange (cf. the above point on defeatism). Being frivolous, a tool that only
-works for the easy-mode will feel awesome because these will be the ones you'll
-encounter most of the time. Regarding blogging this tenet means that the world
-improves when articles are written, even if these articles lack perfection.
+arrange (cf. the above point on defeatism). When approaching the world with a
+frivolous mindset, a tool that only works for the easy-mode will feel awesome
+because these easy problems will be the ones you'll encounter most of the time.
+Regarding blogging this tenet means that the world improves when articles are
+written, even if these articles lack perfection.
 
-These three tenets have a number of implications regarding the design and the
-usage of Kitchen-sink.
+# Implications of the Kitchen Sink tenets regarding the blog engine
+
+There are a few implications and many possible misunderstanding regarding the
+tenets. In particular being _frivolous_ and in _awe_ of scrapy solutions looks
+like being in opposition with "professional".
+
+__Organization-wise__. Kitchen-Sink is not a good fit if you have strong opinions
+about hierarchies of information. Rather, the modus-operandi is: thinking about
+writing something? throw it into the Kitchen Sink.  Where do we put source
+files? in the Kitchen-Sink; where do we put CSS files?  in the Kitchen-Sink;
+where do we save images? in the Kitchen-Sink.  If someone looks for what you
+have written: they can look in the Kitchen Sink. If people do not find what
+they are looking for, then only it may become interesting to add extra
+structure. You may even want to grow out of Kitchen-Sink and it's fine. The
+Kitchen-Sink philosophy will help you with that because you won't have annoying
+problems like file conflict names to start with. In short, throw things in the
+Kitchen Sink, it's easy to remove them from here anyway.
+
+__Project-wise.__ I think that there is a distinction between honest but
+hard-to-swallow feedback and contempt or guardkeeping.  Thus, when someone
+approaches Kitchen-Sink saying it is inadequate for their use case: good. When
+someone says the whole project is a waste of time: not good.  If we regard time
+as a scarce resource, then adding content to a site is a budget-allocation game
+where the time-budget is small. I can honestly say I've lost so much time on
+_modern_ or _flexible_ or _$marketing-term_ tools. Many blogs (and likely, many
+corporate websites) would benefit from having fewer features of the modern web
+and more content. I think the world would be better with more ugly website with
+great content over pretty websites with content-farmed content.
+Markdown is awesome but you would prefer something else and do not want to
+contribute it? well, even though Kitchen-Sink could support new formats we're
+not chasing features, we're chasing content.
+
+__Technically.__ Being frivolous and in awe of scrapy solutions does not mean
+that Kitchen-Sink should be irritating to use. Usability and correctness are a
+concern, otherwise some [features](/features.html) like live-reload and the
+section-based format would not exist. Correctness may suffer a bit when things
+are not super-well defined or inconsequential (e.g., the word-count not taking
+into account titles in the sections they start -- feature or bug, I cannot
+tell, but definitely not a huge deal).
+
+=base:taken-off.cmark
 
 ## implications and non-implications
 
@@ -91,10 +140,3 @@ systems.
 - Open-graph, twitter meta tags and other meta information are simple and awesome ways to propagate information around even if the solution seem unsatisfying: it does the job.
 - Markdown and Commonmark: they do the job, I can write, I get most of the HTML I care for a long blog-post: awesome.
 
-=base:main-content.cmark
-
-# why yet-another static-site generator?
-
-# what niche does it fill?
-
-# the separation of layout, and article meat
