@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -9,7 +9,7 @@
 }
 
 =base:topic.json
-{"tags":["haskell", "authoring articles", "philosophy"]
+{"tags":["haskell", "authoring articles"]
 ,"keywords":["static-site generators", "design"]
 }
 
@@ -25,6 +25,25 @@
 @import "/css/article.css";
 @import "/css/navigation.css";
 
+section:not(:first-of-type) {
+  border-left: 2px solid black;
+  padding-left: 1em;
+}
+
+#histogram {
+  height: 400px;
+}
+
+code {
+  color: darksalmon;
+  font-weight: bold;
+}
+
+code.language-console {
+  color: darkgreen;
+  font-weight: initial;
+}
+
 
 =base:summary.cmark
 
@@ -32,18 +51,211 @@ This article lists the main features of Kitchen Sink. We do not really compare i
 
 =base:main-content.cmark
 
-- live-reload or one-time builtins
-- a few pre-built layouts (customizable as a library)
-- categories using tags
-- article summaries
-- commonmark as main input articles
-- tunable CSS, JS per page
-- microscriptable in Dhall
-- open-graph and twitter-card metas
-- dev-server
-- advanced content analysis features
-- rather fast considering all it does
-- syntax highlighting with skylighting
-- site listing and search-box
-- sitemap graph
-- article skylines
+Kitchen-Sink consists of two related components:
+- i. a set of _libraries_ (at the time of writing, everything is packed in a single library: it's a kitchen sink afterall)
+- ii. a default _executable_ which uses defaults from the library
+
+The library allows you to write a program to author websites from content
+thrown into a folder. The name Kitchen-Sink comes from the fact that Kitchen
+Sink is meant to work with a single folder having no particular organization
+besides filenames.
+
+The executable imports the library to demonstrates and implements a
+blog-generator generating HTML having a default layout (for this very website
+for instance).  Thus, as a Kitchen-Sink user you could either run the
+executable directly (if you want a website that looks like this one for
+instance) or write your own executable from the library.
+
+When we refer to _the Kitchen Sink engine_ or _the blog engine_, we thus refer
+to features available from the libary. As of this writing, however, I have yet
+to finish modularizing all these features. However, the following sections
+provide a listing of features with a good overall structure of what could go in
+which libraries.
+
+
+=base:main-content.cmark
+## command-line single-run mode
+
+The default executable can run as a one-off generator command.  The intended
+use-case if for generating websites as part of automated pipelines. There is
+nothing really exciting about the command-line single-run mode.
+
+Example usage with the default executable:
+
+`kitchen-sink produce --srcDir website-src --outDir website-www`
+
+```console
+Loading (LoadArticle "website-src/features.cmark")
+Loading (EvalSection "website-src/features.cmark" BuildInfo Json)
+Loading (EvalSection "website-src/features.cmark" Preamble Json)
+Loading (EvalSection "website-src/features.cmark" Topic Json)
+Loading (EvalSection "website-src/features.cmark" Social Json)
+Loading (EvalSection "website-src/features.cmark" MainCss Css)
+Loading (EvalSection "website-src/features.cmark" Summary Cmark)
+Loading (EvalSection "website-src/features.cmark" MainContent Cmark)
+Loading (EvalSection "website-src/features.cmark" MainContent Cmark)
+[...]
+Assembling "website-www/features.html"
+Assembling "website-www/topics/modding.html"
+Assembling "website-www/topics/philosophy.html"
+Assembling "website-www/topics/sections.html"
+[...]
+Generating "website-www/json/paths.json"
+Generating "website-www/json/filecounts.json"
+Generating "website-www/json/topicsgraph.json"
+Generating "website-www/json/features.cmark.json"
+Generating "website-www/json/philosophy.cmark.json"
+[...]
+```
+
+These logs indicate that files where sourced in the `website-src` directory,
+then computation occured, and finally files where output in the `website-www`
+directory. You can navigate with a browser in this directory. However when
+authoring articles it is pretty annoying to do manual refreshes. Instead,
+Kitchen-Sink incorporates a server able to directly serve the same content as
+it generates.
+
+=base:main-content.cmark
+## server-mode
+
+One key reason for having written Kitchen-Sink is to explore things that makes
+my life easy. Among these: live
+
+### live-serving
+
+Rather than generating all the website once, Kitchen-Sink can run an HTTP
+server that will directly return the results of the output targets _on the
+fly_.  That is, each time a web-browser navigates, the latest value for a given
+route is shown to the browser. This is not especially useful but can come handy.
+
+Example usage with the default executable:
+
+`$ kitchen-sink serve --srcDir website-src --outDir website-www --servMode SERVE --port 7654`
+
+```console
+[...]
+SiteReloaded (Init ())
+SiteReloaded RunStart
+TargetRequested "/features.html"
+TargetBuilt "/features.html" 10079
+GET /features.html
+  Params: [("server-id","ca231c17-35c9-4060-b4f4-c0dd574dd325")]
+  Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+  Status: 200 OK 0.029790833s
+TargetRequested "/js/search-box.js"
+TargetBuilt "/js/search-box.js" 260790
+GET /js/search-box.js
+  Accept: */*
+  Status: 200 OK 0.000694164s
+```
+
+### auto-reload
+
+The executable server has a special API route with a mechanism to wait for changes
+of source files on the file-system.  We also bundle a [small JavaScript](/js/autoreload.js) that
+subscribes to changes and reload the page on a change. This JavaScript gets
+injected in the layout only in dev-server mode. This setup allows to auto-reload on change.
+
+::: { .todo }
+
+insert a video
+
+:::
+
+To use the dev-server mode, use `--servMode DEV`. That is, the full-command to run with the default executable is:
+
+`kitchen-sink serve --srcDir website-src --outDir website-www --servMode DEV --port 7654`
+
+### one-time commands
+
+In addition to the above auto-reload script. The default executable's layout insert some buttons to get one-click.
+
+- the `produce` button will regenerate the whole HTML output
+- the `publish` button will call the `publishScript` command in the [kitchen-sink.json file](/kitchen-sink-dot-json.html) . As a data-point, I use [this publish-script](/gen/out/features.cmark__cat-publish-script) for this documentation site.
+
+### it's just a webserver library
+I've not really explored this avenue, but it should be possible to incorporate
+the webserver logic in most Haskell web-applications (e.g., your
+web-application could run an API and Kitchen-Sink could run some documentation
+pages aside).
+
+### server metrics
+
+Why not? to build the webserver-library I've used some set of [curated and
+bundled libraries named ProdAPI](https://github.com/lucasdicioccio/prodapi).
+Which means the server inherits a number of features; among which a number of
+[Prometheus counters](https://prometheus.io/). An example set of metrics is
+available on [this
+extract](/gen/out/features.cmark__gen-local-server-metrics.txt). Thus, rather
+than bragging how much Kitchen-Sink is fast, you get to see for yourself
+directly (e.g., with the `blog_fullbuild_time` counters in the Prometheus
+summary). Other usages would be to track how fast you add content to articles
+by collecting and storing the counters. For instance, this is a timeseries of
+me editing this paragraph in live thanks to [a Firefox extension I
+built](https://lucasdicioccio.github.io/prometheus-monitor.html).
+
+![a timeseries graph showing the `blog_targets_sizes` prometheus counter](/images/features-001-targetsizes-timeseries.png)
+
+=generator:cmd.json
+{"cmd":"cat"
+,"args":["scripts/publish.sh"]
+,"target":"cat-publish-script"
+}
+
+=generator:cmd.json
+{"cmd":"curl"
+,"args":["http://localhost:7654/metrics"]
+,"target":"gen-local-server-metrics.txt"
+}
+
+=base:main-content.cmark
+## article authoring
+
+### mostly using a section-based format
+
+See [the source for this article](/gen/out/features.cmark__cat-features-cmark) .
+
+### commonmark as main input articles
+
+### generate images from `.dot`
+### copies other images, css
+### tunable CSS, JS per page
+### syntax highlighting with skylighting
+### emojis :eyes:
+
+=generator:cmd.json
+{"cmd":"cat"
+,"args":["website-src/features.cmark"]
+,"target":"cat-features-cmark"
+}
+
+
+=base:main-content.cmark
+## content-generation
+
+### embedded data
+### microscriptable in Dhall
+### command-based generators
+
+=base:main-content.cmark
+## article organization
+
+### article summaries
+### social links
+### open-graph and twitter-card metas
+### special-support for dotfiles
+### categories using tags
+
+
+=base:main-content.cmark
+## content-analysis
+
+### site listing and search-box
+### wordcounts
+### sitemap graph
+### article skylines
+
+::: {#histogram}
+:::
+
+<script src="/js/echart-histogram.js"></script>

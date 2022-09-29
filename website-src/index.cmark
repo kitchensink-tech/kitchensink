@@ -24,3 +24,9 @@ just want to generate web pages and move on.
 @import "/css/articles-listing.css";
 @import "/css/index.css";
 
+=generator:cmd.json
+{"cmd":"git"
+,"args":["rev-parse", "HEAD"]
+,"target":"gen-git-head-sha.txt"
+}
+

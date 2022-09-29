@@ -5,7 +5,7 @@
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "The Kitchen Sink: a philosophy"
+,"title": "The philosophy of the Kitchen Sink"
 }
 
 =base:topic.json
@@ -30,8 +30,9 @@
 
 In these pages, I sometimes use "__It's a kitchen-sink!__" as a placeholder for
 apologetic or unapologetic statements regarding the lack of sophistication of
-Kitchen-Sink. This article answers questions like: why Kitchen-Sink exists?
-what sort of features and experience to expect from using it?
+Kitchen-Sink. This article positions a few tenents for Kitchen-Sink, and
+hopefully helps you get a feel the experience we want to build around this
+software.
 
 =base:main-content.cmark
 
@@ -43,9 +44,10 @@ explain the three Kitchen-Sink tenets.
 
 # The Kitchen-Sink tenets
 
-The name of the blog-engine is not just a pun. There's some philosophy behind
-the name, a philosophy that I grew out of experience: a mix of frivolity,
-defeatism, and awe -- applied to small static sites and blogs.
+The name of the blog-engine is not just a pun about where just dumping files in
+a directory to make a blog. There's some philosophy behind the name, a
+philosophy that I grew out of experience: a mix of frivolity, defeatism, and
+awe -- applied to small static sites and blogs.
 
 __Frivolity__. When you are too lazy to wash and sort plates, you drop them in
 the kitchen sink. You'll come back later. In short, _take it easy_.  really
@@ -96,22 +98,22 @@ Kitchen Sink, it's easy to remove them from here anyway.
 __Project-wise.__ I think that there is a distinction between honest but
 hard-to-swallow feedback and contempt or guardkeeping.  Thus, when someone
 approaches Kitchen-Sink saying it is inadequate for their use case: good. When
-someone says the whole project is a waste of time: not good.  If we regard time
-as a scarce resource, then adding content to a site is a budget-allocation game
-where the time-budget is small. I can honestly say I've lost so much time on
-_modern_ or _flexible_ or _$marketing-term_ tools. Many blogs (and likely, many
-corporate websites) would benefit from having fewer features of the modern web
-and more content. I think the world would be better with more ugly website with
-great content over pretty websites with content-farmed content.
-Markdown is awesome but you would prefer something else and do not want to
-contribute it? well, even though Kitchen-Sink could support new formats we're
-not chasing features, we're chasing content.
+someone says the whole project is a waste of time because they already have a
+wash basin: not good.  If we regard time as a scarce resource, then adding
+content to a site is a budget-allocation game where the time-budget is small. I
+can honestly say I've lost so much time on _modern_ or _flexible_ or
+_$marketing-term_ tools. I believe a number of websites would benefit from
+having fewer features of the modern web and more content instead. I think the
+web would be better with more ugly websites having great content over pretty
+content-farmed websites.  Markdown is awesome but you would prefer
+something else and do not want to contribute it? well, even though Kitchen-Sink
+could support new formats we're not chasing features, we're chasing content.
 
 __Technically.__ Being frivolous and in awe of scrapy solutions does not mean
 that Kitchen-Sink should be irritating to use. Usability and correctness are a
 concern, otherwise some [features](/features.html) like live-reload and the
 section-based format would not exist. Correctness may suffer a bit when things
-are not super-well defined or inconsequential (e.g., the word-count not taking
+lack a good definition or inconsequential (e.g., the word-count not taking
 into account titles in the sections they start -- feature or bug, I cannot
 tell, but definitely not a huge deal).
 
