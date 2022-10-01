@@ -13,8 +13,8 @@
 
 Kitchen-Sink is a [_frivolous_](/philosophy.html)  static-site generator.
 
-We don't clame to be the best organized nor the fastest nor the prettiest. We
-just want to generate web pages and move on.
+We don't claim to be the best organized nor the fastest nor the prettiest. We
+just want to generate web pages from content and move on.
 
 <script src="js/echarts.min.js"></script>
 <script src="js/site-graph.js"></script>

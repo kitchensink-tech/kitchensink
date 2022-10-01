@@ -5,7 +5,7 @@
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "Features list"
+,"title": "Feature list"
 }
 
 =base:topic.json
@@ -30,7 +30,7 @@ section:not(:first-of-type) {
   padding-left: 1em;
 }
 
-#histogram {
+#histogram, #echartzone {
   height: 400px;
 }
 
@@ -55,7 +55,6 @@ code.language-console {
 .cf {
   color: red;
 }
-
 
 =base:summary.cmark
 
@@ -183,6 +182,11 @@ In addition to the above auto-reload script. The default executable's layout ins
 
 - the `produce` button will regenerate the whole HTML output
 - the `publish` button will call the `publishScript` command in the [kitchen-sink.json file](/kitchen-sink-dot-json.html) . As a data-point, I use [this publish-script](/gen/out/features.cmark__cat-publish-script) for this documentation site.
+
+<video width="640" height="480" controls>
+  <source src="/videos/one-time-commands-001-produce.mp4" type="video/mp4">
+  <source src="/videos/one-time-commands-001-produce.webm" type="video/webm">
+</video>
 
 ### it's just a webserver library
 I've not really explored this avenue, but it should be possible to incorporate
@@ -354,7 +358,7 @@ with each HTML article and is linked in the HTML `meta` tag with name
 information. As we get more mileage, we'll likely add more of such paths and
 formalize a bit their expected content.  However, keep in mind that
 Kitchen-Sink generates more than just the static aspects of the HTML: it
-provides a bunch of extra information.
+provides a bunch of extra information which can be useful for [creative and advanced analyses](#content-analysis).
 
 ### command-based generators
 
@@ -382,23 +386,109 @@ I have written a [full article](https://lucasdicioccio.github.io/dhall-section-d
 =base:main-content.cmark
 ## article organization
 
-### article summaries
-### social links
-### open-graph and twitter-card metas
-### special-support for dotfiles
+An article needs some _decorum_ to help readers of your site as well as other
+applications relaying your articles. For instance, who is the author? what
+topics are covered? can you summarize it for me? Kitchen-Sink has a number of
+features to answer such questions. Most if not all of these features are
+controlled by specific [sections](/sections.html) in the section-based-format.
+Here we merely give an overview of what is feasible.
+
 ### categories using tags
+
+Article can be labelled with a set of tags. Kitchen-Sink then collects all
+articles for a given tag under special categories and under the `/topics`
+route. This is not especially innovative but I believe it's a must have even if
+I suppose most readers do not really use these topics listing a lot, they are
+used to connect articles in the [site map](#sitemap graph).
+
+### article summaries
+
+Article have summaries. The use case for summaries is to entice readers into
+committing more time to read an article in full.
+
+Technically, summaries are inserted in article listings. The main listing is
+the home-page of a blog.  [Categories listings](#categories-using-tags) also
+repeat the listings. The summary also is used in some `<meta>` headers, in
+particular to provide neat summaries when people share your articles (cf. [open-graph](#open-graph-and-twitter-card-metas)).
+
+### social links
+
+In this age of pervasive Internet, you may have accounts in a number of online
+social-networks. Kitchen-Sink supports some of these: list your handles and
+enable features (as of today: it's only a link to your canonical profile, in
+the future we could imagine more interactions).
+
+### open-graph and twitter-card metas
+
+You've probably already seen how some chat-applications (e.g., Discord, Slack)
+and social-services (e.g., LinkedIn, Twitter) provide a preview of webpages
+that are linked. These previews can embed images. You need to follow some
+specifications to control these, and that is what Kitchen-Sink does.  Indeed
+Kitchen-Sink generates `<meta>` HTML headers for [OpenGraph](https://ogp.me/)
+and [Twitter
+cards](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/abouts-cards).
 
 
 =base:main-content.cmark
 ## content-analysis
 
+Whether you write individual articles or a long series of multiple articles, it
+is useful to have some way to summarize what you have written. For instance,
+you want to know whether an article is connected to other articles, you want to
+understand if sections are well-balanced or not.
+
+All of these reasons were decisive factors when deciding to write and while [designing](/design-points.html) Kitchen-Sink. I've merely scratched the surface of the analyses I want to make on my own writing and I hope you'll find some of these helpful too.
+
 ### site listing and search-box
-### wordcounts
-### sitemap graph
-### article skylines
+
+Static sites lack a good user-driven search as there are no servers to answer
+search queries. Topics listing alleviate some of these need. Topics merely are
+pre-computed indexes. Thus, KitchenSink also want to pre-compute search
+indexes. At the moment, the search-box is primitive and only allows to search
+into filenames (and I use it all the time when authoring articles to find
+[links to images and generated outputs](/json/paths.json)).  However we could
+definitely go a step further by also searching, or displaying summaries in the
+search box. As people say: watch this space!
+
+### wordcounts and article staircases
+
+One key aspect of writing content for the web is to control the length of an
+article. While writing for a printed format (my experience is with academic
+publishing) the number of pages and the number of column-per-page for articles
+is a good indication of the size of the content.  Infinitely-long pages on the
+web blur this signal. Thus, to rebuild some understanding of how-long an
+article is, we need to run word counts.
+
+As a result, Kitchen-Sink compute a word count for each article (in addition to
+images, links counts). Even further, Kitchen-Sink computes a word-count per
+title-section. Which allows us to display what I call article staircases with visualization libraries (here we use [Apache ECharts](https://echarts.apache.org/en/index.html)):
 
 ::: {#histogram}
 :::
 
 <script src="/js/echarts.min.js"></script>
 <script src="/js/echart-histogram.js"></script>
+
+The above histogram shows, for each section in the article, the number of words
+and the cumulated number of words in the article. This histogram allows me,
+when writing an article, to spot which sections are abnormally-long or
+abnormally short. I interpret this graph to find opportunities to split or
+merge sections together, hopefully improving my writing for users.
+
+Kitchen-Sink also computes [whole-site summaries](/json/filecounts.json)
+although I have no great use-case yet for these.
+
+### sitemap graph
+
+Kitchen-Sink processes all of the above information (topics, links between
+pages, image lists, etc.) to populate a [JSON representation of a
+graph](/json/topicsgraph.json) summarizing the structure of the whole site.
+This special target is built with the website and you can be creative with it.
+So far, Kitchen-Sink provides a minimal [JavaScript](/js/site-graph.js) to turn
+the graph into an interactive-picture using [Apache
+Echarts](https://echarts.apache.org/en/index.html).
+
+::: {#echartzone}
+:::
+
+<script src="js/site-graph.js"></script>

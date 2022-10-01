@@ -1,0 +1,13 @@
+digraph {
+  node[shape="rectangle"]
+  ks[label="kitchen-sink"]
+  node[shape="ellipse"]
+  "css" -> ks
+  "cmark" -> ks
+  "js" -> ks
+  "dot" -> ks
+  "png|jpeg" -> ks
+  "mp4" -> ks
+  node[shape="egg"]
+  ks -> {"html"}
+}
