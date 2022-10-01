@@ -44,6 +44,18 @@ code.language-console {
   font-weight: initial;
 }
 
+.op {
+  color: rebeccapurple;
+}
+
+.dt {
+  color: violet;
+}
+
+.cf {
+  color: red;
+}
+
 
 =base:summary.cmark
 
@@ -156,11 +168,10 @@ of source files on the file-system.  We also bundle a [small JavaScript](/js/aut
 subscribes to changes and reload the page on a change. This JavaScript gets
 injected in the layout only in dev-server mode. This setup allows to auto-reload on change.
 
-::: { .todo }
-
-insert a video
-
-:::
+<video width="640" height="480" controls>
+  <source src="/videos/auto-reload-002-liveedit.webm" type="video/webm">
+  <source src="/videos/auto-reload-002-liveedit.mp4" type="video/mp4">
+</video>
 
 To use the dev-server mode, use `--servMode DEV`. That is, the full-command to run with the default executable is:
 
@@ -211,17 +222,100 @@ built](https://lucasdicioccio.github.io/prometheus-monitor.html).
 =base:main-content.cmark
 ## article authoring
 
-### mostly using a section-based format
+Writing articles is the most important thing of a static-site generator.  The
+[Kitchen-Sink Philosophy](/philosophy.html) here is to throw everything in one
+file. The key, and probably somewhat unique aspect of Kitchen-Sink is to
+propose writing articles, tune their CSS, provide tags, add generators and so
+on directly in the same source file.
 
-See [the source for this article](/gen/out/features.cmark__cat-features-cmark) .
+### the section-based format
 
-### commonmark as main input articles
+The so-called section-based format has a [dedicated article](/sections.html) to
+document specific mechanism.  In this article we merely show-off [the source
+for this article](/gen/out/features.cmark__cat-features-cmark) to get an
+impression of what writing _meaty content_ entails.
+
+### tunable CSS per page
+
+Among sections worth a "feature" label, a special section drives the
+inlined-CSS of individual articles. In short, each article can have its own CSS
+file.  I found that especially useful when I need to add some rules only for a
+given article (e.g., alternating figure alignments) or when I want to host a
+single-page JavaScript-app on an article only.  Thus, you should use `@import`
+directives for CSS modularization and re-use across pages.  You do not lose
+much in expressivity, a bit in performance, but you gain a lot in flexibility.
+
+### CommonMark as main input articles
+
+Writing articles is mostly done in [CommonMark](https://commonmark.org/). That
+is, the _meaty content_ and some advanced analyses are based on CommonMark.
+
+Besides the basics for headings, links, raw-HTML, _emphasis_, __boldness__, and `code`.
+A number of extensions and additional extensions are enabled.
+
+#### emojis :eyes:
+
+Adding emojis is a way to incorporate some emotions in written-web content.
+The list of `:emoji-codes:` is available [:arrow_right: here :arrow_left:](https://gist.github.com/rxaviers/7360908) :fire:.
+
+#### delimited blocks divs with attributes 
+
+Which allow to add some CSS classes, and HTML identifiers
+
+For instance:
+
+    ::: {.todo #smalldiv}
+      add something
+    :::
+
+generates the following code
+
+```html
+<div id="smalldiv" class="todo">
+<p>add something</p>
+</div>
+```
+
+which can then be styled in CSS.
+
+#### syntax highlighting with `skylighting`
+
+Code-blocks are analyzed by [skylighting](https://github.com/jgm/skylighting),
+which tokenize code and wraps resulting code with HTML tags having some
+well-defined classes for styling in CSS.
+
+```c
+int main(int argc, char** argv) {
+  return 0;
+}
+```
+
+Overall I found that skylighting does the job and since the library requires no
+extra JavaScript on the resulting website or external-dependencies at
+code-generation time: it's good.
+
 
 ### generate images from `.dot`
+
+There is a special room in my heart for [GraphViz](https://graphviz.org/) :heart:. I use it a lot to render diagrams and illustrate simple ideas. Thus I found natural to add some special support for files with the `.dot` extensions.
+
+![all in the kitchen-sink](/gen/images/features-002-dot-demo.dot.png)
+
+Coupled with [auto-reload](#auto-reload), GraphViz-made diagrams work well
+enough to edit technical articles without ever leaving my editor as illustrated in the following video:
+
+<video width="640" height="480" controls>
+  <source src="/videos/auto-reload-001-dot.mp4" type="video/mp4">
+  <source src="/videos/auto-reload-001-dot.webm" type="video/webm">
+</video>
+
 ### copies other images, css
-### tunable CSS, JS per page
-### syntax highlighting with skylighting
-### emojis :eyes:
+
+An article often comes with extra medias. Images (with `jpeg`, `png`
+extensions), JavaScript (`.js`) and CSS (`.css`) files are copied and moved to
+their own target at known location.  That is, KitchenSink wants everything in a
+directory but applies rule so that you get something a bit cleaner in return,
+isn't it awesome?
 
 =generator:cmd.json
 {"cmd":"cat"
@@ -258,4 +352,5 @@ See [the source for this article](/gen/out/features.cmark__cat-features-cmark) .
 ::: {#histogram}
 :::
 
+<script src="/js/echarts.min.js"></script>
 <script src="/js/echart-histogram.js"></script>

@@ -5,12 +5,12 @@
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "The philosophy of the Kitchen Sink"
+,"title": "The Kitchen Sink philosophy"
 }
 
 =base:topic.json
 {"tags":["philosophy"]
-,"keywords":["static-site generators", "design"]
+,"keywords":["static-site generators", "design", "position paper"]
 }
 
 =base:social.json
