@@ -294,6 +294,15 @@ Overall I found that skylighting does the job and since the library requires no
 extra JavaScript on the resulting website or external-dependencies at
 code-generation time: it's good.
 
+### copies other images, css
+
+An article often comes with extra medias. Images (with `jpeg`, `png`
+extensions), JavaScript (`.js`) and CSS (`.css`) files are copied to
+their own target at known location.  That is, KitchenSink wants everything in a
+directory but applies rule so that you get something a bit cleaner in return,
+isn't it awesome?
+
+You can see for yourself, compare the [listing of this website source directory](/gen/out/features.cmark__tree-site-input-cmark.json) with the [listing of the website output directory](/gen/out/features.cmark__tree-site-output-cmark.json) (courtesy of `tree -J`).
 
 ### generate images from `.dot`
 
@@ -309,13 +318,17 @@ enough to edit technical articles without ever leaving my editor as illustrated 
   <source src="/videos/auto-reload-001-dot.webm" type="video/webm">
 </video>
 
-### copies other images, css
+=generator:cmd.json
+{"cmd":"tree"
+,"args":["-J", "website-src"]
+,"target":"tree-site-input-cmark.json"
+}
 
-An article often comes with extra medias. Images (with `jpeg`, `png`
-extensions), JavaScript (`.js`) and CSS (`.css`) files are copied and moved to
-their own target at known location.  That is, KitchenSink wants everything in a
-directory but applies rule so that you get something a bit cleaner in return,
-isn't it awesome?
+=generator:cmd.json
+{"cmd":"tree"
+,"args":["-J", "website-www"]
+,"target":"tree-site-output-cmark.json"
+}
 
 =generator:cmd.json
 {"cmd":"cat"
@@ -327,9 +340,44 @@ isn't it awesome?
 =base:main-content.cmark
 ## content-generation
 
+The core-business of a static-site generator is to generate HTML output from
+various input.  Thus, we could pedentically say that all content is
+"generated". Here we discuss cases where Kitchen-Sink goes the extra-mile to
+provide extra features.
+
 ### embedded data
-### microscriptable in Dhall
+
+Kitchen-Sink generate a host of data while assembling targets from input files.
+Intermediary-representations. In particular, there is a `json` file generated
+with each HTML article and is linked in the HTML `meta` tag with name
+`ks:article_json`. So that individual scripts can then locate these
+information. As we get more mileage, we'll likely add more of such paths and
+formalize a bit their expected content.  However, keep in mind that
+Kitchen-Sink generates more than just the static aspects of the HTML: it
+provides a bunch of extra information.
+
 ### command-based generators
+
+In this article I've already pointed to a number of links (e.g., the source of
+this article, some directory listings).  In short, you can add one-off data
+collections that produce their own targets.
+
+A typical usage is to turn some information about the system generating the
+blog (e.g. `uname -a`). However you could get creative such as
+- fetch the latest news-article
+- run some database query to be displayed in javascript later
+- taking a [selfie](/gen/out/features.cmark__latest-selfie.jpg) on demand (yes, this picture happens to be my face when I generate this website -- hat tip to `fswebcam`)
+
+### microscriptable in Dhall
+
+I have written a [full article](https://lucasdicioccio.github.io/dhall-section-demo.html) on my personal blog a while ago to motivate the whole usage of [Dhall](https://dhall-lang.org/). Keep in mind that I'm still happy about the choice. Dhall "powers" my photo galleries and my [stream of notes](https://lucasdicioccio.github.io/notes.html) on my personal blog.
+
+=generator:cmd.json
+{"cmd":"fswebcam"
+,"args":["-r", "320x240", "--jpeg", "85", "-D", "1", "/dev/stdout"]
+,"target":"latest-selfie.jpg"
+}
+
 
 =base:main-content.cmark
 ## article organization
