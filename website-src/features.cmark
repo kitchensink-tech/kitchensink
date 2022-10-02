@@ -370,17 +370,24 @@ A typical usage is to turn some information about the system generating the
 blog (e.g. `uname -a`). However you could get creative such as
 - fetch the latest news-article
 - run some database query to be displayed in javascript later
-- taking a [selfie](/gen/out/features.cmark__latest-selfie.jpg) on demand (yes, this picture happens to be my face when I generate this website -- hat tip to `fswebcam`)
+
+Less typical usage is for "personal" features like taking a selfie on demand:
+yes, this picture happens to be my face when I generate my [personal
+blog](https://lucasdicioccio.github.io/) as I've added this section in the
+"about-me" page -- hat tip to `fswebcam`.
+
+    =generator:cmd.json
+    {"cmd":"fswebcam"
+    ,"args":["-r", "320x240", "--jpeg", "85", "-D", "1", "/dev/stdout"]
+    ,"target":"latest-selfie.jpg"
+    }
+
+![selfie](https://lucasdicioccio.github.io/gen/out/about-me.cmark__latest-selfie.jpg)
 
 ### microscriptable in Dhall
 
 I have written a [full article](https://lucasdicioccio.github.io/dhall-section-demo.html) on my personal blog a while ago to motivate the whole usage of [Dhall](https://dhall-lang.org/). Keep in mind that I'm still happy about the choice. Dhall "powers" my photo galleries and my [stream of notes](https://lucasdicioccio.github.io/notes.html) on my personal blog.
 
-=generator:cmd.json
-{"cmd":"fswebcam"
-,"args":["-r", "320x240", "--jpeg", "85", "-D", "1", "/dev/stdout"]
-,"target":"latest-selfie.jpg"
-}
 
 
 =base:main-content.cmark
