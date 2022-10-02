@@ -205,9 +205,9 @@ extract](/gen/out/features.cmark__gen-local-server-metrics.txt). Thus, rather
 than bragging how much Kitchen-Sink is fast, you get to see for yourself
 directly (e.g., with the `blog_fullbuild_time` counters in the Prometheus
 summary). Other usages would be to track how fast you add content to articles
-by collecting and storing the counters. For instance, this is a timeseries of
-me editing this paragraph in live thanks to [a Firefox extension I
-built](https://lucasdicioccio.github.io/prometheus-monitor.html).
+by collecting and storing the counters. For instance, the following picture is a screenshot of a Prometheus timeseries showing the size of the article
+while editing this paragraph (screenshot is made using [a Firefox extension I
+built](https://lucasdicioccio.github.io/prometheus-monitor.html))
 
 ![a timeseries graph showing the `blog_targets_sizes` prometheus counter](/images/features-001-targetsizes-timeseries.png)
 
