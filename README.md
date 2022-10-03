@@ -3,12 +3,19 @@ Kitchen-Sink
 
 Kitchen-Sink is @lucasdicioccio's static-site generator.
 
-See a [series of article](https://lucasdicioccio.github.io/topics/web.html) for some context and overview.
+The main documentation is to be found on the [GitHub pages](https://kitchensink-tech.github.io/).
+
+For a list of features: refer to [the feature list](https://kitchensink-tech.github.io/features.html).
+
+For some historical context and overview: refer to a [series of article](https://lucasdicioccio.github.io/topics/web.html).
+
+## directory organization
 
 ```
 hs/           -- haskell source files
 purs/         -- purescript source files
 scaffolding/  -- helper scripts and data to scaffold a project
+website-src/  -- the Kitchen-Sink source for the main website, which doubles as a real-world example
 ```
 
 # usage
@@ -21,6 +28,7 @@ scaffolding/  -- helper scripts and data to scaffold a project
 ## build and install
 
 ```
+cd hs
 cabal build
 cabal install
 ```

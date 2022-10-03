@@ -16,6 +16,9 @@ Kitchen-Sink is a [_frivolous_](/philosophy.html)  static-site generator.
 We don't claim to be the best organized nor the fastest nor the prettiest. We
 just want to generate web pages from content and move on.
 
+This website is the main documentation and main example of Kitchen-Sink features.
+You can install KitchenSink from source [using the GitHub directory](https://github.com/kitchensink-tech/kitchensink).
+
 <script src="js/echarts.min.js"></script>
 <script src="js/site-graph.js"></script>
 

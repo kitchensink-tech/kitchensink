@@ -25,21 +25,84 @@
 @import "/css/article.css";
 @import "/css/navigation.css";
 
+pre {
+  border-left: 4px double coral;
+  margin-left: 1em;
+  padding-left: 1em;
+}
+
 
 =base:summary.cmark
 
-This article explains the section-based authoring format.
+Writing articles in KitchenSink requires to write text files with a specific
+format called the section-based authoring format. A section-based format
+consists of delimited sections of text. Sections either configure the page
+(e.g., the tile of the page) or provide _meaty content_ for readers to read.
+
+This article describes the section-based format and sections available to write
+articles.
 
 =base:main-content.cmark
 
-# general rules
+In my [first article about why I wrote my own
+blog-engine](https://lucasdicioccio.github.io/how-this-blog-works.html), I
+introduce an important separation between content and structure of articles. In
+short, the _meaty content_ is what readers are interested in, whereas structure
+is what readers navigate. You need both meaty content and some structure to
+make an article. However, you do not want to alternate switching between the
+two to [protect your state of
+flow](https://en.wikipedia.org/wiki/Flow_(psychology)) while writing.
 
-sections with actual content can be repeated
-sections for helping the Kitchen-Sink layout engine cannot (the engine is not guaranteed to complain)
+I grew the section-based format out of frustration using blogs that require
+templates with partials and special directory listings: I always felt like the
+added structure did not bring much. The key idea here is to put as much
+information in a same file as possible and just drop all files in a same
+directory (it's a kitchen-sink after all). From this "minimalist" design,
+arises the need to separate big blocks of texts (markdown/commonmark) from
+structural information (json, CSS).  Here comes the section-based format: an
+article file consists of multiple sections separated with special line
+separators.
 
-# current sections
+# section-based files
 
-### build-info
+A Section starts with a `=` followed by a section name (e.g.,
+`base:main-css.css`) and ends with an empty line followed by another section
+(or the end of the file).
+
+For instance, a fictional file containing three sections could be
+
+```
+=foo.json
+{"a": 123}
+
+=foobar.css
+@import "toto.css";
+
+=foobar.css
+@import "titi.css";
+html{ background: cyan };
+```
+
+In that case, the three sections would consists of one `foo.json` with some
+JSON object and two `foobar.css` with some CSS rules.  We note that sections
+can be repeated: the section-format itself does not prescibe whether sections
+can appear multiple times or whether they are mandatory. It is then the role of
+the KitchenSink blog engine to decide whether it makes sense to have such a
+structure. For instance, having two paragraphs of texts makes sense, having two
+titles may be a stretch.
+
+Alas (fortunately?) KitchenSink `foo.json` and `foobar.css` do not exist.
+Instead, this article list sections supported by KitchenSink. Modifying the
+KitchenSink engine to support new sections is out of scope of this article.
+You'll find plenty of section-based format examples by browsing the
+[source-files for this very
+website](https://github.com/kitchensink-tech/kitchensink/tree/main/website-src),
+KitchenSink names section-based format with the `.cmark` extension for
+convenience (because the meaty-content is written in CommonMark).
+
+# Supported sections
+
+## build-info
 
 an important section to let Kitchen-Sink know which layout to apply
 
@@ -50,7 +113,7 @@ __example__
     ,"publicationStatus":"Public"
     }
 
-### preamble
+## preamble
 
 the title and authorship, optionally some link to a representative image
 
@@ -61,7 +124,7 @@ __example__
     ,"title": "The section-based format"
     }
 
-### topics
+## topics
 
 categorization of articles by tags/labels/topics
 
@@ -75,7 +138,7 @@ __example__
     ,"keywords":["static-site generators", "design"]
     }
 
-### social
+## social
 
 listing of social-profiles on various sites, will drive the inclusion of links and some Twitter meta headers
 
@@ -87,7 +150,7 @@ __example__
     ,"github": "lucasdicioccio"
     }
 
-### cmark
+## cmark
 
 __example__
 
@@ -95,7 +158,7 @@ __example__
     
     some commonmark
     
-### taken-off cmark
+## taken-off cmark
 
 like cmark but for text you want to leave out of the generated output, for instance some draft section or paragraph you want to keep around for another future article
 
@@ -105,7 +168,7 @@ __example__
     
     some commonmark
     
-### css
+## CSS
 
 some inline-CSS, includes are supported via the `@import` CSS directive
 
@@ -119,11 +182,7 @@ __example__
       margin: auto;
     }
 
-## advanced
-
-### dhall
-
-for applying a template onto a dataset
+# Advanced sections
 
 ### commands
 
@@ -140,3 +199,7 @@ __example__
     ,"args": ["this is an example command"]
     ,"target":"example"
     }
+
+### dhall
+
+for applying a template onto a dataset
