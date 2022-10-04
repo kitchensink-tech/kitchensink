@@ -31,6 +31,19 @@ pre {
   padding-left: 1em;
 }
 
+h2 {
+  padding: 0.2rem 0.2rem 0.2rem 1em;
+  margin-bottom: 0;
+  border-radius: 6px 0 0 0;
+  background: salmon;
+  color: white;
+  font-family: monospace;
+}
+
+.section-details {
+  padding: 2rem;
+  border-left: 8px solid salmon;
+}
 
 =base:summary.cmark
 
@@ -63,7 +76,7 @@ structural information (json, CSS).  Here comes the section-based format: an
 article file consists of multiple sections separated with special line
 separators.
 
-# section-based files
+# Section-based files
 
 A Section starts with a `=` followed by a section name (e.g.,
 `base:main-css.css`) and ends with an empty line followed by another section
@@ -102,9 +115,31 @@ convenience (because the meaty-content is written in CommonMark).
 
 # Supported sections
 
-## build-info
+Recall that KitchenSink is both a library and an engine. We describe here
+sections when using KitchenSink without tuning. While using KitchenSink as a
+library, it should be easy enough to add new sections or new layouts or modify
+subtly how Kitchen-Sink interprets some section data.
 
-an important section to let Kitchen-Sink know which layout to apply
+Thus, the following documentation is descriptive of how the default KitchenSink
+engine works. It is not the case that this documentation is prescriptive (i.e.,
+you are free to modify any behavior -- just avoid confusing your users that may
+end up reading this piece of documentation).
+
+## build-info [mandatory]
+
+::: {.section-details}
+
+An important section to let Kitchen-Sink know which __layout__ to apply.  Known
+layouts are `article`, `index` (for `index.cmark`), `tags` (for `tags.cmark`),
+`application` for JavaScript single-page apps, `gallery` for content galleries,
+and `listing` for various listings. Overall, except for index and tags, the
+layout of content does not change significantly besides the HTML-nesting (which
+then allows you to modify CSS or hijack DOM elements for single-page apps).
+
+The publicationStatus is either: `Public` or `Upcoming`. Upcoming articles are
+treated slightly differently from Public articles in listing or in the home
+page: they are ranked lower and they do not carry a summary. A warning is also
+inserted on Upcoming articles.
 
 __example__
 
@@ -113,34 +148,79 @@ __example__
     ,"publicationStatus":"Public"
     }
 
-## preamble
+:::
 
-the title and authorship, optionally some link to a representative image
+## preamble [mandatory]
+
+::: {.section-details}
+
+Contains bibliographical information such as the title and author of the
+article. Optionally, you can add some link to a representative image.
+
+Titles and authors are used throughout where it makes sense. 
 
 __example__
 
     =base:preamble.json
     {"author": "Lucas DiCioccio"
+    ,"date": "2022-01-30T12:00:00Z"
     ,"title": "The section-based format"
     }
 
-## topics
+:::
 
-categorization of articles by tags/labels/topics
 
-- tags: for internally-generated section and listings
-- keywords: for HTML meta headers
+## summary [recommended]
+
+::: {.section-details}
+
+Some commonmark to generate a short summary about the article.
+
+The summary is displayed in article listings but also in OpenGraph
+and Twitter summaries when people share links on various media.
+
+Also use as HTML Meta header for search engines.
+
+Although the summary is arbitrary CommonMark, you should avoid complexifying it
+too much (i.e., stick to emphasis, inlined code, and bold).
+
+You should also keep it short (a few sentences).
+
+__example__
+
+    =base:summary.cmark
+    A small article about _something_ interesting.
+
+:::
+
+## topics [recommended]
+
+::: {.section-details}
+
+Meta-information for contextualizing the article content.
+
+The representative image is displayed in article listings but also in OpenGraph
+and Twitter summaries when people share links on various media.
+
+- tags: for internally-generated topics labels (for visitors, and for creating series)
+- keywords: for HTML meta headers (for search engines)
 
 __example__
 
     =base:topic.json
     {"tags":["authoring articles", "how-to", "sections"]
     ,"keywords":["static-site generators", "design"]
+    ,"imageLink": "/images/some-image.jpeg"
     }
 
-## social
+:::
 
-listing of social-profiles on various sites, will drive the inclusion of links and some Twitter meta headers
+## social [recommended]
+
+::: {.section-details}
+
+Listing of social-profiles on various sites, will drive the inclusion of links
+and some Twitter meta headers.
 
 __example__
 
@@ -150,7 +230,17 @@ __example__
     ,"github": "lucasdicioccio"
     }
 
-## cmark
+:::
+
+## main content
+
+::: {.section-details}
+
+Well, sometimes you have good reason to not have some content. But these
+sections are where you should be spending most of your effort.
+
+Sections are inserted in order under `<section>` html tags.
+This fact is important when you are tuning the CSS of your articles (e.g., using CSS `nth-*` selectors).
 
 __example__
 
@@ -158,19 +248,37 @@ __example__
     
     some commonmark
     
-## taken-off cmark
+:::
 
-like cmark but for text you want to leave out of the generated output, for instance some draft section or paragraph you want to keep around for another future article
+## taken-off cmark [good-to-know]
+
+::: {.section-details}
+
+Sometimes you really are taking notes along the way and you want to leave out
+some paragraph out of the generated output. For instance you wrote some
+paragraph but realized it's better to keep it around for future articles only.
+
+Such content is merely ignored by KitchenSink when generating the HTML for articles.
 
 __example__
 
     =base:taken-off.cmark
     
-    some commonmark
-    
-## CSS
+    some content that will not show up in the article
 
-some inline-CSS, includes are supported via the `@import` CSS directive
+:::
+    
+## CSS [recommended]
+
+::: {.section-details}
+
+Some CSS block that is inlined in the HTML header. Includes are supported via
+the `@import` CSS directive (note KitchenSink doesn't interpret the CSS, it
+merely defers the import to your clients browsers).
+
+Most often you'll `@import` some repeated CSS for your specific layout and then
+tune some rules that match the generated HTML structure and CSS classes you may
+have added in your articles.
 
 __example__
 
@@ -182,9 +290,11 @@ __example__
       margin: auto;
     }
 
-# Advanced sections
+:::
 
-### commands
+## commands [advanced]
+
+::: {.section-details}
 
 add some complicated routes for generating content via shell commands
 
@@ -200,6 +310,12 @@ __example__
     ,"target":"example"
     }
 
-### dhall
+:::
+
+## dhall [advanced]
+
+::: {.section-details}
 
 for applying a template onto a dataset
+
+:::
