@@ -50,9 +50,8 @@ div.taglist {
 
 div.tag {
   margin-right: 1em;
-  padding: 0.25em;
+  padding: 0.25em 0.7em 0.25em 0.7em;
   background-color: #e3e3e3;
-  padding: calc(min(0.25em, 12px));
   border-radius: 6px;
 }
 
