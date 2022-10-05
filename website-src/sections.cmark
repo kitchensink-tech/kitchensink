@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -274,7 +274,7 @@ __example__
 
 Some CSS block that is inlined in the HTML header. Includes are supported via
 the `@import` CSS directive (note KitchenSink doesn't interpret the CSS, it
-merely defers the import to your clients browsers).
+merely defers the [import-feature in CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/@import) that web browsers implement).
 
 Most often you'll `@import` some repeated CSS for your specific layout and then
 tune some rules that match the generated HTML structure and CSS classes you may
@@ -296,18 +296,46 @@ __example__
 
 ::: {.section-details}
 
-add some complicated routes for generating content via shell commands
+Sometimes you want to build content from an external command.  For instance,
+you could snapshot the agenda of your favorite music band each time you
+generate your blog.
 
-i recommend it mostly for generating metadata (e.g., git-hash)
+KitchenSink has minimal support for such a scheme. The feature requires to specify
+- a command name (e.g. `ping`)
+- command arguments, arguments are a fixed array (e.g., `["-c", "3", "8.8.4.4"]`)
+- a target name (e.g., `latency_to_best_ip`)
 
-beware things like local envs with different command flavors installed
+KitchenSink then reserves the filename `/gen/out/<filename.cmark>__<target
+name>` (i.e., `/gen/out/sections.cmark__latency_to_best_ip` if we were to add
+this section in this article) and will execute the command, retrieve the
+standard output and put it in the file content.
+
+The main intended use cases are:
+- to generate extra or debugging metadata (e.g., to get the git-hash of the
+  source repository or the hostname of the machine that built the website)
+- to help writing blog articles where you want to "show some code" (which I do
+  extensively to `cat` some example source files rather than copying them in the source directory upfront)
+- to support funny features (e.g., take a selfie when generating the site)
+
+Keep in mind that you may hit portability issues when switching systems (e.g.,
+if you build your website in some automation, the automation need to be able to
+execute the commands).
+
+
+:warning:
+Yes, this section is a bit like a CGI-bin and it opens all sorts of security
+risks if you do not know what you are doing.  In particular, do not copy-paste
+commands from the Internet without paying close attention.  In future version
+of KitchenSink I'll likely add a flag to ignore this section to reduce security
+risks for people who would like to run KitchenSink on external sources.
+At this point I assume that KitchenSink users are tech-savvy geeks.
 
 __example__
 
     =generator:cmd.json
-    {"cmd": "echo"
-    ,"args": ["this is an example command"]
-    ,"target":"example"
+    {"cmd": "ping"
+    ,"args": ["-c", "3", "8.8.4.4"]
+    ,"target":"latency_to_best_ip"
     }
 
 :::
@@ -316,6 +344,49 @@ __example__
 
 ::: {.section-details}
 
-for applying a template onto a dataset
+There is one difficult design point when statically-generating website is when
+we have datasets of repeated structure (e.g., an image list with title, date,
+sizes, filepath, preferred corner thickness etc.) and you want to generate some
+content on a page in an otherwise. I touch on this difficult use-case in a [past article on my blog](https://lucasdicioccio.github.io/dhall-section-demo.html).
+
+In this specific case, the section consists of a
+[Dhall](https://dhall-lang.org/) expression typed so that it returns a page
+content.
+
+The returned object must be of `Type`
+
+```dhall
+{ contents : Text
+, format : Text
+}
+```
+
+Where `format` is either `cmark` or `html` and `contents` is formatted in the
+appropriate format. The return type is currently rather primitive and will
+likely change in the future.
+
+__example__
+
+    =base:main-content.dhall
+    
+    let map =  https://prelude.dhall-lang.org/List/map
+    
+    let alphabet : List Text =
+      [ "Applicative"
+      , "Bisiumulation"
+      , "Closure"
+      , "Distributive"
+      , "..."
+      ]
+    
+    let toCmarkListItem = \(v : Text) -> "- ${v}"
+    
+    let cmarkContents : List Text =
+      map Text Text toCmarkListItem alphabet
+    
+    in
+    { contents =  cmarkContents
+    , format = "cmark"
+    }
 
 :::
