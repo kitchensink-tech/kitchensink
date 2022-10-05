@@ -159,6 +159,9 @@ article. Optionally, you can add some link to a representative image.
 
 Titles and authors are used throughout where it makes sense. 
 
+You can also overload the [favicon](https://www.w3.org/2005/10/howto-favicon)
+using the `faviconUrl` JSON key.
+
 __example__
 
     =base:preamble.json

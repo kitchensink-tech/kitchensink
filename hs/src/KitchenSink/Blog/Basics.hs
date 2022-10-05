@@ -39,6 +39,7 @@ data PreambleData = PreambleData {
   , datetxt :: Maybe Text
   , date    :: Maybe UTCTime
   , title   :: Text
+  , faviconUrl   :: Maybe Text
   } deriving (Show, Eq, Generic)
 instance FromJSON PreambleData
 instance ToJSON PreambleData

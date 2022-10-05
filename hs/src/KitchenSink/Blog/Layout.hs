@@ -181,12 +181,14 @@ metaheaders extra dloc jsondloc art = do
   summary <- fmap extract <$> lookupSection art Summary
   preamble <- fmap extract <$> jsonm @PreambleData art Preamble
   let titleTxt = maybe defaultTitle mktitle preamble :: Text
+  let faviconHref = mkfavicon preamble :: Text
   pure
     $ mconcat
     $ catMaybes
     [ Just $ meta_ [ charset_ "utf-8" ]
     , Just $ meta_ [ name_ "viewport" , content_ "with=device-width, initial-scale=1.0" ]
     , Just $ title_ $ toHtml titleTxt
+    , Just $ link_ [ rel_ "icon" , type_ "image/x-icon", href_ faviconHref ]
     , fmap (\x -> meta_ [ name_ "author" , content_ $ author x]) preamble
     , fmap (\x -> meta_ [ name_ "keywords" , content_ $ Text.intercalate ", " $ topicKeywords x ]) topic
     , fmap (\x -> meta_ [ name_ "description" , content_ $ compactSummary x ]) summary
@@ -221,6 +223,12 @@ metaheaders extra dloc jsondloc art = do
 
     mktitle :: PreambleData -> Text
     mktitle x = mconcat [ baseTitle extra, " - ", title x ]
+
+    defaultFavicon :: Text
+    defaultFavicon = "/images/favicon.png"
+
+    mkfavicon :: Maybe PreambleData -> Text
+    mkfavicon x = fromMaybe defaultFavicon (faviconUrl =<< x)
 
 wrap :: (Lucid.Html () -> Lucid.Html ())
   -> (Article [Text] -> Assembler (Lucid.Html ()))
