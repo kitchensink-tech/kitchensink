@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -28,9 +28,25 @@
 
 =base:summary.cmark
 
-The `kitchen-sink.json` file is quite important.
+The `kitchen-sink.json` file is simpble but quite important as it configures
+things like the URL of your blog.
 
 =base:main-content.cmark
+
+When generating HTML content, most of the work can be done without context of
+"where" an application will be hosted. Unfortunately, some information do leak
+a bit.  In particular, if you want to support some features like OpenGraph or
+RSS, you are supposed to know, at the time of generating the HTML and before
+publishing the HTML, the URL of published URLs.
+Rather than polluting all articles with this concern, we do it once for all
+articles. Enters the `kitchen-sink.json` configuration file.
+
+As the time of writing this article, `kitchen-sink.json` supports the following keys:
+
+- `title`: the title on the index page and the prefix of per-articles titles
+- `publishURL`: the url that will be added as prefix of links in permalinks
+- `twitterLogin` (optional): the Twitter handle for the website, which may differ from the Twitter handle of individual authors
+- `publishScript` (optional): if provided, the script to call when the `publish` button is pressed wile in ['dev-mode'](/engine.html) -- it's a pure convenience
 
 An example of kitchen-sink.json
 
@@ -38,7 +54,9 @@ An example of kitchen-sink.json
 { "title": "Kitchen Sink Default Page"
 , "publishURL": "https://kitchensink.github.io"
 , "twitterLogin": "lucasdicioccio"
+, "publishScript": "./scripts/publish.sh"
 }
-
 ```
 
+The `publishScript` here is very simple (switches to the output dir, git-add
+and commit everything, git pushes).

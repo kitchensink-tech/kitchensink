@@ -1,11 +1,11 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "Other formats"
+,"title": "Other types of files"
 }
 
 =base:topic.json
@@ -28,16 +28,25 @@
 
 =base:summary.cmark
 
-This article explains how some other formats are supported.
+There is more to a blog than just CommonMark HTML.
+This article explains briefly how the KitchenSink engine handles other format.
 
 =base:main-content.cmark
 
-# copied content
+Besides generating content from `.cmark` [section-based](/sections.html) files,
+KitchenSink also copies some video and images, and knows how to call in some
+generators for very specific formats.
 
 ## videos
 
+KitchenSink copies `.webm` and `.mp4` files under `/videos`.
+
 ## images
 
-# generated content
+KitchenSink copies `.jpg`, `.jpeg`, and `.png` files under `/images`.
 
 ## GraphViz dot files
+
+KitchenSink calls `dot` to generate under `/gen/images/<filename>.png`. There
+is little support to control the command that KitchenSink handles. If you need
+more control, generate pictures aside or use a command-section.
