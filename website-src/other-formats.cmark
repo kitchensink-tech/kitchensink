@@ -45,6 +45,17 @@ KitchenSink copies `.webm` and `.mp4` files under `/videos`.
 
 KitchenSink copies `.jpg`, `.jpeg`, and `.png` files under `/images`.
 
+## javascript
+
+KitchenSink copies `.js` files under `/js`.
+
+## Raw text files
+
+KitchenSink copies `.txt` files under `/raw` __excepts for robots.txt__. I use it for when showing a long
+text result (e.g., a long output of a command that is too slow to generate).
+
+__exception__. The file `robots.txt` stays at the root of the output dir to meet the [robots exclusion standard](https://en.wikipedia.org/wiki/Robots_exclusion_standard).
+
 ## GraphViz dot files
 
 KitchenSink calls `dot` to generate under `/gen/images/<filename>.png`. There

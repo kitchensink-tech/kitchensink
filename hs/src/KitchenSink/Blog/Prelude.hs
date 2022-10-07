@@ -26,7 +26,7 @@ module KitchenSink.Blog.Prelude (
   ) where
 
 import Text.Show (Show, show)
-import Data.Bool (Bool(..), not)
+import Data.Bool (Bool(..), otherwise, not)
 import Data.Coerce (Coercible, coerce)
 import Data.Eq (Eq, (==), (/=))
 import Data.Either (Either(..), either)

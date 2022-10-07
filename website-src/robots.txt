@@ -1,0 +1,6 @@
+User-Agent: *
+Disallow: /gen/out/
+Disallow: /topics/
+Disallow: /css
+Disallow: /js
+Disallow: /json

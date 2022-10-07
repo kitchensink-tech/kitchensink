@@ -410,10 +410,15 @@ destVideoFile prefix (FileSource path) =
     (prefix </> "videos" </> takeFileName path)
 
 destRawFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destRawFile prefix (FileSource path) =
-  StaticFileDestination
-    (Text.pack $ "/raw/" <> takeFileName path)
-    (prefix </> "raw" </> takeFileName path)
+destRawFile prefix (FileSource path)
+  | takeFileName path == "robots.txt" =
+      StaticFileDestination
+        (Text.pack $ "/robots.txt")
+        (prefix </> "robots.txt")
+  | otherwise =
+      StaticFileDestination
+        (Text.pack $ "/raw/" <> takeFileName path)
+        (prefix </> "raw" </> takeFileName path)
 
 destCssFile :: OutputPrefix -> SourceLocation -> DestinationLocation
 destCssFile prefix (FileSource path) =
