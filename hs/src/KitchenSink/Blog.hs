@@ -52,6 +52,10 @@ jsonDataTarget :: ToJSON a => OutputPrefix -> a -> FilePath -> Target
 jsonDataTarget prefix v loc =
   Target (destJsonDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ LByteString.toStrict $ encode v)
 
+rootDataTarget :: OutputPrefix -> Text -> FilePath -> Target
+rootDataTarget prefix v loc =
+  Target (destRootDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ Text.encodeUtf8 v)
+
 siteTargets :: OutputPrefix -> Tracer -> MetaExtraData -> Site -> [Target]
 siteTargets prefix tracer extra site = allTargets
   where
@@ -66,6 +70,7 @@ siteTargets prefix tracer extra site = allTargets
       , jsTargets prefix site
       , tagIndexesTargets (lookupSpecialArticle "tags.cmark" site)
       , jsonDataTargets
+      , seoTargets
       ]
 
     jsonDataTargets :: [Target]
@@ -74,6 +79,11 @@ siteTargets prefix tracer extra site = allTargets
       , jsonDataTarget prefix (filecounts site) "filecounts.json"
       , jsonDataTarget prefix (topicsgraph stats) "topicsgraph.json"
       ] <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- articles site
+      ]
+
+    seoTargets :: [Target]
+    seoTargets =
+      [ rootDataTarget prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) articleTargets) "sitemap.txt"
       ]
 
     articleTarget :: Sourced (Article [Text]) -> Target

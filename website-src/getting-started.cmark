@@ -28,7 +28,8 @@
 
 =base:summary.cmark
 
-This article gets you started.
+This article gets you started. As of date, you need some amount of programming
+know-how. 
 
 =base:main-content.cmark
 
@@ -36,7 +37,7 @@ This article gets you started.
 
 ## requirements
 
-- some Haskell installation with cabal (tested with GHC 9.2.4)
+- some Haskell installation with cabal (tested with GHC 9.2.4), we recommend [ghcup](https://www.haskell.org/ghcup/) if you have no Haskell toolchain preference yet
 - (optional) graphviz for generating images from dot-sources
 
 ## build and install

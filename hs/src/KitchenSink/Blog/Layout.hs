@@ -438,6 +438,13 @@ destJsonDataFile prefix path =
     (Text.pack $ "/json/" <> takeFileName path)
     (prefix </> "json" </> takeFileName path)
 
+destRootDataFile :: OutputPrefix -> FilePath -> DestinationLocation
+destRootDataFile prefix path
+  | otherwise =
+      StaticFileDestination
+        (Text.pack $ "/" <> takeFileName path)
+        (prefix </> takeFileName path)
+
 destHtml :: OutputPrefix -> SourceLocation -> DestinationLocation
 destHtml prefix (FileSource path) =
   StaticFileDestination

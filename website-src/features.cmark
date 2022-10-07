@@ -446,6 +446,12 @@ understand if sections are well-balanced or not.
 
 All of these reasons were decisive factors when deciding to write and while [designing](/design-points.html) Kitchen-Sink. I've merely scratched the surface of the analyses I want to make on my own writing and I hope you'll find some of these helpful too.
 
+### sitemap
+
+KitchenSink generates a [sitemap.txt](/sitemap.txt) linking to all articles.
+Remember to "ping" Google afterwards by visiting
+`https://www.google.com/ping?sitemap=<your-deploy-url>/sitemap.txt` (I'm not an SEO expert so I cannot really vouch for other crawlers).
+
 ### site listing and search-box
 
 Static sites lack a good user-driven search as there are no servers to answer

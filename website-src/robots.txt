@@ -4,3 +4,4 @@ Disallow: /topics/
 Disallow: /css
 Disallow: /js
 Disallow: /json
+Sitemap: https://kitchensink-tech.github.io/sitemap.txt
