@@ -6,13 +6,20 @@ import Data.Aeson (ToJSON, encode)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map.Strict as Map
 import Lucid as Lucid
+import Data.Maybe (fromJust, catMaybes, listToMaybe)
 import Data.Text (Text)
+import Data.Time.Format.ISO8601 (iso8601Show)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Lazy as LText
 import qualified Data.List as List
 import System.FilePath.Posix (takeFileName)
 import qualified Data.ByteString.Lazy as LByteString
+
+import Text.Feed.Types (Feed(AtomFeed))
+import Text.XML (def, rsPretty)
+import qualified Text.Atom.Feed as Atom
+import qualified Text.Feed.Export as Export (textFeedWith)
 
 import KitchenSink.Blog.Target
 import KitchenSink.Blog.Generator
@@ -84,7 +91,39 @@ siteTargets prefix tracer extra site = allTargets
     seoTargets :: [Target]
     seoTargets =
       [ rootDataTarget prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) articleTargets) "sitemap.txt"
+      , rootDataTarget prefix atomRootFeedContent "atom.xml"
       ]
+ 
+    atomRootFeedContent :: Text
+    atomRootFeedContent =
+      let render = LText.toStrict . fromJust . Export.textFeedWith def{rsPretty=True} . AtomFeed
+          uri = publishBaseURL extra <> (destinationUrl $ destRootDataFile prefix "atom.xml")
+      in render
+         $ feedForArticles uri
+         $ List.filter (isPublishedArticle . snd)
+         $ List.filter (isListableArticle . snd)
+         $ articleTargets
+
+    feedForArticles :: Atom.URI -> [(Target, Article [Text])] -> Atom.Feed
+    feedForArticles uri arts =
+      let baseFeed = Atom.nullFeed uri (Atom.TextString $ baseTitle extra) updatedAt
+          fmtUTC = Text.pack . iso8601Show
+          -- picks the first date in the article list, recall that date is optional
+          updatedAt = fmtUTC
+                      $ fromMaybe epochUTCTime
+                      $ listToMaybe
+                      $ catMaybes
+                      $ fmap (extractDate . snd)
+                      $ arts
+          mkfeed xs = baseFeed { Atom.feedEntries = xs }
+          entries = traverse toEntry
+                  $ sortByDate arts
+      in case runAssembler (mkfeed <$> entries) of
+            Left err -> error (show err)
+            Right x -> x
+
+    toEntry :: (Target, Article [Text]) -> Assembler Atom.Entry
+    toEntry (tgt, art) = assembleAtomEntry extra (destination tgt) art
 
     articleTarget :: Sourced (Article [Text]) -> Target
     articleTarget (Sourced loc@(FileSource path) art) =

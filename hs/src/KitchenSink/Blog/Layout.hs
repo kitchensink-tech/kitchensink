@@ -10,10 +10,16 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LText
 import qualified Data.List as List
-import Data.Time.Clock (UTCTime)
+import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
+import Data.Time.Clock (UTCTime(..), secondsToDiffTime)
 import Data.Time.Format (formatTime, defaultTimeLocale)
 import Data.Time.Format.ISO8601 (iso8601Show)
 import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
+
+-- import Text.Feed.Types (Feed(AtomFeed))
+-- import Text.XML (def, rsPretty)
+import qualified Text.Atom.Feed as Atom
+-- import qualified Text.Feed.Export as Export (textFeedWith)
 
 import KitchenSink.Blog.Target
 import KitchenSink.Blog.Section
@@ -189,6 +195,7 @@ metaheaders extra dloc jsondloc art = do
     , Just $ meta_ [ name_ "viewport" , content_ "with=device-width, initial-scale=1.0" ]
     , Just $ title_ $ toHtml titleTxt
     , Just $ link_ [ rel_ "icon" , type_ "image/x-icon", href_ faviconHref ]
+    , Just $ link_ [ rel_ "alternate" , type_ "application/atom+xml", title_ "Atom Feed", href_ "/atom.xml" ]
     , fmap (\x -> meta_ [ name_ "author" , content_ $ author x]) preamble
     , fmap (\x -> meta_ [ name_ "keywords" , content_ $ Text.intercalate ", " $ topicKeywords x ]) topic
     , fmap (\x -> meta_ [ name_ "description" , content_ $ compactSummary x ]) summary
@@ -364,10 +371,12 @@ topicTag prefix stats tag =
 sortByDate :: [(a, Article [Text])] -> [(a, Article [Text])]
 sortByDate = List.sortBy f
   where
-    f (_,a1) (_,a2) = g a2 `compare` g a1
-    g art = either (const Nothing) (Just . date . extract)
-          $ runAssembler
-          $ json @PreambleData art Preamble
+    f (_,a1) (_,a2) = extractDate a2 `compare` extractDate a1
+
+extractDate :: Article [Text] -> Maybe UTCTime
+extractDate art = either (const Nothing) (date . extract)
+  $ runAssembler
+  $ json @PreambleData art Preamble
 
 destTag :: OutputPrefix -> Tag -> DestinationLocation
 destTag prefix tag = VirtualFileDestination
@@ -564,3 +573,31 @@ articleImage art = do
 
     f :: Maybe (Section TopicData) -> Maybe Text
     f sec = imageLink . extract =<< sec
+
+assembleAtomEntry :: MetaExtraData -> DestinationLocation -> Article [Text] -> Assembler (Atom.Entry)
+assembleAtomEntry extra dloc art = do
+    summary <- fmap (compactSummary . extract) <$> lookupSection art Summary
+    r <$> (extract <$> json @PreambleData art Preamble)
+      <*> pure summary
+  where
+    r :: PreambleData -> Maybe Text -> Atom.Entry
+    r preamble summary =
+      let url = publishBaseURL extra <> destinationUrl dloc
+          selfLink = (Atom.nullLink url) { Atom.linkRel = Just $ Left "alternate" }
+          base =
+            Atom.nullEntry
+                (url)
+                (Atom.TextString $ title preamble)
+                (fmtUTC $ fromMaybe epochUTCTime $ date preamble)
+       in base { Atom.entrySummary = fmap Atom.TextString summary
+               , Atom.entryAuthors = [Atom.nullPerson { Atom.personName = author preamble}]
+               , Atom.entryLinks = [selfLink]
+               }
+
+    fmtUTC = Text.pack . iso8601Show
+
+    compactSummary :: [Text] -> Text
+    compactSummary = Text.strip . Text.intercalate " "
+
+epochUTCTime :: UTCTime
+epochUTCTime = UTCTime (fromOrdinalDate 1970 1) (secondsToDiffTime 0)
