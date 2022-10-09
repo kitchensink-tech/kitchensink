@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -25,34 +25,131 @@
 @import "/css/article.css";
 @import "/css/navigation.css";
 
+.figure img {
+  max-width: 80%;
+  display: block;
+}
 
 =base:summary.cmark
 
-This article gets you started. As of date, you need some amount of programming
-know-how. 
+This article gets you started with KitchenSink. As of date, you need some
+amount of programming know-how. 
 
 =base:main-content.cmark
 
-# usage
+## expectations
+
+At its core, KitchenSink is a static-site generator _library_ with merely a
+_default theme_. That is, you can have multiple integration modes to run
+a KitchenSink-generated blog.
+
+In this article, we browse you through the simple case where you are happy with
+a website that looks like this one -- or at least has a similar HTML structure.
+As [the CSS Zen Garden](http://www.csszengarden.com/) has demonstrated, one can
+do wonders with only styling. Future releases of KitchenSink may include
+layouts or websites that are not "showcased" on this documentation site.
+
+## pipeline
+
+Before you get a website to entertain your readers, a number of steps are
+required.  This guide navigates you through a subset of the complexity and
+assumes some familiarity with programming toolchains and workflows.
+
+You need a few broad steps to get started:
+- get KitchenSink source code
+- (optional, advanced) adapt the layout or the commands
+- compile KitchenSink
+- write some content
+- produce some HTML
+- publish your website
+
+We illustrate these steps in the following picture (which we refer as _the dependency graph_ here):
+
+::: {.figure}
+
+![KitchenSink building pipeline](http://localhost:7654/gen/images/architecture-01-pipeline.dot.png)
+
+:::
+
+The dependency graph starts from the left with tooling and move to the right towards an HTML
+website making readers happy. In the above pictures "egg" shapes represent
+tools whereas data files use a "file" shape.
+
+The rest of this guide covers only some subset of the whole experience.  In
+particular, we assume that the advanced-topic of editing KitchenSink layouts is
+out of scope. Also, we skip the "publish website" part; you should find some
+help on "hosting a static website" elsewhere -- at this point we believe
+KitchenSink is so niche that you will figure out this part. We also assume that
+you know how to install and run programming tools on your machine.
 
 ## requirements
 
-- some Haskell installation with cabal (tested with GHC 9.2.4), we recommend [ghcup](https://www.haskell.org/ghcup/) if you have no Haskell toolchain preference yet
-- (optional) graphviz for generating images from dot-sources
+Requirements correspond to the "left leaves" tools in the dependency graph.
 
-## build and install
+- some `git` installation
+- some Haskell installation with `cabal` (tested with `ghc` 9.2.4), we recommend [ghcup](https://www.haskell.org/ghcup/) if you have no Haskell toolchain preference yet
+- (optional) `graphviz` for generating images from dot-sources
+- (optional) other commands you may want to use to generate contents
+- (not covered) some publication script to host a directory of static-files online (e.g., GitHub pages, Netlify)
+
+## build and install from source
+
+The goal here is to build `kitchen-sink-exe` in the dependency graph.
+Cabal's install directory must be in your execution `PATH` environment variable afterwards.
 
 ```
+git clone https://github.com/kitchensink-tech/kitchensink.git
+cd kitchensink/hs
 cabal build
 cabal install
 ```
 
 ## minimal site setup
 
+The goal here is to run KitchenSink in server-mode (i.e., we do not output
+`.html` files directly as shown in the dependency graph but we edit them live).
+
+__prepare a directory structure__
+
 ```
 bash scaffolding/outputdir.sh www
 bash scaffolding/sourcedir.sh site-source
+```
+
+__start the live-edit server__
+
+```
 kitchen-sink serve --srcDir site-source/ --outDir www/ --servMode DEV --port 7654
 ```
 
-Then navigate to http://localhost:7654/ you'll notice there are a few things to tune.
+Then navigate to `http://localhost:7654/` you'll notice there are a few things
+to tune.  Things like the page title must be changed in the
+[`kitchen-sink.json`](/kitchen-sink-dot-json) file (note: as of today when you
+edit this file, you need to restart the server for all parameters to be taken
+into account).
+
+__learn how to write articles__
+
+In your editor then you can add or edit new `.cmark` files, try adding some
+"hello world" first.  Then you can experiment with adding more involved
+[sections](/sections.html) or various types of [contents](/other-formats.html)
+
+
+## producing html contents
+
+Before producing some HTML contents to upload, you should modify the
+[`kitchen-sink.json`](/kitchen-sink-dot-json) file to give some title to your
+website and prepare tell the URL that will host your website once it is
+uploaded.
+
+You either __run `produce` on the live preview__ (note: as of today when you edit
+the `kitchen-sink.json` file, you need to restart the server for all parameters
+to be taken into account) while running KitchenSink in serve mode.
+
+__Alternatively__ you separately run the following command:
+
+```
+kitchen-sink produce --srcDir site-source/ --outDir www/
+```
+
+At this point the `www` output dir should have the content for your website.

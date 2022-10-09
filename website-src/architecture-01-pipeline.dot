@@ -1,0 +1,45 @@
+digraph {
+  rankdir=LR;
+  node[fontname="sans"];
+  node[shape=cds,color="coral",style="filled",fillcolor="salmon",fontcolor="white"]
+  "get KitchenSink", "compile", "produce html", "publish website";
+
+  node[shape=box,color="white",style="filled",fillcolor="brown2",fontcolor="white"]
+  "write content", "edit layout";
+
+  node[shape=egg,color="gray",style="",fontcolor="black"]
+  "git", "ghc/cabal", "kitchen-sink-exe", "graphviz", "generator-commands", "publish-script";
+
+  node[shape=note, color="black",style="",fontcolor="black"]
+  ".hs", ".cmark", ".css", "...", ".html";
+
+  node[shape=tripleoctagon]
+  "happy readers";
+
+
+  "git" -> "get KitchenSink"
+  "get KitchenSink" -> ".hs"
+
+  "edit layout" -> ".hs";
+
+  ".hs" -> "compile";
+  "ghc/cabal" -> "compile";
+  "compile" -> "kitchen-sink-exe";
+
+  "kitchen-sink-exe" -> "produce html";
+  "graphviz" -> "produce html";
+  "generator-commands" -> "produce html";
+
+  "write content" -> ".cmark";
+  "write content" -> ".css";
+  "write content" -> "...";
+  ".cmark" -> "produce html";
+  "..." -> "produce html";
+  ".css" -> "produce html";
+
+  "produce html" -> ".html"
+
+  ".html" -> "publish website"
+  "publish-script" -> "publish website"
+  "publish website" -> "happy readers"
+}
