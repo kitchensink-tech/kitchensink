@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -27,17 +27,56 @@
 
 =base:summary.cmark
 
-You want to change extend or restrict Kitchen-Sink? found a bug, want to extract some feature out of it or on the opposite, embed it in a larger application?
+You want to change, extend, or restrict Kitchen-Sink? found a bug? want to
+extract some feature out of it or on the opposite, embed it in a larger
+application?
 
 =base:main-content.cmark
 
-# source code
+# project site, source code, and reporting issues
 
-https://github.com/lucasdicioccio/kitchen-sink
+You'll find the source code of KitchenSink on GitHub at the following repository:
+[https://github.com/kitchensink-tech/kitchensink](https://github.com/kitchensink-tech/kitchensink)
 
-# library curation
+Please also use GitHub on the same project to [file issues](https://github.com/kitchensink-tech/kitchensink/issues).
 
-# code organization
+As of date, there are no discussion channels such as a Discord or Slack
+instance. Please reach-out directly to me via email or on Twitter (cf. social
+links at the bottom of this page).
 
-- like the title, it's a kitchen-sink at the moment
+# repository organization
 
+Much like the title tells, the code is a kitchen sink at the moment. It is
+still unclear what will make good boundaries. However what is clear is that we
+want two keep the following: Haskell for the blog engine, and PureScript for
+frontend "helper JS tools".
+
+Both the engine code, the frontend helpers code, and the KitchenSink
+documentation (this site) sources are in a same repository out of simplicity: a
+feature can be added and documented in a same commit.
+
+# code organization and basic concepts
+
+At this point, the code grew mostly organically and suffers from arbitrary
+choices.  As we implement [new features](/wishlist.html), the need to rework
+and modularize some aspects will show up.
+
+For sure what will stay are:
+- the section-based format is a central way to add functionalities, we may
+  parametrize the Parser to be extensible
+- the notion of a Site has something loaded using some IO parametrized by the engine
+- the notion of Target to hold instruction to build some content with a destination path
+- the fact that layouts are function from Site to Target, possibly in multiple 'stages' (or a fixpoint as it is now)
+
+Things I would like to improve significantly:
+- possibility to modularize the section-based parser and the layout function
+- where we load the Site from in the engine (should be feasible to load Sites without resorting to the section-based parser -- i.e., proper decoupling)
+- settle on some JSON format for advanced analytics, generate some JSON-spec and PureScript bindings from the Haskell representations
+
+# library curation philosophy
+
+The libraries we incorporate are "standard Haskell". In particular we only want
+to bring-in libraries that do not force callers to operate for long in
+complicated Monad stacks. Rather we want to incorporate functionalities and
+wrap them to our suiting.  In short, avoid situations where one has to _add
+code to remove features_.
