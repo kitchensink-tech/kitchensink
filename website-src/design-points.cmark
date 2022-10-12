@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -27,29 +27,68 @@
 
 =base:summary.cmark
 
-This article gives a number of design points.
+This article gives a number of design points and architecture tradeoffs.
 
 =base:main-content.cmark
 
 
-- no organization upfront, we don't really solve pressing problems by inventing another globbing mechanism
-- just put prefixing in filenames
-- reduce annoyance of conflicts in names
-- reduces churning of urls
+# The default site-loader is a kitchen-sink
 
-# lack of overloading (repeating things across articles)
+This tradeoff gave name to the whole tool. In short, KitchenSink loads site
+contents in a directory which has no organization whatsoever.  All files must
+be in a same directory and map to a target based on filenames and filetypes.
 
-- infrequent to add new pages (50 a year is already a feat)
-- enable exploration
+It is often the case that in static-site generators like Jekyll you need to
+organize your posts, categories and so on in a given directory structure,
+sometimes by year etc. Other ones, like Hakyll, requires you to configure
+globbing patterns.  KitchenSink takes the opposite approach because what wrench
+my heart is when I see a personal blog with as few as two posts in them for
+someone who took all the time to setup a static-site generator.
 
-# layouts are hard to change
+Besides convenience, having a large kitchen sink means:
+- we prevents the annoyance of conflicts in names, prefixing by year and so on can go in filenames
+- we reduce the URL churn because we often move and shake hierarchies around but leaves not so much (I've no data for this but it's a feeling)
+- when you look for some file you know where it is
+- when you need to add some file you know where to put it
+- if someones grows out of the limitation of the single-directory approach, they met success and will be ready to allocate some time to either adapt KitchenSink to load the site from different place or to switch to another static-site generator
 
-- Wordpress, Blogspot are a testimonial that tuning layouts may not be that much
-- just CSS can do wonders a lot nowadays
-- you can do SPAs if you need something fancy
+# lack of overloading (repeating many things across articles)
 
-# generators don't take input
+Oftentimes you would like one parameter to take effect on multiple pages (e.g., the social links).
+KitchenSink edges on the side of caution where we prefer to repeat the same small bit of information many times rather than forcing an overloading hierarchy:
+
+Often you end up requiring to overload some "global parameter", which means you
+need special documentation, special handling for overloading the parameter,
+which in turn means you need strictly more code just than just assuming the
+global parameter is empty. I call that _adding code to remove features_.
+
+For a blog-like page, I think it would be infrequent to add new pages. Adding
+one substential article per week means only around 50 articles a year. I'm
+pretty sure only few blog-like pages have that many articles and the effort to
+write them is diluted over long periods of time. Thus, overall, I prefer to
+force having a 'social links' session in every page. 
+CSS is the only case I can think of where you'd need substential copy-pasting
+across articles. And for this use case, CSS supports `@import` directives.
+
+In the end, by repeating things across articles: the edge case where you want
+to tune a parameter on a single article is already supported with less code.
+The associated overhead is rather small and easy to circumvent with a low-tech
+solution (e.g., you'd copy section-based files from a template you keep around
+for yourself -- much like the scaffolding in the [getting started
+article](/getting-started.html)). In the eventual case where one needs to
+change values (e.g., they changed their Twitter handle), it is still possible
+to modify articles in batch with some shell scripting and `sed -i`.
+
+# Layouts are hard to change
+
+- Wordpress, Blogspot online services are a testimonial that tuning layouts may not be that much important for people; tuning layouts for people who really want to do it is feasible because the code is open-source, and corporations or professionals should afford to pay something more "hand-tuned" (they may even consider KitchenSink is not a good solution to their needs)
+- nowadays we can significantly alter the look and even some UX-interactivity with CSS only
+- you can even do JavaScript in KitchenSink pages to add even more "interactivity
+- you can even provide control of all the page to a single-page application if you want
+- I believe people should focus more time on the content rather than on the wrapping, thus having fewer knobs makes it a liberating constraint
+
+# Generator sections don't take input data
 
 - design is still unclear to me (static-website with dynamic envy)
 - sequence of steps may be better handled outside the generator
-- definitely a security risk
+- definitely a security risk that prevent some 'hosting scenarios'
