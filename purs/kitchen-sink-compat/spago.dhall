@@ -10,23 +10,24 @@ When creating a new Spago project, you can use
 `spago init --no-comments` or `spago init -C`
 to generate this file without the comments in this block.
 -}
-{ name = "my-project"
+{ name = "kitchen-sink-compat"
 , dependencies =
   [ "aff"
   , "affjax"
   , "affjax-web"
-  , "argonaut-core"
-  , "arrays"
-  , "codec-argonaut"
+  , "argonaut-aeson-generic"
+  , "argonaut-codecs"
+  , "argonaut-generic"
   , "console"
   , "effect"
   , "either"
-  , "halogen"
-  , "kitchen-sink-compat"
+  , "foldable-traversable"
+  , "foreign-object"
   , "maybe"
+  , "newtype"
   , "prelude"
-  , "strings"
-  , "web-dom"
+  , "profunctor-lenses"
+  , "tuples"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

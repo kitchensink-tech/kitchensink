@@ -3,10 +3,8 @@ module Main where
 import Prelude
 
 import Affjax.Web as AX
-import Affjax.ResponseFormat as ResponseFormat
-import Data.Argonaut.Core as J
+import Data.Lens (toArrayOf, traversed, _Just)
 import Data.Array as Array
-import Data.Codec.Argonaut as CA
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..),fromMaybe)
 import Data.String (trim, split, contains, Pattern(..))
@@ -22,34 +20,29 @@ import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 import Web.DOM.ParentNode (QuerySelector(..))
 
+import KitchenSink (fetchPaths)
+import KitchenSink.Blog.Advanced (PathList, _PathList)
 
-type Routes = Array String
-
-decodeStringArray :: J.Json -> Either CA.JsonDecodeError Routes
-decodeStringArray = CA.decode (CA.array CA.string)
-
-fetchRoutes :: Aff (Maybe Routes)
-fetchRoutes = do
-  res <- AX.get ResponseFormat.json "/json/paths.json" 
+fetchPathList :: Aff (Maybe PathList)
+fetchPathList = do
+  res <- fetchPaths
   case res of
     Left err -> do
       log $ "failed: " <> AX.printError err
       pure Nothing
-    Right rsp -> do
-      let routes = decodeStringArray rsp.body
-      case routes of 
-         Left err -> do
+    Right (Left err) -> do
            log $ "failed: " <> show err
            pure Nothing
-         Right val -> pure $ Just val
+    Right (Right val) -> pure $ Just val
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  routes <- H.liftAff fetchRoutes
+  blogPaths <- H.liftAff fetchPathList
+  let routes = toArrayOf (_Just <<< _PathList <<< traversed) blogPaths
   elem <- HA.selectElement (QuerySelector "#search-box")
   let tgt = fromMaybe body elem
-  runUI component {routes: fromMaybe [] routes} tgt
+  runUI component {routes: routes} tgt
 
 data Action
   = SetFilterString String

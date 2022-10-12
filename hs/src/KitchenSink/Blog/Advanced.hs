@@ -1,12 +1,12 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
-module KitchenSink.Blog.Advanced (filecounts, topicsgraph, articleCMarks, analyzeArticle, ArticleInfos(..), LinkInfo(..), ImageInfo(..), Tag, TopicStats(..), buildTopicStats, allTags) where
+module KitchenSink.Blog.Advanced (filecounts, TopicGraph(..), topicsgraph, Node(..), articleCMarks, analyzeArticle, ArticleInfos(..), LinkInfo(..), ImageInfo(..), Tag, TopicStats(..), buildTopicStats, allTags, SkyLine, SkyLineItem, PathList(..)) where
 
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.List as List
 import GHC.Generics (Generic)
-import Data.Aeson (ToJSON)
+import Data.Aeson (ToJSON,FromJSON)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Prelude (succ, (-))
@@ -69,14 +69,16 @@ data Node
   | ImageNode Text
   deriving (Generic, Show)
 instance ToJSON Node
-data TopicGraph ln le = TopicGraph {
-    nodes :: [(NodeKey, ln)]
-  , edges :: [(NodeKey,NodeKey,le)]
+instance FromJSON Node
+data TopicGraph = TopicGraph {
+    nodes :: [(NodeKey, Node)]
+  , edges :: [(NodeKey,NodeKey)]
   }
   deriving (Generic, Show)
-instance (ToJSON ln, ToJSON le) => ToJSON (TopicGraph ln le)
+instance ToJSON TopicGraph
+instance FromJSON TopicGraph
 
-topicsgraph :: TopicStats -> TopicGraph Node ()
+topicsgraph :: TopicStats -> TopicGraph
 topicsgraph stats =
     TopicGraph
       (topicNodes <> articleNodes <> imagesNodes)
@@ -87,26 +89,26 @@ topicsgraph stats =
     articleNodes = [ (articleKey t, ArticleNode (targetUrl t) histsize) | (t,histsize) <- uniqueTargetArticles ]
     imagesNodes = [ (imageKey url, ImageNode url) | url <- uniqueImages ]
 
-    topicArticleEdges :: [(NodeKey, NodeKey, ())]
+    topicArticleEdges :: [(NodeKey, NodeKey)]
     topicArticleEdges =
         mconcat
-        $ fmap (\(tag, xs) -> [ (topicKey tag, articleKey tgt, ()) | (tgt,_) <- xs])
+        $ fmap (\(tag, xs) -> [ (topicKey tag, articleKey tgt) | (tgt,_) <- xs])
         $ Map.toList (byTopic stats)
 
-    articleArticleEdges :: [(NodeKey, NodeKey, ())]
+    articleArticleEdges :: [(NodeKey, NodeKey)]
     articleArticleEdges = do
       -- list monad!
       (from, a) <- knownTargets stats
       link <- linkInfos $ analyzeArticle a
       toKey <- maybe [] (:[]) (lookupLink link)
-      pure (articleKey from, toKey, ())
+      pure (articleKey from, toKey)
 
-    articleImageEdges :: [(NodeKey, NodeKey, ())]
+    articleImageEdges :: [(NodeKey, NodeKey)]
     articleImageEdges = do
       -- list monad!
       ((from, _), infos) <- List.zip (knownTargets stats) analyses
       img <- imageInfos $ infos
-      pure (articleKey from, imageKey $ imageURL img, ())
+      pure (articleKey from, imageKey $ imageURL img)
 
     topicKey t = "topic:" <> t
     articleKey t = "article:" <> targetUrl t
@@ -135,6 +137,11 @@ topicsgraph stats =
       $ fmap fst
       $ knownTargets stats
 
+newtype PathList = PathList [Text]
+  deriving (Show, Generic)
+instance ToJSON PathList
+instance FromJSON PathList
+
 data ArticleInfos = ArticleInfos {
     ast :: [CMark.Block ()]
   , linkInfos :: [LinkInfo]
@@ -147,10 +154,12 @@ instance ToJSON ArticleInfos
 data LinkInfo = LinkInfo { linkURL :: Text, linkText :: Text }
   deriving (Show, Generic)
 instance ToJSON LinkInfo
+instance FromJSON LinkInfo
 
 data ImageInfo = ImageInfo { imageURL :: Text, imageText :: Text }
   deriving (Show, Generic)
 instance ToJSON ImageInfo
+instance FromJSON ImageInfo
 
 articleCMarks :: Article [Text] -> [CMark.Block ()]
 articleCMarks art =
@@ -205,6 +214,7 @@ newtype SkyLine = SkyLine { skylineItems :: [SkyLineItem] }
   deriving Semigroup via [SkyLineItem]
   deriving Monoid via [SkyLineItem]
 instance ToJSON SkyLine
+instance FromJSON SkyLine
 
 data SkyLineItem
   = HeaderMark Text HeadingLevels
@@ -213,6 +223,7 @@ data SkyLineItem
   deriving Show
   deriving Generic
 instance ToJSON SkyLineItem
+instance FromJSON SkyLineItem
 
 type TextWeight = Int --todo newtype over Sum Int
 type HeadingLevels = [Int] --todo newtype over nonempty list

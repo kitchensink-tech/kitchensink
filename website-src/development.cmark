@@ -71,7 +71,7 @@ For sure what will stay are:
 Things I would like to improve significantly:
 - possibility to modularize the section-based parser and the layout function
 - where we load the Site from in the engine (should be feasible to load Sites without resorting to the section-based parser -- i.e., proper decoupling)
-- settle on some JSON format for advanced analytics, generate some JSON-spec and PureScript bindings from the Haskell representations
+- settle on some JSON format for advanced analytics rather than the current ad-hoc historical values
 
 # library curation philosophy
 
@@ -80,3 +80,17 @@ to bring-in libraries that do not force callers to operate for long in
 complicated Monad stacks. Rather we want to incorporate functionalities and
 wrap them to our suiting.  In short, avoid situations where one has to _add
 code to remove features_.
+
+# generating most of PureScript bindings directly from Haskell
+
+The `purs/` directory contains a package named `kitchen-sink-compat`.  A number
+of sources files in this package are automatically generated from Haskell using
+[purescript-bridge](https://github.com/eskimor/purescript-bridge) and [a
+fork](https://github.com/bentongxyz/purescript-argonaut-aeson-generic) of the
+`argonaut-aeson-generic` PureScript package.
+
+To regenerate the bindings use:
+
+```
+cabal run -- kitchen-sink-purescript-bridge --outputDir ../purs/kitchen-sink-compat/src/
+```

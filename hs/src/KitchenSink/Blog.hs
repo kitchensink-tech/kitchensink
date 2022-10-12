@@ -80,9 +80,12 @@ siteTargets prefix tracer extra site = allTargets
       , seoTargets
       ]
 
+    pathList :: PathList
+    pathList = PathList $ fmap (destinationUrl . destination) allTargets
+
     jsonDataTargets :: [Target]
     jsonDataTargets =
-      [ jsonDataTarget prefix (fmap (destinationUrl . destination) allTargets) "paths.json"
+      [ jsonDataTarget prefix (pathList) "paths.json"
       , jsonDataTarget prefix (filecounts site) "filecounts.json"
       , jsonDataTarget prefix (topicsgraph stats) "topicsgraph.json"
       ] <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- articles site

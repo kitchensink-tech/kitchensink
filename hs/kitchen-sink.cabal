@@ -91,3 +91,13 @@ executable kitchen-sink
                     , kitchen-sink
     ghc-options: -O2 -threaded
     hs-source-dirs:   app
+
+executable kitchen-sink-purescript-bridge
+    main-is:          Main.hs
+    other-modules:    Bridge
+    build-depends:    base >=4.14.3.0
+                    , aeson
+                    , kitchen-sink
+                    , optparse-generic
+                    , purescript-bridge
+    hs-source-dirs:   bridge
