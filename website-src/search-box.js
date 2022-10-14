@@ -167,6 +167,22 @@
     return dict.reflectSymbol;
   };
 
+  // output/Record.Unsafe/foreign.js
+  var unsafeSet = function(label5) {
+    return function(value14) {
+      return function(rec) {
+        var copy2 = {};
+        for (var key in rec) {
+          if ({}.hasOwnProperty.call(rec, key)) {
+            copy2[key] = rec[key];
+          }
+        }
+        copy2[label5] = value14;
+        return copy2;
+      };
+    };
+  };
+
   // output/Data.Semigroup/index.js
   var semigroupArray = {
     append: concatArray
@@ -1615,7 +1631,7 @@
     };
   };
   var sortByImpl = function() {
-    function mergeFromTo(compare2, fromOrdering, xs1, xs2, from3, to2) {
+    function mergeFromTo(compare2, fromOrdering, xs1, xs2, from3, to3) {
       var mid;
       var i2;
       var j;
@@ -1623,15 +1639,15 @@
       var x;
       var y;
       var c;
-      mid = from3 + (to2 - from3 >> 1);
+      mid = from3 + (to3 - from3 >> 1);
       if (mid - from3 > 1)
         mergeFromTo(compare2, fromOrdering, xs2, xs1, from3, mid);
-      if (to2 - mid > 1)
-        mergeFromTo(compare2, fromOrdering, xs2, xs1, mid, to2);
+      if (to3 - mid > 1)
+        mergeFromTo(compare2, fromOrdering, xs2, xs1, mid, to3);
       i2 = from3;
       j = mid;
       k = from3;
-      while (i2 < mid && j < to2) {
+      while (i2 < mid && j < to3) {
         x = xs2[i2];
         y = xs2[j];
         c = fromOrdering(compare2(x)(y));
@@ -1646,7 +1662,7 @@
       while (i2 < mid) {
         xs1[k++] = xs2[i2++];
       }
-      while (j < to2) {
+      while (j < to3) {
         xs1[k++] = xs2[j++];
       }
     }
@@ -1694,7 +1710,7 @@
   }
   var thaw = copyImpl;
   var sortByImpl2 = function() {
-    function mergeFromTo(compare2, fromOrdering, xs1, xs2, from3, to2) {
+    function mergeFromTo(compare2, fromOrdering, xs1, xs2, from3, to3) {
       var mid;
       var i2;
       var j;
@@ -1702,15 +1718,15 @@
       var x;
       var y;
       var c;
-      mid = from3 + (to2 - from3 >> 1);
+      mid = from3 + (to3 - from3 >> 1);
       if (mid - from3 > 1)
         mergeFromTo(compare2, fromOrdering, xs2, xs1, from3, mid);
-      if (to2 - mid > 1)
-        mergeFromTo(compare2, fromOrdering, xs2, xs1, mid, to2);
+      if (to3 - mid > 1)
+        mergeFromTo(compare2, fromOrdering, xs2, xs1, mid, to3);
       i2 = from3;
       j = mid;
       k = from3;
-      while (i2 < mid && j < to2) {
+      while (i2 < mid && j < to3) {
         x = xs2[i2];
         y = xs2[j];
         c = fromOrdering(compare2(x)(y));
@@ -1725,7 +1741,7 @@
       while (i2 < mid) {
         xs1[k++] = xs2[i2++];
       }
-      while (j < to2) {
+      while (j < to3) {
         xs1[k++] = xs2[j++];
       }
     }
@@ -4699,12 +4715,22 @@
     };
   };
 
+  // output/Data.Lens.Getter/index.js
+  var to2 = function(f) {
+    return function(p2) {
+      var $3 = unwrap()(p2);
+      return function($4) {
+        return $3(f($4));
+      };
+    };
+  };
+
   // output/Data.Lens.Prism/index.js
-  var prism = function(to2) {
+  var prism = function(to3) {
     return function(fro) {
       return function(dictChoice) {
         return function(pab) {
-          return dimap(dictChoice.Profunctor0())(fro)(either(identity(categoryFn))(identity(categoryFn)))(right(dictChoice)(rmap(dictChoice.Profunctor0())(to2)(pab)));
+          return dimap(dictChoice.Profunctor0())(fro)(either(identity(categoryFn))(identity(categoryFn)))(right(dictChoice)(rmap(dictChoice.Profunctor0())(to3)(pab)));
         };
       };
     };
@@ -8886,12 +8912,97 @@
     }())(decodeJArray);
   };
 
+  // output/Record/index.js
+  var insert4 = function(dictIsSymbol) {
+    return function() {
+      return function() {
+        return function(l) {
+          return function(a2) {
+            return function(r) {
+              return unsafeSet(reflectSymbol(dictIsSymbol)(l))(a2)(r);
+            };
+          };
+        };
+      };
+    };
+  };
+
   // output/Data.Argonaut.Decode.Class/index.js
+  var gDecodeJsonNil = {
+    gDecodeJson: function(v) {
+      return function(v1) {
+        return new Right({});
+      };
+    }
+  };
+  var gDecodeJson = function(dict) {
+    return dict.gDecodeJson;
+  };
+  var decodeRecord = function(dictGDecodeJson) {
+    return function() {
+      return {
+        decodeJson: function(json2) {
+          var v = toObject(json2);
+          if (v instanceof Just) {
+            return gDecodeJson(dictGDecodeJson)(v.value0)($$Proxy.value);
+          }
+          ;
+          if (v instanceof Nothing) {
+            return new Left(new TypeMismatch2("Object"));
+          }
+          ;
+          throw new Error("Failed pattern match at Data.Argonaut.Decode.Class (line 103, column 5 - line 105, column 46): " + [v.constructor.name]);
+        }
+      };
+    };
+  };
   var decodeJsonString = {
     decodeJson: decodeString
   };
+  var decodeJsonField = function(dict) {
+    return dict.decodeJsonField;
+  };
+  var gDecodeJsonCons = function(dictDecodeJsonField) {
+    return function(dictGDecodeJson) {
+      return function(dictIsSymbol) {
+        return function() {
+          return function() {
+            return {
+              gDecodeJson: function(object2) {
+                return function(v) {
+                  var fieldName = reflectSymbol(dictIsSymbol)($$Proxy.value);
+                  var fieldValue = lookup(fieldName)(object2);
+                  var v1 = decodeJsonField(dictDecodeJsonField)(fieldValue);
+                  if (v1 instanceof Just) {
+                    return bind(bindEither)(lmap(bifunctorEither)(AtKey.create(fieldName))(v1.value0))(function(val) {
+                      return bind(bindEither)(gDecodeJson(dictGDecodeJson)(object2)($$Proxy.value))(function(rest) {
+                        return new Right(insert4(dictIsSymbol)()()($$Proxy.value)(val)(rest));
+                      });
+                    });
+                  }
+                  ;
+                  if (v1 instanceof Nothing) {
+                    return new Left(new AtKey(fieldName, MissingValue.value));
+                  }
+                  ;
+                  throw new Error("Failed pattern match at Data.Argonaut.Decode.Class (line 127, column 5 - line 134, column 44): " + [v1.constructor.name]);
+                };
+              }
+            };
+          };
+        };
+      };
+    };
+  };
   var decodeJson = function(dict) {
     return dict.decodeJson;
+  };
+  var decodeFieldId = function(dictDecodeJson) {
+    return {
+      decodeJsonField: function(j) {
+        return map(functorMaybe)(decodeJson(dictDecodeJson))(j);
+      }
+    };
   };
   var decodeArray2 = function(dictDecodeJson) {
     return {
@@ -9103,7 +9214,11 @@
   var sitePaths = "/json/paths.json";
   var fetchPaths = /* @__PURE__ */ bind(bindAff)(/* @__PURE__ */ get3(json)(sitePaths))(function(resp) {
     return pure(applicativeAff)(map(functorEither)(function(x) {
-      return genericDecodeAeson(genericPathList)(decodeAesonConstructor(decodeRepArgsArgument(decodeArray2(decodeJsonString)))({
+      return genericDecodeAeson(genericPathList)(decodeAesonConstructor(decodeRepArgsArgument(decodeRecord(gDecodeJsonCons(decodeFieldId(decodeArray2(decodeJsonString)))(gDecodeJsonNil)({
+        reflectSymbol: function() {
+          return "paths";
+        }
+      })()())()))({
         reflectSymbol: function() {
           return "PathList";
         }
@@ -9111,7 +9226,11 @@
         reflectSymbol: function() {
           return "PathList";
         }
-      })(decodeRepArgsArgument(decodeArray2(decodeJsonString)))))(defaultOptions)(x.body);
+      })(decodeRepArgsArgument(decodeRecord(gDecodeJsonCons(decodeFieldId(decodeArray2(decodeJsonString)))(gDecodeJsonNil)({
+        reflectSymbol: function() {
+          return "paths";
+        }
+      })()())()))))(defaultOptions)(x.body);
     })(resp));
   });
 
@@ -9176,16 +9295,16 @@
     };
     var handleAction = function(v) {
       return modify_2(monadStateHalogenM)(function(v1) {
-        var $11 = {};
-        for (var $12 in v1) {
-          if ({}.hasOwnProperty.call(v1, $12)) {
-            $11[$12] = v1[$12];
+        var $12 = {};
+        for (var $13 in v1) {
+          if ({}.hasOwnProperty.call(v1, $13)) {
+            $12[$13] = v1[$13];
           }
           ;
         }
         ;
-        $11.filter = v.value0;
-        return $11;
+        $12.filter = v.value0;
+        return $12;
       });
     };
     return mkComponent({
@@ -9203,11 +9322,14 @@
   var main2 = /* @__PURE__ */ runHalogenAff(/* @__PURE__ */ bind(bindAff)(awaitBody)(function(body2) {
     return bind(bindAff)(liftAff(monadAffAff)(fetchPathList))(function(blogPaths) {
       var routes = toArrayOf(function() {
-        var $15 = _Just(choiceForget(monoidEndo(categoryFn)));
-        var $16 = _PathList(profunctorForget);
-        var $17 = traversed(traversableArray)(wanderForget(monoidEndo(categoryFn)));
-        return function($18) {
-          return $15($16($17($18)));
+        var $16 = _Just(choiceForget(monoidEndo(categoryFn)));
+        var $17 = _PathList(profunctorForget);
+        var $18 = to2(function(v) {
+          return v.paths;
+        });
+        var $19 = traversed(traversableArray)(wanderForget(monoidEndo(categoryFn)));
+        return function($20) {
+          return $16($17($18($19($20))));
         };
       }())(blogPaths);
       return bind(bindAff)(selectElement("#search-box"))(function(elem3) {

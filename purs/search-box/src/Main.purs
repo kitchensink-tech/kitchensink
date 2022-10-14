@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Affjax.Web as AX
-import Data.Lens (toArrayOf, traversed, _Just)
+import Data.Lens (toArrayOf, traversed, _Just, to)
 import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..),fromMaybe)
@@ -39,7 +39,7 @@ main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   blogPaths <- H.liftAff fetchPathList
-  let routes = toArrayOf (_Just <<< _PathList <<< traversed) blogPaths
+  let routes = toArrayOf (_Just <<< _PathList <<< to _.paths <<< traversed) blogPaths
   elem <- HA.selectElement (QuerySelector "#search-box")
   let tgt = fromMaybe body elem
   runUI component {routes: routes} tgt

@@ -137,7 +137,9 @@ topicsgraph stats =
       $ fmap fst
       $ knownTargets stats
 
-newtype PathList = PathList [Text]
+data PathList = PathList {
+    paths :: [Text]
+  }
   deriving (Show, Generic)
 instance ToJSON PathList
 instance FromJSON PathList

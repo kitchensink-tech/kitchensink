@@ -152,7 +152,9 @@ _ImageInfo = _Newtype
 
 --------------------------------------------------------------------------------
 newtype PathList =
-    PathList (Array String)
+    PathList {
+      paths :: Array String
+    }
 
 instance encodeJsonPathList :: EncodeJson PathList where
   encodeJson = genericEncodeAeson Argonaut.defaultOptions
@@ -162,6 +164,7 @@ derive instance genericPathList :: Generic PathList _
 derive instance newtypePathList :: Newtype PathList _
 
 --------------------------------------------------------------------------------
-_PathList :: Iso' PathList (Array String)
+_PathList :: Iso' PathList { paths :: Array String}
 _PathList = _Newtype
+
 --------------------------------------------------------------------------------
