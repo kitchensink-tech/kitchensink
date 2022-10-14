@@ -23,10 +23,11 @@ data ProductionRule
   | ProduceFileCopy (Sourced ())
   deriving Show
 
-data Target = Target
+data Target a = Target
   { destination :: DestinationLocation
   , productionRule :: ProductionRule
-  } deriving Show
+  , summary :: a
+  } deriving (Show, Functor)
 
 data SourceLocation = FileSource FilePath
   deriving (Show, Eq, Ord)
@@ -45,7 +46,7 @@ destinationUrl :: DestinationLocation -> Url
 destinationUrl (StaticFileDestination u _) = u
 destinationUrl (VirtualFileDestination u _)  = u
 
-outputTarget :: Target -> IO ByteString
+outputTarget :: Target a -> IO ByteString
 outputTarget t = do
   case productionRule t of
     ProduceAssembler assembler -> do
@@ -57,7 +58,7 @@ outputTarget t = do
     ProduceFileCopy (Sourced (FileSource src) _) -> do
       ByteString.readFile src
 
-produceTarget :: Tracer -> Target -> IO ()
+produceTarget :: Tracer -> Target a -> IO ()
 produceTarget trace t = do
   case productionRule t of
     ProduceAssembler assembler -> do

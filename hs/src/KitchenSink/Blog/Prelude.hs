@@ -1,6 +1,7 @@
 
 module KitchenSink.Blog.Prelude (
     FilePath
+  , hush
   , module Control.Applicative
   , module Control.Monad
   , module Data.Bool
@@ -41,7 +42,7 @@ import Data.Ord (Ord, compare)
 import Data.Semigroup (Semigroup(..), (<>))
 import Data.Traversable (Traversable(..), traverse)
 import Data.Tuple (uncurry, fst, snd)
-import Control.Monad (Monad, Functor, void, fmap, (>>), (>>=), (=<<))
+import Control.Monad (Monad, Functor, void, fmap, join, (>>), (>>=), (=<<))
 import Control.Applicative (Applicative, pure, (<*>), (*>), (<*), (<|>))
 
 import Data.String (String)
@@ -50,3 +51,7 @@ import GHC.IO (IO)
 import System.IO (print,putStrLn)
 
 type FilePath = String
+
+hush :: Either a b -> Maybe b
+hush = either (const Nothing) Just
+

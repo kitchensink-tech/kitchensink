@@ -21,12 +21,17 @@ to generate this file without the comments in this block.
   , "console"
   , "effect"
   , "either"
+  , "foldable-traversable"
   , "halogen"
   , "kitchen-sink-compat"
   , "maybe"
   , "prelude"
+  , "profunctor-lenses"
   , "strings"
+  , "tuples"
   , "web-dom"
+  , "web-events"
+  , "web-uievents"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

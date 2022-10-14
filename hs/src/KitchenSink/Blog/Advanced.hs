@@ -1,6 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
-module KitchenSink.Blog.Advanced (filecounts, TopicGraph(..), topicsgraph, Node(..), articleCMarks, analyzeArticle, ArticleInfos(..), LinkInfo(..), ImageInfo(..), Tag, TopicStats(..), buildTopicStats, allTags, SkyLine, SkyLineItem, PathList(..)) where
+module KitchenSink.Blog.Advanced (filecounts, TopicGraph(..), topicsgraph, Node(..), articleCMarks, analyzeArticle, ArticleInfos(..), LinkInfo(..), ImageInfo(..), Tag, TopicStats(..), buildTopicStats, allTags, SkyLine, SkyLineItem) where
 
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -39,14 +39,14 @@ filecounts site =
 
 type Tag = Text
 data TopicStats = TopicStats {
-    byTopic      :: Map Tag [(Target, Article [Text])]
-  , knownTargets :: [(Target, Article [Text])]
+    byTopic      :: Map Tag [(Target (), Article [Text])]
+  , knownTargets :: [(Target (), Article [Text])]
   }
 
 allTags :: TopicStats -> [Tag]
 allTags = Map.keys . byTopic
 
-buildTopicStats :: [Sourced (Article [Text])] -> (Sourced (Article [Text]) -> Target) -> TopicStats
+buildTopicStats :: [Sourced (Article [Text])] -> (Sourced (Article [Text]) -> Target ()) -> TopicStats
 buildTopicStats arts mkTarget =
     TopicStats indexByTopic [(mkTarget sa, a) | sa@(Sourced _ a) <- arts]
   where
@@ -116,7 +116,7 @@ topicsgraph stats =
 
     targetUrl t = destinationUrl (destination t)
 
-    uniqueTargetArticles :: [(Target,Int)]
+    uniqueTargetArticles :: [(Target (),Int)]
     uniqueTargetArticles = do
       ((from, _), infos) <- List.zip (knownTargets stats) analyses
       pure (from, length $ histogram infos)
@@ -136,13 +136,6 @@ topicsgraph stats =
       $ List.find (\t -> targetUrl t == url)
       $ fmap fst
       $ knownTargets stats
-
-data PathList = PathList {
-    paths :: [Text]
-  }
-  deriving (Show, Generic)
-instance ToJSON PathList
-instance FromJSON PathList
 
 data ArticleInfos = ArticleInfos {
     ast :: [CMark.Block ()]

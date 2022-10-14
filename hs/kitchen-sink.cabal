@@ -100,4 +100,5 @@ executable kitchen-sink-purescript-bridge
                     , kitchen-sink
                     , optparse-generic
                     , purescript-bridge
+                    , text
     hs-source-dirs:   bridge

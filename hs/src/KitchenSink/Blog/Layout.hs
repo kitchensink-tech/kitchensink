@@ -132,7 +132,7 @@ assembleTopicListing :: OutputPrefix -> TopicStats -> Tag -> Article [Text] -> A
 assembleTopicListing prefix stats tag _ =
     pure r
   where
-    xs :: [ (Target, Article [Text]) ]
+    xs :: [ (Target (), Article [Text]) ]
     xs = fromMaybe [] $ Map.lookup tag (byTopic stats)
 
     r :: Lucid.Html ()
@@ -222,20 +222,17 @@ metaheaders extra dloc jsondloc art = do
     urlForJSONPage = destinationUrl jsondloc
     urlForImage imgpath = publishBaseURL extra <> imgpath
 
-    compactSummary :: [Text] -> Text
-    compactSummary = Text.strip . Text.intercalate " "
-
     defaultTitle :: Text
     defaultTitle = baseTitle extra
 
     mktitle :: PreambleData -> Text
     mktitle x = mconcat [ baseTitle extra, " - ", title x ]
 
-    defaultFavicon :: Text
-    defaultFavicon = "/images/favicon.png"
-
     mkfavicon :: Maybe PreambleData -> Text
     mkfavicon x = fromMaybe defaultFavicon (faviconUrl =<< x)
+
+defaultFavicon :: Text
+defaultFavicon = "/images/favicon.png"
 
 wrap :: (Lucid.Html () -> Lucid.Html ())
   -> (Article [Text] -> Assembler (Lucid.Html ()))
@@ -297,7 +294,6 @@ buildinfo art =
   $ runAssembler
   $ json @BuildInfoData art BuildInfo
 
-
 isListableArticle :: Article [Text] -> Bool
 isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingPage])
 
@@ -311,8 +307,8 @@ isConcreteTarget art = not (layoutNameFor art `List.elem` [TopicListingPage])
 compactTitle :: PreambleData -> Text
 compactTitle p = mconcat [ title p ]
 
-articleLink :: Target -> Article [Text] -> Lucid.Html ()
-articleLink (Target d _) art =
+articleLink :: Target a -> Article [Text] -> Lucid.Html ()
+articleLink (Target d _ _) art =
     mylink_ url txt
   where
     url :: Text
@@ -346,13 +342,13 @@ topicsListings stats =
         | p <- Map.toList $ byTopic stats
         ]
 
-topicListing :: (Tag, [(Target,Article [Text])]) -> Lucid.Html ()
+topicListing :: (Tag, [(Target a,Article [Text])]) -> Lucid.Html ()
 topicListing (tag,tgts) =
   div_ [ class_ "topics-listing-list-topic" ] $ do
     strong_ [ class_ "tag-name" ] (toHtml tag)
     smallArticleLinks tgts
 
-smallArticleLinks :: [(Target,Article [Text])] -> Lucid.Html ()
+smallArticleLinks :: [(Target a,Article [Text])] -> Lucid.Html ()
 smallArticleLinks tgts =
   ul_ [ class_ "article-links-list" ]
   $ mconcat
@@ -460,13 +456,13 @@ destHtml prefix (FileSource path) =
     (Text.pack $ "/" <> takeBaseName path <> ".html")
     (prefix </> takeBaseName path <> ".html")
 
-mainArticleLinks :: [(Target, Article [Text])] -> Lucid.Html ()
+mainArticleLinks :: [(Target a, Article [Text])] -> Lucid.Html ()
 mainArticleLinks targets =
   articleListing "all articles"
   $ List.filter (isListableArticle . snd)
   $ sortByDate targets
 
-latestArticleLink :: [(Target, Article [Text])] -> Lucid.Html ()
+latestArticleLink :: [(Target a, Article [Text])] -> Lucid.Html ()
 latestArticleLink targets =
   articleListing "latest article"
   $ List.take 1
@@ -474,7 +470,7 @@ latestArticleLink targets =
   $ List.filter (isListableArticle . snd)
   $ sortByDate targets
 
-articleListing :: Text -> [(Target, Article [Text])] -> Lucid.Html ()
+articleListing :: Text -> [(Target a, Article [Text])] -> Lucid.Html ()
 articleListing htext targets =
   nav_ [ class_ "articles-listing" ] $ do
     h2_ [ class_ "listing-callout"] $ Lucid.toHtml htext
@@ -490,7 +486,7 @@ siteGraphEchartZone =
     h2_ [ class_ "listing-callout"] "site map"
     div_ [ id_ "echartzone" , style_ "width:800px;height:600px;"] mempty
 
-mainArticleLinkWithAnnotation :: Target -> Article [Text] -> Lucid.Html ()
+mainArticleLinkWithAnnotation :: Target a -> Article [Text] -> Lucid.Html ()
 mainArticleLinkWithAnnotation t art =
     div_ [ class_ $ mconcat [ "articles-listing-item", " ", publishStatusClass ] ] $ do
       span_ [ class_ "article-date" ] (toHtml formattedDate)
@@ -596,8 +592,42 @@ assembleAtomEntry extra dloc art = do
 
     fmtUTC = Text.pack . iso8601Show
 
-    compactSummary :: [Text] -> Text
-    compactSummary = Text.strip . Text.intercalate " "
+assemblePreambleData :: Article [Text] -> Assembler (Maybe PreambleData)
+assemblePreambleData art = do
+  fmap extract <$> jsonm @PreambleData art Preamble
+
+articlePreambleData :: Article [Text] -> Maybe PreambleData
+articlePreambleData =
+  join . hush . runAssembler . assemblePreambleData
+
+assembleTopicData :: Article [Text] -> Assembler (Maybe TopicData)
+assembleTopicData art = do
+  fmap extract <$> jsonm @TopicData art Topic
+
+articleTopicData :: Article [Text] -> Maybe TopicData
+articleTopicData =
+  join . hush . runAssembler . assembleTopicData
+
+compactSummary :: [Text] -> Text
+compactSummary = Text.strip . Text.intercalate " "
+
+assembleCompactSummary :: Article [Text] -> Assembler Text
+assembleCompactSummary art = do
+  summary <- fmap extract <$> lookupSection art Summary
+  pure $ maybe "" compactSummary summary
+
+assembleTitle :: Article [Text] -> Assembler (Maybe Text)
+assembleTitle art = do
+  preamble <- fmap extract <$> jsonm @PreambleData art Preamble
+  pure (title <$> preamble)
+
+articleCompactSummary :: Article [Text] -> Maybe Text
+articleCompactSummary =
+  hush . runAssembler . assembleCompactSummary
+
+articleTitle :: Article [Text] -> Maybe Text
+articleTitle =
+  join . hush . runAssembler . assembleTitle
 
 epochUTCTime :: UTCTime
 epochUTCTime = UTCTime (fromOrdinalDate 1970 1) (secondsToDiffTime 0)

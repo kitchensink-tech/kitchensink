@@ -151,20 +151,3 @@ _ImageInfo :: Iso' ImageInfo { imageURL :: String, imageText :: String}
 _ImageInfo = _Newtype
 
 --------------------------------------------------------------------------------
-newtype PathList =
-    PathList {
-      paths :: Array String
-    }
-
-instance encodeJsonPathList :: EncodeJson PathList where
-  encodeJson = genericEncodeAeson Argonaut.defaultOptions
-instance decodeJsonPathList :: DecodeJson PathList where
-  decodeJson = genericDecodeAeson Argonaut.defaultOptions
-derive instance genericPathList :: Generic PathList _
-derive instance newtypePathList :: Newtype PathList _
-
---------------------------------------------------------------------------------
-_PathList :: Iso' PathList { paths :: Array String}
-_PathList = _Newtype
-
---------------------------------------------------------------------------------

@@ -1,10 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
-module KitchenSink.Blog (siteTargets) where
+{-# LANGUAGE RecordWildCards #-}
+module KitchenSink.Blog (
+    siteTargets
+  , PathList
+  , TargetType
+  , PreambleSummary
+  , TargetSummary
+  , TopicSummary
+  ) where
 
 import GHC.Err (error)
-import Data.Aeson (ToJSON, encode)
+import Data.Aeson (ToJSON, FromJSON, encode)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map.Strict as Map
+import GHC.Generics (Generic)
 import Lucid as Lucid
 import Data.Maybe (fromJust, catMaybes, listToMaybe)
 import Data.Text (Text)
@@ -21,47 +30,119 @@ import Text.XML (def, rsPretty)
 import qualified Text.Atom.Feed as Atom
 import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Target hiding (Target)
+import qualified KitchenSink.Blog.Target as BlogTarget
 import KitchenSink.Blog.Generator
 import KitchenSink.Blog.Section
 import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Basics
+import KitchenSink.Blog.Basics hiding (PreambleData, target)
+import qualified KitchenSink.Blog.Basics as Basics
 import KitchenSink.Blog.Layout
 import KitchenSink.Blog.AssembleSections
 import KitchenSink.Blog.Advanced
 
+data TargetType
+  = CssTarget
+  | ImageTarget
+  | GraphVizImageTarget
+  | VideoTarget
+  | RawTarget
+  | JavaScriptSourceTarget
+  | JSONTarget
+  | RootFileTarget
+  | ArticleTarget
+  | GeneratedTarget
+  | TopicsIndexTarget
+  deriving (Show, Generic)
+instance ToJSON TargetType
+instance FromJSON TargetType
+
+data PreambleSummary = PreambleSummary {
+    author  :: Text
+  , datetxt :: Maybe Text
+  , title   :: Text
+  , faviconUrl   :: Text
+  } deriving (Show, Eq, Generic)
+instance FromJSON PreambleSummary
+instance ToJSON PreambleSummary
+
+data TopicSummary = TopicSummary {
+    tags :: [Text]
+  , keywords :: [Text]
+  , imageLink :: Maybe Text
+  } deriving (Show, Eq, Generic)
+instance FromJSON TopicSummary
+instance ToJSON TopicSummary
+
+summarizePreamble :: Basics.PreambleData -> PreambleSummary
+summarizePreamble p =
+  PreambleSummary
+    (Basics.author p)
+    (Basics.datetxt p)
+    (Basics.title p)
+    (fromMaybe defaultFavicon $ Basics.faviconUrl p)
+
+summarizeTopic :: TopicData -> TopicSummary
+summarizeTopic (TopicData{..}) = TopicSummary{..}
+
+data TargetSummary
+  = TargetSummary
+  { targetType :: TargetType
+  , textualTitle :: Maybe Text
+  , textualSummary :: Maybe Text
+  , preambleSummary :: Maybe PreambleSummary
+  , topicSummary :: Maybe TopicSummary
+  } deriving (Show, Generic)
+instance ToJSON TargetSummary
+instance FromJSON TargetSummary
+
+data PathList = PathList {
+    paths :: [(Text, TargetSummary)]
+  }
+  deriving (Show, Generic)
+instance ToJSON PathList
+instance FromJSON PathList
+
+type Target = BlogTarget.Target TargetSummary
+
+target :: TargetSummary -> DestinationLocation -> ProductionRule -> Target
+target z x y = BlogTarget.Target x y z
+
+simpleTarget :: TargetType -> DestinationLocation -> ProductionRule -> Target
+simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing) x y
+
 imageTargets :: OutputPrefix -> Site -> [Target]
 imageTargets prefix site =
-  [ Target (destImage prefix loc) (copyFrom loc) | Sourced loc _ <- images site ]
+  [ simpleTarget ImageTarget (destImage prefix loc) (copyFrom loc) | Sourced loc _ <- images site ]
 
 dotimageTargets :: OutputPrefix -> Tracer -> Site -> [Target]
 dotimageTargets prefix trace site =
-  [ Target (destGenImage prefix loc GenPngFile) (execCmd trace "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site ]
+  [ simpleTarget GraphVizImageTarget (destGenImage prefix loc GenPngFile) (execCmd trace "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site ]
 
 videoTargets :: OutputPrefix -> Site -> [Target]
 videoTargets prefix site =
-  [ Target (destVideoFile prefix loc) (copyFrom loc) | Sourced loc _ <- videoFiles site ]
+  [ simpleTarget VideoTarget (destVideoFile prefix loc) (copyFrom loc) | Sourced loc _ <- videoFiles site ]
 
 rawTargets :: OutputPrefix -> Site -> [Target]
 rawTargets prefix site =
-  [ Target (destRawFile prefix loc) (copyFrom loc) | Sourced loc _ <- rawFiles site ]
+  [ simpleTarget RawTarget (destRawFile prefix loc) (copyFrom loc) | Sourced loc _ <- rawFiles site ]
 
 cssTargets :: OutputPrefix -> Site -> [Target]
 cssTargets prefix site =
-  [ Target (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- cssFiles site ]
+  [ simpleTarget CssTarget (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- cssFiles site ]
 
 jsTargets :: OutputPrefix -> Site -> [Target]
 jsTargets prefix site =
-  [ Target (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- jsFiles site ]
+  [ simpleTarget JavaScriptSourceTarget (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- jsFiles site ]
 
 jsonDataTarget :: ToJSON a => OutputPrefix -> a -> FilePath -> Target
 jsonDataTarget prefix v loc =
-  Target (destJsonDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ LByteString.toStrict $ encode v)
+  simpleTarget JSONTarget (destJsonDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ LByteString.toStrict $ encode v)
 
 rootDataTarget :: OutputPrefix -> Text -> FilePath -> Target
 rootDataTarget prefix v loc =
-  Target (destRootDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ Text.encodeUtf8 v)
+  simpleTarget RootFileTarget (destRootDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ Text.encodeUtf8 v)
 
 siteTargets :: OutputPrefix -> Tracer -> MetaExtraData -> Site -> [Target]
 siteTargets prefix tracer extra site = allTargets
@@ -81,7 +162,7 @@ siteTargets prefix tracer extra site = allTargets
       ]
 
     pathList :: PathList
-    pathList = PathList $ fmap (destinationUrl . destination) allTargets
+    pathList = PathList $ [ (destinationUrl (destination tgt), summary tgt) | tgt <- allTargets ]
 
     jsonDataTargets :: [Target]
     jsonDataTargets =
@@ -132,7 +213,8 @@ siteTargets prefix tracer extra site = allTargets
     articleTarget (Sourced loc@(FileSource path) art) =
       let u = destHtml prefix loc
           j = destJsonDataFile prefix (path <> ".json") -- todo:unify
-      in Target u (ProduceAssembler $ layoutFor u j art)
+          tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art)
+      in target tgtSummary u (ProduceAssembler $ layoutFor u j art)
 
     articleTargets :: [(Target, Article [Text])]
     articleTargets =
@@ -154,7 +236,7 @@ siteTargets prefix tracer extra site = allTargets
 
         genTarget :: SourceLocation -> GeneratorInstructionsData -> Target
         genTarget loc g = let rule = execCmd tracer (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
-                      in Target (destGenArbitrary prefix loc g) rule
+                      in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
 
         f :: Article [Text] -> Assembler [GeneratorInstructionsData]
         f art = getSections art GeneratorInstructions
@@ -162,7 +244,7 @@ siteTargets prefix tracer extra site = allTargets
 
     tagIndexesTargets :: Maybe (Article [Text]) -> [ Target ]
     tagIndexesTargets Nothing = []
-    tagIndexesTargets (Just art) = [ let u = destTag prefix tag in Target u (ProduceAssembler $ tagsLayout tag u u art) | tag <- Map.keys $ byTopic stats ]
+    tagIndexesTargets (Just art) = [ let u = destTag prefix tag in simpleTarget TopicsIndexTarget u (ProduceAssembler $ tagsLayout tag u u art) | tag <- Map.keys $ byTopic stats ]
 
     layoutFor :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     layoutFor dloc jsondloc art =
@@ -182,7 +264,7 @@ siteTargets prefix tracer extra site = allTargets
       ]
 
     stats :: TopicStats
-    stats = buildTopicStats (articles site) articleTarget 
+    stats = buildTopicStats (articles site) (fmap (const ()) . articleTarget )
 
     indexLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     indexLayout dloc jsondloc =

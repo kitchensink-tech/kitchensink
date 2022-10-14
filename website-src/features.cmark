@@ -6,6 +6,7 @@
 =base:preamble.json
 {"author": "Lucas DiCioccio"
 ,"title": "Feature list"
+,"faviconUrl": "/images/favicon.png"
 }
 
 =base:topic.json

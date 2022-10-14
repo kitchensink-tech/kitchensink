@@ -266,7 +266,7 @@ handleDevPublish config rt =
       runTracer (traceDev rt) (PublishedBuild out)
       pure (DevTextOutput $ Text.pack out)
 
-handleOnTheFlyProduction :: Counters -> Tracer IO DevServerTrack -> (ByteString -> IO (ByteString, Maybe Target)) -> Application
+handleOnTheFlyProduction :: Counters -> Tracer IO DevServerTrack -> (ByteString -> IO (ByteString, Maybe (Target ()))) -> Application
 handleOnTheFlyProduction cntrs track fetchTarget = go
   where
     go :: Application
@@ -301,7 +301,7 @@ handleOnTheFlyProduction cntrs track fetchTarget = go
       | ".html" `ByteString.isSuffixOf` path = "text/html"
       | True = ""
 
-findTarget :: Engine -> DevServerRuntime -> ByteString -> IO (ByteString, Maybe Target)
+findTarget :: Engine -> DevServerRuntime -> ByteString -> IO (ByteString, Maybe (Target ()))
 findTarget engine rt origpath = do
   let path = if origpath == "/" then "/index.html" else origpath
   runTracer (traceDev rt) (TargetRequested origpath)
@@ -378,8 +378,8 @@ serveApi engine rt =
 data Engine = Engine {
     execLoadSite :: IO Site
   , execLoadMetaExtradata :: IO MetaExtraData
-  , evalTargets :: MetaExtraData -> Site -> [Target]
-  , execProduceTarget :: Target -> IO ()
+  , evalTargets :: MetaExtraData -> Site -> [Target ()]
+  , execProduceTarget :: Target () -> IO ()
   }
 
 defaultMain :: IO ()
@@ -391,7 +391,7 @@ defaultMain = do
   let prodengine = Engine
                   (loadSite (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (defaultGetExtraData kitchensinkFilePath)
-                  (siteTargets (coerce $ outDir cmd) print)
+                  (\med site -> fmap (fmap $ const ()) $ siteTargets (coerce $ outDir cmd) print med site)
                   (produceTarget print)
   let devengine = prodengine { execLoadMetaExtradata = getDevExtraData kitchensinkFilePath }
   case cmd of
