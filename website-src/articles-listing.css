@@ -36,3 +36,10 @@ div.article-stats p {
 div.article-summary > p {
   margin-left: 2em;
 }
+
+div.article-image > img {
+  max-width: 100%;
+  min-width: 100%;
+  object-fit: contain;
+  display: block;
+}
