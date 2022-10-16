@@ -1,0 +1,12 @@
+digraph G {
+  rankdir=LR
+  node[shape=diamond]
+  "kitchen-sink-exe";
+  node[shape=oval, color="blue"]
+  "kitchen-sink-exe" -> {"Read" -> "Assemble" -> "Produce"};
+  node[shape=box, color="darkorange"]
+  inputs [shape=record,label="<f0>.cmark |<f1>.css |<f2>.js |<f3>.png|<f4>.dot|<f5>..."];
+  inputs -> "Read";
+  outputs [shape=record,label="<f0>.html |<f1>.css |<f2>.js |<f3>.png|<f4>.png|<f5>..."];
+  "Produce" -> outputs;
+}

@@ -37,12 +37,12 @@ A whishlist, which actually is a todolist.
 - add count of code snippets
 - add listing/index of all code snippets,images,etc.
 - command list in kitchen-sink.json
-- PureScript lib for key metadata json files
 - port all .js to PureScript
 - serv/dev-mode with a route to reload upon external triggers
 - load from elsewhere than disk
 - modularize parser
 - modularize layout
+- constellation mode/app to search/graph multiple kitchen-sinks
 
 =base:taken-off.cmark
 - understand other "remote" kitchen-sinks (e.g., in the site map)

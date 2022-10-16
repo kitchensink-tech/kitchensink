@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -9,8 +9,9 @@
 }
 
 =base:topic.json
-{"tags":["how-to", "haskell"]
+{"tags":["internals"]
 ,"keywords":["static-site generators", "design"]
+,"imageLink": "/gen/images/architecture-02-engine-pipeline.dot.png"
 }
 
 =base:social.json
@@ -25,12 +26,110 @@
 @import "/css/article.css";
 @import "/css/navigation.css";
 
+.figure img {
+  max-width: 80%;
+  display: block;
+}
+
 =base:summary.cmark
 
-This article answers questions the engine (i.e., the generator proper).
+This article answers questions the engine (i.e., the glue-code performing the
+dance to understand what layout code to apply to generate results).
 
 =base:main-content.cmark
 
-- special json targets
-- autoreload script
-- add-dev-routes script
+In the [getting started](/getting-started.html) article, we present the
+following picture: 
+
+::: {.figure}
+
+![pipeline](/gen/images/architecture-01-pipeline.dot.png)
+
+:::
+
+Each steps are pretty handwavy at this point. Between written content and
+`.html` outputs, there is a vague `produce html` function. The focus of this
+article is to expand on this particular step. Indeed the "core" of the Engine
+is to turn source files into a static website. Asked to zoom in one level
+closer to understand what this step is, I would draw such a picture (I actually
+did on my personal blog).
+
+::: {.figure}
+
+![pipeline](/gen/images/architecture-02-engine-pipeline.dot.png)
+
+:::
+
+Alas such a level of detail is still underwhelming: the picture merely
+illustrate the rather uninteresting life of a static-site generator:
+
+- _read_: find and load input data and configuration files
+- _assemble_: build an in-memory representation of everything the site contains
+- _produce_: generate output files in the proper location
+
+
+# In depth
+
+Most of what I want to write here is already covered partially in my [original
+article](https://lucasdicioccio.github.io/how-this-blog-works.html#implementation)
+but I'll come back to this page often to build some reference of the key
+data-types and functions.
+
+::: {.figure}
+
+![pipeline](/gen/images/architecture-03-in-depth-engine-pipeline.dot.png)
+
+:::
+
+# Server-mode specifics
+
+Generating files from pipelines is mundane, and I wrote KitchenSink to support
+some advanced features that help me stay "in the flow" while writing article
+contents.
+
+Among the `scaffolding` source files, some two interesting JavaScript files
+exist only for the support of the live-server: `autoreload.js` and
+`add-dev-route.js`.  Their respective name may change in future versions but
+the feature will be maintained.
+
+## The `autoreload.js` script
+
+The auto-reload script is a small loop that tries to make sure that at any given time,
+the page shown on the web-browser is up-to-date.
+Since we are focused.
+
+The interesting bit is on the engine-side: the server monitors for filesystem changes.
+Upon changes, a thread on the server wakes-up all waiting clients.
+
+In some case we change the generator-code or the layout itself. In that case,
+no filesystem changes will ever be notices, we need another mechanism for
+clients to know the server has new content.  The client remembers what is the
+"server-id" and the server returns whether it recognizes its own server-id.
+
+For now the server-id information is passed in a query parameter as we cannot
+pass a bunch of informations in a HTTP-get at reload times (alternatives are
+some form of storage on the client-side -- we'll eventually get there).
+
+## The `add-dev-route.js` script
+
+Another nicety is that we can trigger a full-rebuild of the website without
+leaving one's preview browser. The gain is little but there is some
+satisfaction to press a button on an interface and see your website being
+generated or published.
+
+Upon loading, the `add-dev-route.js` script creates a few buttons in the
+`#navigation` bar (i.e., the layout has to cooperate a bit, we'll change that a
+bit later).  Buttons then trigger actions handled by the server.
+
+## Metrics because why not
+
+The server exposes Prometheus metrics.
+There are some use to it:
+- if you complain about KitchenSink being slow
+- if you like vanity metrics about how many bytes per minute you add to your articles
+- me debugging why the engine reloads too often
+
+If you ever change the engine, please keep in mind to also add counters for new
+features.  You can even have a target to catch the resulting metrics while
+generating your website output to record your performance for future uses.
+

@@ -1,0 +1,97 @@
+digraph G {
+ subgraph cluster_0 {
+    ".cmark";
+    ".css";
+    ".png";
+    ".jpeg";
+    ".js";
+    ".dot";
+    label = "Input files";
+    labelloc = "t";
+    labeljust = "l";
+  }
+
+  subgraph cluster_1 {
+    style=filled;
+    color=lightgray;
+    node [style=filled,color=white];
+    Article;
+    Site;
+    CSSFile;
+    JavaScript;
+    Image;
+    "Graph";
+
+    Article -> Site;
+    CSSFile -> Site;
+    Image -> Site;
+    JavaScript -> Site;
+    "Graph" -> Site;
+    CSSFile -> Site;
+    Sections [shape=egg];
+
+
+    subgraph cluster_2 {
+      style=filled;
+      color=lightblue;
+
+      Targets -> "Extra Targets";
+      node [shape=box]; E0, E1;
+      E0 [ label="extract" ];
+      E1 [ label="assemble" ];
+      E0 -> Sections -> E1;
+      "Extra Targets" -> E1;
+    }
+    Article -> E0;
+
+    subgraph cluster_3 {
+      "Production Rule";
+    }
+
+
+    Site -> E1 -> Targets -> "Production Rule";
+
+    border=1;
+    node [shape=box]; R1, R2, R3, R4, R5;
+    R1 [ label="read" ];
+    R2 [ label="read" ];
+    R3 [ label="read" ];
+    R4 [ label="read" ];
+    R5 [ label="read" ];
+
+    node [shape=box]; W1a, W1b, W1c, W2;
+    W1a [ label="write" ];
+    W1b [ label="copy" ];
+    W1c [ label="generate" ];
+    W2 [ label="reply" ];
+    label = "Program RAM";
+    labelloc = "b";
+    labeljust = "l";
+  }
+
+
+  ".cmark" -> R1 -> Article;
+  ".css" -> R2 -> CSSFile;
+  {".png", ".jpeg"} -> R3 -> Image;
+  ".js" -> R4 -> JavaScript;
+  ".dot" -> R5 -> "Graph";
+
+  "Production Rule" -> {W1a,W1b,W1c};
+  "Production Rule" -> W2;
+  subgraph cluster_10 {
+    label = "Static Files";
+    labelloc = "b";
+    labeljust = "l";
+    W1a -> "out/*.html" ;
+    {W1b,W1c} -> "out/{images,css,js,json,gen}/*" ;
+  }
+
+  subgraph cluster_11 {
+    label = "Web Serving";
+    labelloc = "b";
+    labeljust = "l";
+    W2 -> "files" ;
+    W2 -> "api" ;
+  }
+
+}
