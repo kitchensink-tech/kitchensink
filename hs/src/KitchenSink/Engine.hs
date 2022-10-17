@@ -97,6 +97,7 @@ data DevServerTrack
 
 data DevServerRuntime = DevServerRuntime
   { waitReload :: IO ()
+  , tryPushNewSite :: IO (Site, Bool)
   , traceDev :: Tracer IO DevServerTrack
   , liveSite :: BackgroundVal Site
   , counters :: Counters
@@ -105,16 +106,17 @@ data DevServerRuntime = DevServerRuntime
 initDevServerRuntime :: Engine -> FilePath -> Tracer IO DevServerTrack -> IO DevServerRuntime
 initDevServerRuntime engine path devtracer = do
   rtCounters <- initCounters
-  notifies <- newEmptyTMVarIO
+  siteTMVar <- newEmptyTMVarIO
   watches <- newTVarIO []
 
   notify <- FSNotify.startManager
-  _ <- FSNotify.watchDir notify path notifyPredicate (handleFSEvent rtCounters notifies)
+  _ <- FSNotify.watchDir notify path notifyPredicate (handleFSEvent rtCounters siteTMVar)
   
   DevServerRuntime
     <$> pure (waitFsChanges watches)
+    <*> pure (pushNewSite rtCounters siteTMVar)
     <*> pure devtracer
-    <*> (load rtCounters >>= (\s -> background (contramap f devtracer) 0 s (reloadSite rtCounters notifies watches)))
+    <*> (load rtCounters >>= (\s -> background (contramap f devtracer) 0 s (reloadSite rtCounters siteTMVar watches)))
     <*> pure rtCounters
   where
     load :: Counters -> IO Site
@@ -122,13 +124,19 @@ initDevServerRuntime engine path devtracer = do
       site <- execLoadSite engine
       Prometheus.setGauge (cnt_sources cntrs) (int2Double $ countSources $ site)
       pure site
+
+    pushNewSite :: Counters -> TMVar Site -> IO (Site, Bool)
+    pushNewSite cntrs siteTMVar = do
+      site <- load cntrs
+      res <- seq site $ atomically $ tryPutTMVar siteTMVar site
+      pure (site, res)
  
     reloadSite :: Counters -> TMVar Site -> TVar [TMVar ()] -> Int -> IO (Site, Int)
-    reloadSite cntrs inotify watches v = do
+    reloadSite cntrs siteTMVar watches v = do
       Prometheus.incCounter $ cnt_reloads cntrs
-      -- wait for inotify and fan-out to all watches
+      -- wait for siteTMVar and fan-out to all watches
       atomically $ do
-        site <- takeTMVar inotify
+        site <- takeTMVar siteTMVar
         old <- swapTVar watches []
         traverse_ (flip putTMVar ()) old
         pure (site, succ v)
@@ -189,9 +197,10 @@ type DevApi = DevWatchApi
   :<|> DevListTargetsApi
   :<|> DevProduceApi
   :<|> DevPublishApi
-  :<|> DevOnTheFlyProductionApi
+  :<|> DevForceReloadApi
+  :<|> OnTheFlyProductionApi
 
-type ServeApi = DevOnTheFlyProductionApi
+type ServeApi = OnTheFlyProductionApi
 
 type TargetPathName = Text
 
@@ -207,7 +216,13 @@ type DevProduceApi = "dev" :> "produce" :> Post '[JSON] DevTextOutput
 
 type DevPublishApi = "dev" :> "publish" :> Post '[JSON] DevTextOutput
 
-type DevOnTheFlyProductionApi = Raw
+data ForceReloadStatus = ForceReloaded
+  deriving (Generic, Show)
+instance ToJSON ForceReloadStatus
+
+type DevForceReloadApi = "dev" :> "reload" :> Post '[JSON] (Maybe ForceReloadStatus)
+
+type OnTheFlyProductionApi = Raw
 
 handleDevWatch :: Engine -> DevServerRuntime -> Maybe Text -> Maybe TargetPathName -> Handler (Prod.Identification, WatchResult)
 handleDevWatch _ rt srvId pathname
@@ -265,6 +280,14 @@ handleDevPublish config rt =
       Prometheus.incCounter $ cnt_publishs $ counters rt
       runTracer (traceDev rt) (PublishedBuild out)
       pure (DevTextOutput $ Text.pack out)
+
+handleDevForceReload :: DevServerRuntime -> Handler (Maybe ForceReloadStatus)
+handleDevForceReload rt = do
+    (_, worked) <- liftIO $ do
+      Prometheus.incCounter $ cnt_forceReloads $ counters rt
+      tryPushNewSite rt
+    let status = if worked then Just ForceReloaded else Nothing
+    pure status
 
 handleOnTheFlyProduction :: Counters -> Tracer IO DevServerTrack -> (ByteString -> IO (ByteString, Maybe (Target ()))) -> Application
 handleOnTheFlyProduction cntrs track fetchTarget = go
@@ -367,6 +390,7 @@ serveDevApi config devengine prodengine rt =
   :<|> handleDevListTargets devengine rt
   :<|> handleDevProduce prodengine rt
   :<|> handleDevPublish config rt
+  :<|> handleDevForceReload rt
   :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget devengine rt))
 
 serveApi :: Engine -> DevServerRuntime -> Server ServeApi
@@ -448,6 +472,7 @@ data Counters
       , cnt_targetRequests :: Prometheus.Vector (Text, Text) Prometheus.Counter
       , cnt_targetSizes :: Prometheus.Vector (Text) Prometheus.Gauge
       , cnt_sources :: Prometheus.Gauge
+      , cnt_forceReloads :: Prometheus.Counter
       }
 
 initCounters :: IO Counters
@@ -464,6 +489,7 @@ initCounters =
     <*> reg1 "blog_targets_requests" ("status","path") "number of queries per blog target"
     <*> reg1g "blog_targets_sizes" ("path") "sizes of targets in bytes"
     <*> reg0g "blog_targets_number" "number of targets"
+    <*> reg0 "blog_forceReloads" "number of time the site has been reloaded upon user request"
   where
     reg0 k h =
       Prometheus.register

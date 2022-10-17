@@ -37,7 +37,6 @@ A whishlist, which actually is a todolist.
 - add listing/index of all code snippets,images,etc.
 - command list in kitchen-sink.json
 - port all .js to PureScript
-- serv/dev-mode with a route to reload upon external triggers
 - load from elsewhere than disk
 - modularize parser
 - modularize layout

@@ -44,6 +44,7 @@
   const go = () => {
     addButton("produce", callRoute("/dev/produce"));
     addButton("publish", callRoute("/dev/publish"));
+    addButton("reload", callRoute("/dev/reload"));
   };
   document.addEventListener("DOMContentLoaded", go);
 })();
