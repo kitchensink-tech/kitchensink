@@ -217,6 +217,7 @@ showTargetType = case _ of
   GraphVizImageTarget -> "Some rendered graph image"
   VideoTarget -> "Some video"
   JavaScriptSourceTarget -> "Some JS code"
+  HtmlSourceTarget -> "Some raw HTML file."
   JSONTarget -> "Some JSON data"
   RawTarget -> "Some arbitrary data"
   RootFileTarget -> "Some unspecified data."

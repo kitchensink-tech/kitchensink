@@ -46,6 +46,7 @@ data TargetType =
   | VideoTarget
   | RawTarget
   | JavaScriptSourceTarget
+  | HtmlSourceTarget
   | JSONTarget
   | RootFileTarget
   | ArticleTarget
@@ -93,6 +94,12 @@ _JavaScriptSourceTarget :: Prism' TargetType Unit
 _JavaScriptSourceTarget = prism' (\_ -> JavaScriptSourceTarget) f
   where
     f JavaScriptSourceTarget = Just unit
+    f _ = Nothing
+
+_HtmlSourceTarget :: Prism' TargetType Unit
+_HtmlSourceTarget = prism' (\_ -> HtmlSourceTarget) f
+  where
+    f HtmlSourceTarget = Just unit
     f _ = Nothing
 
 _JSONTarget :: Prism' TargetType Unit

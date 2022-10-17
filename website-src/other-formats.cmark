@@ -45,6 +45,15 @@ KitchenSink copies `.webm` and `.mp4` files under `/videos`.
 
 KitchenSink copies `.jpg`, `.jpeg`, and `.png` files under `/images`.
 
+## HTML
+
+KitchenSink copies `.html` files under `/` that is, with no prefix.
+
+The main use-case is to allow porting some other website to KitchenSink, starting from some imported `.html`
+Other usages could be to support things like webmaster-verification tools on Google.
+
+:warning: there is no conflict detection yet so avoid having a `.cmark` matching a `.html` file or you risk inconsistencies.
+
 ## javascript
 
 KitchenSink copies `.js` files under `/js`.

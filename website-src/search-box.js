@@ -9590,6 +9590,13 @@
     JavaScriptSourceTarget2.value = new JavaScriptSourceTarget2();
     return JavaScriptSourceTarget2;
   }();
+  var HtmlSourceTarget = /* @__PURE__ */ function() {
+    function HtmlSourceTarget2() {
+    }
+    ;
+    HtmlSourceTarget2.value = new HtmlSourceTarget2();
+    return HtmlSourceTarget2;
+  }();
   var JSONTarget = /* @__PURE__ */ function() {
     function JSONTarget2() {
     }
@@ -9660,26 +9667,30 @@
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inl)))))) {
-        return JSONTarget.value;
+        return HtmlSourceTarget.value;
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))) {
-        return RootFileTarget.value;
+        return JSONTarget.value;
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))) {
-        return ArticleTarget.value;
+        return RootFileTarget.value;
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))))) {
+        return ArticleTarget.value;
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))))) {
         return GeneratedTarget.value;
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr))))))))) {
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr)))))))))) {
         return TopicsIndexTarget.value;
       }
       ;
-      throw new Error("Failed pattern match at KitchenSink.Blog (line 59, column 1 - line 59, column 58): " + [x.constructor.name]);
+      throw new Error("Failed pattern match at KitchenSink.Blog (line 60, column 1 - line 60, column 58): " + [x.constructor.name]);
     },
     from: function(x) {
       if (x instanceof CssTarget) {
@@ -9706,27 +9717,31 @@
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))));
       }
       ;
-      if (x instanceof JSONTarget) {
+      if (x instanceof HtmlSourceTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))));
       }
       ;
-      if (x instanceof RootFileTarget) {
+      if (x instanceof JSONTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))))));
       }
       ;
-      if (x instanceof ArticleTarget) {
+      if (x instanceof RootFileTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))))));
       }
       ;
-      if (x instanceof GeneratedTarget) {
+      if (x instanceof ArticleTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))))))));
       }
       ;
-      if (x instanceof TopicsIndexTarget) {
-        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(NoArguments.value))))))))));
+      if (x instanceof GeneratedTarget) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))))))));
       }
       ;
-      throw new Error("Failed pattern match at KitchenSink.Blog (line 59, column 1 - line 59, column 58): " + [x.constructor.name]);
+      if (x instanceof TopicsIndexTarget) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(NoArguments.value)))))))))));
+      }
+      ;
+      throw new Error("Failed pattern match at KitchenSink.Blog (line 60, column 1 - line 60, column 58): " + [x.constructor.name]);
     }
   };
   var genericTargetSummary = {
@@ -9815,6 +9830,10 @@
       }
     }))(/* @__PURE__ */ decodeAesonSum$prime(/* @__PURE__ */ decodeAesonConstructorNoArguments$prime({
       reflectSymbol: function() {
+        return "HtmlSourceTarget";
+      }
+    }))(/* @__PURE__ */ decodeAesonSum$prime(/* @__PURE__ */ decodeAesonConstructorNoArguments$prime({
+      reflectSymbol: function() {
         return "JSONTarget";
       }
     }))(/* @__PURE__ */ decodeAesonSum$prime(/* @__PURE__ */ decodeAesonConstructorNoArguments$prime({
@@ -9833,7 +9852,7 @@
       reflectSymbol: function() {
         return "TopicsIndexTarget";
       }
-    }))))))))))))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))))))))))))(isSingleConstructor_Sum))(defaultOptions)
+    })))))))))))))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments)))))))))))))(isSingleConstructor_Sum))(defaultOptions)
   };
   var decodeJsonPreambleSummary = {
     decodeJson: /* @__PURE__ */ genericDecodeAeson(genericPreambleSummary)(/* @__PURE__ */ decodeAesonConstructor(/* @__PURE__ */ decodeRepArgsArgument(/* @__PURE__ */ decodeRecord(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString))(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldMaybe(decodeJsonString))(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString))(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString))(gDecodeJsonNil)({
@@ -10041,6 +10060,10 @@
       return "Some JS code";
     }
     ;
+    if (v instanceof HtmlSourceTarget) {
+      return "Some raw HTML file.";
+    }
+    ;
     if (v instanceof JSONTarget) {
       return "Some JSON data";
     }
@@ -10065,7 +10088,7 @@
       return "An index.";
     }
     ;
-    throw new Error("Failed pattern match at Main (line 214, column 18 - line 225, column 35): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 214, column 18 - line 226, column 35): " + [v.constructor.name]);
   };
   var preventMouseClickBeforeExpand = function(v) {
     if (v instanceof ArticleTarget) {

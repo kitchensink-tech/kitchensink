@@ -27,6 +27,9 @@ data CssFile = CssFile
 data JsFile = JsFile
   deriving (Show, Eq, Ord)
 
+data HtmlFile = HtmlFile
+  deriving (Show, Eq, Ord)
+
 data Image = Image
   deriving (Show, Eq, Ord)
 
@@ -39,6 +42,7 @@ data Site = Site
   , videoFiles :: [ Sourced VideoFile ]
   , cssFiles :: [ Sourced CssFile ]
   , jsFiles :: [ Sourced JsFile ]
+  , htmlFiles :: [ Sourced HtmlFile ]
   , dotSourceFiles :: [ Sourced DotSourceFile ]
   , rawFiles :: [ Sourced RawFile ]
   }
@@ -51,6 +55,7 @@ countSources s = sum
   , length $ videoFiles s
   , length $ cssFiles s
   , length $ jsFiles s
+  , length $ htmlFiles s
   , length $ dotSourceFiles s
   , length $ rawFiles s
   ]

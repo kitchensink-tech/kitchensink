@@ -49,6 +49,7 @@ data TargetType
   | VideoTarget
   | RawTarget
   | JavaScriptSourceTarget
+  | HtmlSourceTarget
   | JSONTarget
   | RootFileTarget
   | ArticleTarget
@@ -136,6 +137,10 @@ jsTargets :: OutputPrefix -> Site -> [Target]
 jsTargets prefix site =
   [ simpleTarget JavaScriptSourceTarget (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- jsFiles site ]
 
+htmlTargets :: OutputPrefix -> Site -> [Target]
+htmlTargets prefix site =
+  [ simpleTarget HtmlSourceTarget (destHtml prefix loc) (copyFrom loc) | Sourced loc _ <- htmlFiles site ]
+
 jsonDataTarget :: ToJSON a => OutputPrefix -> a -> FilePath -> Target
 jsonDataTarget prefix v loc =
   simpleTarget JSONTarget (destJsonDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ LByteString.toStrict $ encode v)
@@ -156,6 +161,7 @@ siteTargets prefix tracer extra site = allTargets
       , rawTargets prefix site
       , cssTargets prefix site
       , jsTargets prefix site
+      , htmlTargets prefix site
       , tagIndexesTargets (lookupSpecialArticle "tags.cmark" site)
       , jsonDataTargets
       , seoTargets

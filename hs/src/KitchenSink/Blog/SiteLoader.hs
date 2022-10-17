@@ -26,6 +26,7 @@ data LogMsg
   | LoadRaw FilePath
   | LoadCss FilePath
   | LoadJs FilePath
+  | LoadHtml FilePath
   | LoadDotSource FilePath
   | EvalSection FilePath SectionType Format
   deriving Show
@@ -92,6 +93,11 @@ loadJs trace path = do
   trace $ LoadJs path
   pure $ (Sourced (FileSource path) JsFile)
 
+loadHtml :: Loader HtmlFile
+loadHtml trace path = do
+  trace $ LoadHtml path
+  pure $ (Sourced (FileSource path) HtmlFile)
+
 loadDotSource :: Loader DotSourceFile
 loadDotSource trace path = do
   trace $ LoadDotSource path
@@ -106,6 +112,7 @@ loadSite trace dir = do
     <*> videosM paths
     <*> cssM paths
     <*> jsM paths
+    <*> htmlM paths
     <*> dotsM paths
     <*> rawsM paths
   where
@@ -117,6 +124,8 @@ loadSite trace dir = do
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".css"] ]
     jsM paths = traverse (loadJs trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".js"] ]
+    htmlM paths = traverse (loadHtml trace)
+                     $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".html"] ]
     dotsM paths = traverse (loadDotSource trace)
                      $ [ dir </> p | p <- paths, takeExtension p == ".dot" ]
     videosM paths = traverse (loadVideo trace)
