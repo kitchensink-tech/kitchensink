@@ -61,12 +61,13 @@ assembleHeader prefix stats currentDestination art =
       let infos = analyzeArticle art
       let lc = toHtml . show . length . linkInfos $ infos
       let ic = toHtml . show . length . imageInfos $ infos
+      let bc = toHtml . show . length . snippetInfos $ infos
       let headersentence pr =
             case preambleDateText pr of
               Just txt ->
-                mconcat ["On ", span_ (toHtml txt), ", by ", author_, ", ", wc, " words, ", lc, " links, ", ic, "images."]
+                mconcat ["On ", span_ (toHtml txt), ", by ", author_, ", ", wc, " words, ", bc, " code snippets, ", lc, " links, ", ic, "images."]
               Nothing ->
-                mconcat ["By ", author_, ", ", wc, " words, ", lc, " links, ", ic, "images."]
+                mconcat ["By ", author_, ", ", wc, " words, ", bc, " code snippets, ",  lc, " links, ", ic, "images."]
 
       header_ [ class_ "heading" ] $ do
         h1_ (toHtml $ title $ content)
@@ -576,7 +577,8 @@ articleStats art = do
       p_ $ toHtml $ List.intercalate " "
                   [ show wc, "words", "/"
                   , show . length . linkInfos $ infos, "links", "/"
-                  , show . length . imageInfos $ infos, "images"
+                  , show . length . imageInfos $ infos, "images", "/"
+                  , show . length . snippetInfos $ infos, "snippets"
                   ]
   where
     infos = analyzeArticle art

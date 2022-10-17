@@ -32,15 +32,15 @@ A whishlist, which actually is a todolist.
 
 =base:main-content.cmark
 
-- add count of videos
-- add count of code snippets
+- fix commonmark histogram with lists
 - add listing/index of all code snippets,images,etc.
 - command list in kitchen-sink.json
-- port all .js to PureScript
+- port all .js to PureScript, deprecate histogram
 - load from elsewhere than disk
 - modularize parser
 - modularize layout
 - constellation mode/app to search/graph multiple kitchen-sinks
+- add count of videos
 
 =base:taken-off.cmark
 - understand other "remote" kitchen-sinks (e.g., in the site map)

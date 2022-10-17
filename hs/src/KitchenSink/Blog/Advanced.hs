@@ -141,6 +141,7 @@ data ArticleInfos = ArticleInfos {
     ast :: [CMark.Block ()]
   , linkInfos :: [LinkInfo]
   , imageInfos :: [ImageInfo]
+  , snippetInfos :: [SnippetInfo]
   , histogram :: [Int]
   , skyline :: SkyLine
   } deriving (Show, Generic)
@@ -150,6 +151,11 @@ data LinkInfo = LinkInfo { linkURL :: Text, linkText :: Text }
   deriving (Show, Generic)
 instance ToJSON LinkInfo
 instance FromJSON LinkInfo
+
+data SnippetInfo = SnippetInfo { snippetContents :: Text, snippetType :: Text }
+  deriving (Show, Generic)
+instance ToJSON SnippetInfo
+instance FromJSON SnippetInfo
 
 data ImageInfo = ImageInfo { imageURL :: Text, imageText :: Text }
   deriving (Show, Generic)
@@ -173,6 +179,7 @@ analyzeArticle art =
         (xs)
         (mconcat [findLinksInSection x | x <- xs])
         (mconcat [findImagesInSection x | x <- xs])
+        (mconcat [findSnippetsInSection x | x <- xs])
         (mconcat [sectionHistogram x | x <- xs])
         (mconcat [sectionSkyLine x | x <- xs])
 
@@ -182,6 +189,13 @@ findLinksInSection s = do
   il <- blockInlines (s)
   Link dst ttl _ <- inlineChunks il
   pure $ LinkInfo dst ttl
+
+findSnippetsInSection :: (CMark.Block a) -> [SnippetInfo]
+findSnippetsInSection s = do
+  -- list monad!
+  b <- blockUniverse (s)
+  CodeBlock typ_ raw <- blockChunks b
+  pure $ SnippetInfo typ_ raw
 
 findImagesInSection :: (CMark.Block a) -> [ImageInfo]
 findImagesInSection s = do
