@@ -32,7 +32,6 @@ A whishlist, which actually is a todolist.
 
 =base:main-content.cmark
 
-- next/prev article per topic
 - add count of videos
 - add count of code snippets
 - add listing/index of all code snippets,images,etc.

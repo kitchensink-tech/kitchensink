@@ -301,7 +301,7 @@ siteTargets prefix tracer extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ assembleHeader prefix stats
+                        [ assembleHeader prefix stats dloc
                         , assembleUpcomingMain
                         , assembleFooter
                         ]
@@ -322,7 +322,7 @@ siteTargets prefix tracer extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ assembleHeader prefix stats
+                        [ assembleHeader prefix stats dloc
                         , assembleMain
                         , assembleFooter
                         ]
@@ -385,7 +385,7 @@ siteTargets prefix tracer extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ assembleTopicListing prefix stats tag
+                        [ const (assembleTopicListing prefix stats tag)
                         ]
                       ]
                   ]
@@ -405,7 +405,7 @@ siteTargets prefix tracer extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ assembleHeader prefix stats
+                        [ assembleHeader prefix stats dloc
                         , assembleDefaultLayoutWarning
                         , assembleMain
                         , assembleFooter

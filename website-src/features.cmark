@@ -401,13 +401,16 @@ features to answer such questions. Most if not all of these features are
 controlled by specific [sections](/sections.html) in the section-based-format.
 Here we merely give an overview of what is feasible.
 
-### categories using tags
+### categories and series using tags
 
 Article can be labelled with a set of tags. Kitchen-Sink then collects all
 articles for a given tag under special categories and under the `/topics`
 route. This is not especially innovative but I believe it's a must have even if
 I suppose most readers do not really use these topics listing a lot, they are
 used to connect articles in the [site map](#sitemap graph).
+
+Furthermore _topics double as series_ that is, a "previous/next" link show up
+on the article header. To follow the previous-next article within a topic.
 
 ### article summaries
 

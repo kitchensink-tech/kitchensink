@@ -1,5 +1,6 @@
 module KitchenSink.Blog.Layout where
 
+import Prelude ((+))
 import Control.Monad (when)
 import Data.Maybe (fromMaybe, isJust, catMaybes)
 import Data.Either (fromRight)
@@ -31,8 +32,8 @@ import KitchenSink.Blog.AssembleSections
 import KitchenSink.Blog.Wordcount
 import KitchenSink.Blog.Advanced
 
-assembleHeader :: OutputPrefix -> TopicStats -> Article [Text] -> Assembler (Lucid.Html ())
-assembleHeader prefix stats art =
+assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
+assembleHeader prefix stats currentDestination art =
     r <$> (extract <$> json @PreambleData art Preamble)
       <*> (fmap extract <$> jsonm @SocialData art Social)
       <*> (fmap extract <$> jsonm @TopicData art Topic)
@@ -49,7 +50,8 @@ assembleHeader prefix stats art =
               Just d -> do
                 div_ [ class_ "taglist" ]
                 $ mconcat
-                  [ topicTag prefix stats tag | tag <- tags d ]
+                  [ topicTag prefix stats currentDestination tag | tag <- tags d
+                  ]
    
       let wc = toHtml
                $ show
@@ -128,27 +130,39 @@ assembleStyle a = r <$> (fmap Text.concat <$> getSection a MainCss)
     r :: Section Text -> Lucid.Html ()
     r content = style_ (extract content)
 
-assembleTopicListing :: OutputPrefix -> TopicStats -> Tag -> Article [Text] -> Assembler (Lucid.Html ())
-assembleTopicListing prefix stats tag _ =
+assembleTopicListing :: OutputPrefix -> TopicStats -> Tag -> Assembler (Lucid.Html ())
+assembleTopicListing prefix stats tag =
     pure r
   where
-    xs :: [ (Target (), Article [Text]) ]
-    xs = fromMaybe [] $ Map.lookup tag (byTopic stats)
+    articles :: [ (Target (), Article [Text]) ]
+    articles = fromMaybe [] $ Map.lookup tag (byTopic stats)
 
     r :: Lucid.Html ()
     r = do
       header_ [ class_ "heading" ] $ do
         h1_ $ toHtml tag
       section_ [ class_ "main" ] $ do
-        mainArticleLinks xs
+        mainArticleLinks articles
       section_ [ class_ "others" ]
         $ mconcat
           [ h2_ [ class_ "listing-callout" ] "other topics"
           , div_ [ class_ "taglist" ]
             $ mconcat
-              [ topicTag prefix stats otherTag | otherTag <- Map.keys $ byTopic stats , otherTag /= tag
+              [ topicListingTag prefix stats otherTag | otherTag <- Map.keys $ byTopic stats , otherTag /= tag
               ]
           ]
+
+topicListingTag :: OutputPrefix -> TopicStats -> Tag -> Lucid.Html ()
+topicListingTag prefix stats tag =
+  div_ [ class_ "tag" ] $ do
+    a_ [ class_ "tag-link", href_ url ] $ do
+      span_ [ class_ "tag-name" ] (toHtml tag)
+      span_ [ class_ "tag-count" ] $ do
+        toHtml $ show $ length articles
+  where
+    url = destinationUrl $ destTag prefix tag
+    articles = fromMaybe [] $ Map.lookup tag $ byTopic stats
+
 
 htmlbody
   :: (Article [Text] -> Assembler (Lucid.Html ()))
@@ -354,15 +368,34 @@ smallArticleLinks tgts =
   $ mconcat
   [ li_ [ class_ "article-links-list-item" ] $ uncurry articleLink t | t <- tgts ]
 
-topicTag :: OutputPrefix -> TopicStats -> Tag -> Lucid.Html ()
-topicTag prefix stats tag =
+topicTag :: OutputPrefix ->  TopicStats -> DestinationLocation -> Tag -> Lucid.Html ()
+topicTag prefix stats currentDestination tag =
   div_ [ class_ "tag" ] $ do
     a_ [ class_ "tag-link", href_ url ] $ do
       span_ [ class_ "tag-name" ] (toHtml tag)
-      span_ [ class_ "tag-count" ] (toHtml $ show $ tagcount tag)
+      span_ [ class_ "tag-count" ] $ do
+        toHtml $ show $ 1 + length prevArticles
+        toHtml ("/" :: Text)
+        toHtml $ show $ length articles
+    div_ [ class_ "tag-prevnext" ] $ do
+      span_ [ class_ "tag-prev-link" ] $ do
+        fromMaybe (pure ()) prevLink
+      span_ [ class_ "tag-next-link" ] $ do
+        fromMaybe (pure ()) nextLink
   where
     url = destinationUrl $ destTag prefix tag
-    tagcount t = maybe 0 length $ Map.lookup t $ byTopic stats
+    articles = fromMaybe [] $ Map.lookup tag $ byTopic stats
+    -- todo: extract the following into separate functions
+    isOtherTarget (target2, _) = destination target2 /= currentDestination
+    prevArticles = List.takeWhile isOtherTarget articles
+    nextArticles = List.drop 1 $ List.dropWhile isOtherTarget articles
+    previousArticle = if null prevArticles then Nothing else Just $ List.last prevArticles
+    nextArticle = if null nextArticles then Nothing else Just $ List.head nextArticles
+
+    tgtLink word (target, _) = mylink_ (destinationUrl $ destination target) word
+    prevLink = fmap (tgtLink "[prev]") previousArticle
+    nextLink = fmap (tgtLink "[next]") nextArticle
+
 
 sortByDate :: [(a, Article [Text])] -> [(a, Article [Text])]
 sortByDate = List.sortBy f

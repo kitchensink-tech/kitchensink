@@ -74,6 +74,14 @@ span.tag-count {
   margin-left: 0.75em;
 }
 
+div.tag-prevnext {
+  margin-top: 1em;
+  font-size: 0.5em;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
 /*~~ social links ~~~~~~~~~~~~~~~*/
 
 div.social-links {
