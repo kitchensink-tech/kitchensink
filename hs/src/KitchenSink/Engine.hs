@@ -197,6 +197,8 @@ type DevApi = DevWatchApi
   :<|> DevListTargetsApi
   :<|> DevProduceApi
   :<|> DevPublishApi
+  :<|> DevListCommandsApi
+  :<|> DevExecCommandApi
   :<|> DevForceReloadApi
   :<|> OnTheFlyProductionApi
 
@@ -215,6 +217,10 @@ instance ToJSON DevTextOutput
 type DevProduceApi = "dev" :> "produce" :> Post '[JSON] DevTextOutput
 
 type DevPublishApi = "dev" :> "publish" :> Post '[JSON] DevTextOutput
+
+type DevListCommandsApi = "dev" :> "commands" :> Get '[JSON] [Command]
+
+type DevExecCommandApi = "dev" :> "command" :> QueryParam' '[Required,Strict] "handle" Text :> Post '[JSON] DevTextOutput
 
 data ForceReloadStatus = ForceReloaded
   deriving (Generic, Show)
@@ -281,6 +287,24 @@ handleDevPublish config rt =
       runTracer (traceDev rt) (PublishedBuild out)
       pure (DevTextOutput $ Text.pack out)
 
+handleExecCommand :: KitchenSinkEngineConfig -> DevServerRuntime -> Text -> Handler DevTextOutput
+handleExecCommand config rt commandName =
+    case List.find (\c -> handle c == commandName) $ commands config of
+      Just cmd -> runCommand $ exe cmd
+      Nothing -> pure $ DevTextOutput "no publish-script configured"
+  where
+    runCommand path = liftIO $ do
+      out <- timeIt time_publishing (counters rt) $ do
+        procOut <- readCreateProcess (proc path []) ""
+        seq (length procOut) $ pure procOut
+      Prometheus.incCounter $ cnt_publishs $ counters rt
+      runTracer (traceDev rt) (PublishedBuild out)
+      pure (DevTextOutput $ Text.pack out)
+
+handleDevListCommands :: KitchenSinkEngineConfig -> DevServerRuntime -> Handler [Command]
+handleDevListCommands config _ =
+  pure $ commands config
+
 handleDevForceReload :: DevServerRuntime -> Handler (Maybe ForceReloadStatus)
 handleDevForceReload rt = do
     (_, worked) <- liftIO $ do
@@ -338,8 +362,17 @@ loadJSONFile :: FromJSON a => FilePath -> IO (Maybe a)
 loadJSONFile path =
   decode <$> LByteString.readFile path
 
+data Command = Command {
+    exe  :: FilePath
+  , display :: Text
+  , handle :: Text
+  } deriving (Generic, Show)
+instance FromJSON Command
+instance ToJSON Command
+
 data KitchenSinkEngineConfig = KitchenSinkEngineConfig {
     publishScript :: Maybe FilePath
+  , commands :: [Command]
   } deriving (Generic, Show)
 instance FromJSON KitchenSinkEngineConfig
 
@@ -390,6 +423,8 @@ serveDevApi config devengine prodengine rt =
   :<|> handleDevListTargets devengine rt
   :<|> handleDevProduce prodengine rt
   :<|> handleDevPublish config rt
+  :<|> handleDevListCommands config rt
+  :<|> handleExecCommand config rt
   :<|> handleDevForceReload rt
   :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget devengine rt))
 

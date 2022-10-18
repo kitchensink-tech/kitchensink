@@ -2,5 +2,9 @@
 , "publishURL": "https://kitchensink-tech.github.io"
 , "twitterLogin": "lucasdicioccio"
 , "publishScript": "./scripts/publish.sh"
+, "commands":
+  [ {"display": "publish to github", "handle": "publish", "exe": "./scripts/publish.sh" }
+  , {"display": "notify to google", "handle": "notify-google", "exe": "./scripts/notify-google.sh" }
+  ]
 }
 

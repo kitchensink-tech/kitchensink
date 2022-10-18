@@ -45,6 +45,18 @@
     addButton("produce", callRoute("/dev/produce"));
     addButton("publish", callRoute("/dev/publish"));
     addButton("reload", callRoute("/dev/reload"));
+
+    const url = new URL(document.location.origin + "/dev/commands");
+    fetch(url, {'method': 'GET'})
+    .then(response => response.json())
+    .then(data => {
+      data.forEach((cmd) => addButton(cmd.display, callRoute(`/dev/command?handle=${cmd.handle}`)));
+      console.log(data);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    })
   };
+  
   document.addEventListener("DOMContentLoaded", go);
 })();

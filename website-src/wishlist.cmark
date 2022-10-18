@@ -34,7 +34,6 @@ A whishlist, which actually is a todolist.
 
 - fix commonmark histogram with lists
 - add listing/index of all code snippets,images,etc.
-- command list in kitchen-sink.json
 - port all .js to PureScript, deprecate histogram
 - load from elsewhere than disk
 - modularize parser
