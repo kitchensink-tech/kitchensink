@@ -1,6 +1,6 @@
 module Main where
 
-import Prelude
+import Prelude (Unit, bind, discard, pure, show, ($), (<<<), (<>))
 
 import Affjax.Web as AX
 import Data.Lens (view, preview, toArrayOf, traversed, _Just, to)
@@ -12,7 +12,6 @@ import Data.String (trim, split, contains, Pattern(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Aff.Class (class MonadAff)
 import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.Aff as HA
@@ -20,12 +19,12 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
-import Web.Event.Event (preventDefault)
-import Web.UIEvent.MouseEvent as MouseEvent
 import Web.DOM.ParentNode (QuerySelector(..))
 
 import KitchenSink (fetchPaths)
 import KitchenSink.Blog (PathList, TargetSummary, _TargetSummary, _TopicSummary, _PreambleSummary, TargetType(..), _PathList)
+
+import Searchbox
 
 fetchPathList :: Aff (Maybe PathList)
 fetchPathList = do
@@ -46,31 +45,10 @@ main = HA.runHalogenAff do
   let routes = toArrayOf (_Just <<< _PathList <<< to _.paths <<< traversed) blogPaths
   elem <- HA.selectElement (QuerySelector "#search-box")
   let tgt = fromMaybe body elem
-  runUI component {routes: routes} tgt
+  let props = {matchRoute, renderRoute}
+  runUI (component props) {routes: routes, filter: ".html"} tgt
 
-data Action
-  = SetFilterString String
-  | SetVisibility Visibility
-  | ToggleItemVisibility TargetType String MouseEvent.MouseEvent
-
-data Visibility = Hidden | Visible
-
-data Query a = Query a
-
-type Input =
-  { routes :: Array (Tuple String TargetSummary)
-  }
-
-type Output = Unit
-
-type State =
-  { routes :: Array (Tuple String TargetSummary)
-  , filter :: Maybe String
-  , visibility :: Visibility
-  , expanded :: Maybe String
-  }
-
-matchFilter :: String -> String -> Boolean
+matchFilter :: FilterQuery -> Route -> Boolean
 matchFilter filter str =
   Array.all matchString
   $ split (Pattern " ")
@@ -78,7 +56,7 @@ matchFilter filter str =
   where
     matchString q = Pattern q `contains` str
 
-matchRoute :: String -> Tuple String TargetSummary -> Boolean
+matchRoute :: FilterQuery -> Tuple Route TargetSummary -> Boolean
 matchRoute filter (Tuple r summary) =
   let f = matchFilter filter 
       inTitle = preview (_TargetSummary <<< to _.textualTitle <<< _Just <<< to f) summary
@@ -90,120 +68,64 @@ matchRoute filter (Tuple r summary) =
   , fromMaybe false inSummary
   ]
 
-component
-  :: forall m. MonadAff m
-  => H.Component Query Input Output m
-component =
-  H.mkComponent
-    { initialState
-    , render
-    , eval: H.mkEval $ H.defaultEval
-      { handleAction = handleAction
-      }
-    }
-  where
-
-  initialState input = { routes: input.routes , filter: ".html" , visibility: Hidden , expanded: Nothing }
-
-  render state =
-    HH.div_
-      [ renderFilter state.filter
-      , renderRoutes state state.visibility (Array.filter (matchRoute state.filter) state.routes)
-      ]
-
-  renderFilter str =
-      HH.input
-      [ HP.class_ (HH.ClassName "routes-filter-input")
-      , HE.onValueInput (\e -> SetFilterString e)
-      , HE.onClick (\e -> SetVisibility Visible)
-      , HP.value str
-      , HP.placeholder "search"
-      ]
-
-  renderRoutes state visibility rts =
-      let visibilityClass =
-             case _ of
-               Hidden -> "hidden"
-               Visible -> if Array.null rts then "hidden" else "visible"
-      in
-      HH.div
-      [ HP.classes [ HH.ClassName "routes-list", HH.ClassName $ visibilityClass visibility ]
-      ]
-      [ HH.div_ [ renderCollapseListButton ]
-      , HH.ul_ $ map (renderRoute state.expanded) rts
-      ]
-
-  renderCollapseListButton =
-      HH.button
-      [ HP.class_ (HH.ClassName "collapse-button")
-      , HE.onClick (\e -> SetVisibility Hidden)
-      ]
-      [ HH.text "🔺️"
-      ]
-
-  renderRoute expanded (Tuple r summary) =
-    let
-      visibilityClass = if Just r == expanded then "visible" else "hidden"
-      targetType = view (_TargetSummary <<< to _.targetType) summary
-      defaultTitle = showTargetType targetType
-      summaryTitle = view (_TargetSummary <<< to _.textualTitle) summary
-      summaryDescription = view (_TargetSummary <<< to _.textualSummary) summary
-      preambleFavicon = preview (_TargetSummary <<< to _.preambleSummary <<< _Just <<< _PreambleSummary <<< to _.faviconUrl) summary
-      topicImage = preview (_TargetSummary <<< to _.topicSummary <<< _Just <<< _TopicSummary <<< to _.imageLink <<< _Just) summary
-    in
-    HH.li
-    [ HP.classes [ HH.ClassName "routes-list-item", HH.ClassName "link-description" , HH.ClassName visibilityClass ] -- note we hide only on div.hidden
-    , HE.onClick (\e -> ToggleItemVisibility targetType r e)
+renderRoute :: forall m. ItemVisibility -> Tuple Route TargetSummary -> HH.ComponentHTML Action () m
+renderRoute visibility (Tuple r summary) =
+  let
+    visibilityClass = case visibility of
+                        Expanded -> "visible"
+                        Collapsed -> "hidden"
+    targetType = view (_TargetSummary <<< to _.targetType) summary
+    defaultTitle = showTargetType targetType
+    summaryTitle = view (_TargetSummary <<< to _.textualTitle) summary
+    summaryDescription = view (_TargetSummary <<< to _.textualSummary) summary
+    preambleFavicon = preview (_TargetSummary <<< to _.preambleSummary <<< _Just <<< _PreambleSummary <<< to _.faviconUrl) summary
+    topicImage = preview (_TargetSummary <<< to _.topicSummary <<< _Just <<< _TopicSummary <<< to _.imageLink <<< _Just) summary
+  in
+  HH.li
+  [ HP.classes [ HH.ClassName "routes-list-item", HH.ClassName "link-description" , HH.ClassName visibilityClass ] -- note we hide only on div.hidden
+  , HE.onClick (\e -> ToggleItemVisibility (preventMouseClickBeforeExpand targetType) r e)
+  ]
+  [ HH.p
+    [ HP.class_ (HH.ClassName "link-description-header")
     ]
-    [ HH.p
-      [ HP.class_ (HH.ClassName "link-description-header")
+    [ HH.a
+      [ HP.href r
+      , HP.target "_blank"
+      , HP.class_ (HH.ClassName "link")
       ]
-      [ HH.a
-        [ HP.href r
-        , HP.target "_blank"
-        , HP.class_ (HH.ClassName "link")
-        ]
-        [ maybe (HH.text "") renderFavicon preambleFavicon
-        , HH.span_ [ HH.text r ]
-        ]
-      , HH.span
-        [ HP.class_ (HH.ClassName "link-description-title")
-        ]
-        [ HH.text $ fromMaybe defaultTitle summaryTitle
-        ]
+      [ maybe (HH.text "") renderFavicon preambleFavicon
+      , HH.span_ [ HH.text r ]
       ]
-    , HH.div
-      [ HP.classes [ HH.ClassName "link-description-body" , HH.ClassName visibilityClass ]
+    , HH.span
+      [ HP.class_ (HH.ClassName "link-description-title")
       ]
-      [ HH.p_
-        [ HH.text $ fromMaybe "" summaryDescription
-        ]
-      , maybe (HH.text "") renderTopicImage topicImage
+      [ HH.text $ fromMaybe defaultTitle summaryTitle
       ]
     ]
-
-
-  renderFavicon url =
-    HH.img
-    [ HP.src url
-    , HP.width 32
-    , HP.height 32
+  , HH.div
+    [ HP.classes [ HH.ClassName "link-description-body" , HH.ClassName visibilityClass ]
     ]
-
-  renderTopicImage url =
-    HH.img
-    [ HP.src url
+    [ HH.p_
+      [ HH.text $ fromMaybe "" summaryDescription
+      ]
+    , maybe (HH.text "") renderTopicImage topicImage
     ]
+  ]
 
 
-  handleAction = case _ of
-    SetFilterString str -> H.modify_ _ { filter = str } 
-    SetVisibility v -> H.modify_ _ { visibility = v }
-    ToggleItemVisibility targetType r ev -> do
-       st0 <- H.get
-       H.put $ st0 { expanded = Just r }
-       when (st0.expanded /= Just r && preventMouseClickBeforeExpand targetType) $
-         H.liftEffect $ preventDefault (MouseEvent.toEvent ev)
+renderFavicon :: forall w i. String -> HH.HTML w i
+renderFavicon url =
+  HH.img
+  [ HP.src url
+  , HP.width 32
+  , HP.height 32
+  ]
+
+renderTopicImage :: forall w i. String -> HH.HTML w i
+renderTopicImage url =
+  HH.img
+  [ HP.src url
+  ]
 
 preventMouseClickBeforeExpand :: TargetType -> Boolean
 preventMouseClickBeforeExpand = case _ of
