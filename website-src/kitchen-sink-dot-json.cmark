@@ -46,7 +46,11 @@ As the time of writing this article, `kitchen-sink.json` supports the following 
 - `title`: the title on the index page and the prefix of per-articles titles
 - `publishURL`: the url that will be added as prefix of links in permalinks
 - `twitterLogin` (optional): the Twitter handle for the website, which may differ from the Twitter handle of individual authors
-- `publishScript` (optional): if provided, the script to call when the `publish` button is pressed wile in ['dev-mode'](/engine.html) -- it's a pure convenience
+- `commands`: an array of json objects containing:
+  - a  `display` for the text on the web
+  - a  `handle` that must be unique across command and gives a command name, this value is used as a query-param (suggestion: a lower-kebab-case word)
+  - a  `exe` as a path to a script that is executable from the webserver
+- `publishScript` (deprecated, use a command instead): an historical "blessed" command. This is documented only if you ever encounter a kitchen-sink.json with this field, the support for this field will be removed in the feature.
 
 An example of kitchen-sink.json
 
@@ -54,7 +58,9 @@ An example of kitchen-sink.json
 { "title": "Kitchen Sink Default Page"
 , "publishURL": "https://kitchensink.github.io"
 , "twitterLogin": "lucasdicioccio"
-, "publishScript": "./scripts/publish.sh"
+, "commands":
+  [ {"display": "publish to github", "handle": "publish", "exe": "./scripts/publish.sh" }
+  ]
 }
 ```
 
