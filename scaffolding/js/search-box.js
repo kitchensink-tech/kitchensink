@@ -5131,48 +5131,1113 @@
     });
   });
 
-  // output/Data.Exists/index.js
-  var runExists = unsafeCoerce2;
-  var mkExists = unsafeCoerce2;
-
-  // output/Data.Coyoneda/index.js
-  var CoyonedaF = /* @__PURE__ */ function() {
-    function CoyonedaF2(value0, value1) {
+  // output/Halogen.Query.Input/index.js
+  var RefUpdate = /* @__PURE__ */ function() {
+    function RefUpdate2(value0, value1) {
       this.value0 = value0;
       this.value1 = value1;
     }
     ;
-    CoyonedaF2.create = function(value0) {
+    RefUpdate2.create = function(value0) {
       return function(value1) {
-        return new CoyonedaF2(value0, value1);
+        return new RefUpdate2(value0, value1);
       };
     };
-    return CoyonedaF2;
+    return RefUpdate2;
   }();
-  var unCoyoneda = function(f) {
-    return function(v) {
-      return runExists(function(v1) {
-        return f(v1.value0)(v1.value1);
-      })(v);
+  var Action = /* @__PURE__ */ function() {
+    function Action3(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Action3.create = function(value0) {
+      return new Action3(value0);
+    };
+    return Action3;
+  }();
+
+  // output/Halogen.VDom.Machine/index.js
+  var Step = /* @__PURE__ */ function() {
+    function Step3(value0, value1, value22, value32) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+    }
+    ;
+    Step3.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return new Step3(value0, value1, value22, value32);
+          };
+        };
+      };
+    };
+    return Step3;
+  }();
+  var unStep = unsafeCoerce2;
+  var step2 = function(v, a2) {
+    return v.value2(v.value1, a2);
+  };
+  var mkStep = unsafeCoerce2;
+  var halt = function(v) {
+    return v.value3(v.value1);
+  };
+  var extract2 = /* @__PURE__ */ unStep(function(v) {
+    return v.value0;
+  });
+
+  // output/Halogen.VDom.Types/index.js
+  var Text = /* @__PURE__ */ function() {
+    function Text2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Text2.create = function(value0) {
+      return new Text2(value0);
+    };
+    return Text2;
+  }();
+  var Elem = /* @__PURE__ */ function() {
+    function Elem2(value0, value1, value22, value32) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+    }
+    ;
+    Elem2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return new Elem2(value0, value1, value22, value32);
+          };
+        };
+      };
+    };
+    return Elem2;
+  }();
+  var Keyed = /* @__PURE__ */ function() {
+    function Keyed2(value0, value1, value22, value32) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+      this.value3 = value32;
+    }
+    ;
+    Keyed2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return function(value32) {
+            return new Keyed2(value0, value1, value22, value32);
+          };
+        };
+      };
+    };
+    return Keyed2;
+  }();
+  var Widget = /* @__PURE__ */ function() {
+    function Widget2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Widget2.create = function(value0) {
+      return new Widget2(value0);
+    };
+    return Widget2;
+  }();
+  var Grafted = /* @__PURE__ */ function() {
+    function Grafted2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Grafted2.create = function(value0) {
+      return new Grafted2(value0);
+    };
+    return Grafted2;
+  }();
+  var Graft = /* @__PURE__ */ function() {
+    function Graft2(value0, value1, value22) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+    }
+    ;
+    Graft2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return new Graft2(value0, value1, value22);
+        };
+      };
+    };
+    return Graft2;
+  }();
+  var unGraft = function(f) {
+    return function($55) {
+      return f($55);
     };
   };
-  var coyoneda = function(k) {
-    return function(fi) {
-      return mkExists(new CoyonedaF(k, fi));
-    };
-  };
-  var functorCoyoneda = {
-    map: function(f) {
-      return function(v) {
-        return runExists(function(v1) {
-          return coyoneda(function($83) {
-            return f(v1.value0($83));
-          })(v1.value1);
-        })(v);
+  var graft = unsafeCoerce2;
+  var bifunctorGraft = {
+    bimap: function(f) {
+      return function(g) {
+        return unGraft(function(v) {
+          return graft(new Graft(function($57) {
+            return f(v.value0($57));
+          }, function($58) {
+            return g(v.value1($58));
+          }, v.value2));
+        });
       };
     }
   };
-  var liftCoyoneda = /* @__PURE__ */ coyoneda(/* @__PURE__ */ identity(categoryFn));
+  var runGraft = /* @__PURE__ */ unGraft(function(v) {
+    var go2 = function(v2) {
+      if (v2 instanceof Text) {
+        return new Text(v2.value0);
+      }
+      ;
+      if (v2 instanceof Elem) {
+        return new Elem(v2.value0, v2.value1, v.value0(v2.value2), map(functorArray)(go2)(v2.value3));
+      }
+      ;
+      if (v2 instanceof Keyed) {
+        return new Keyed(v2.value0, v2.value1, v.value0(v2.value2), map(functorArray)(map(functorTuple)(go2))(v2.value3));
+      }
+      ;
+      if (v2 instanceof Widget) {
+        return new Widget(v.value1(v2.value0));
+      }
+      ;
+      if (v2 instanceof Grafted) {
+        return new Grafted(bimap(bifunctorGraft)(v.value0)(v.value1)(v2.value0));
+      }
+      ;
+      throw new Error("Failed pattern match at Halogen.VDom.Types (line 86, column 7 - line 86, column 27): " + [v2.constructor.name]);
+    };
+    return go2(v.value2);
+  });
+
+  // output/Halogen.VDom.Util/foreign.js
+  function unsafeGetAny(key, obj) {
+    return obj[key];
+  }
+  function unsafeHasAny(key, obj) {
+    return obj.hasOwnProperty(key);
+  }
+  function unsafeSetAny(key, val, obj) {
+    obj[key] = val;
+  }
+  function forE2(a2, f) {
+    var b2 = [];
+    for (var i2 = 0; i2 < a2.length; i2++) {
+      b2.push(f(i2, a2[i2]));
+    }
+    return b2;
+  }
+  function forEachE(a2, f) {
+    for (var i2 = 0; i2 < a2.length; i2++) {
+      f(a2[i2]);
+    }
+  }
+  function forInE(o, f) {
+    var ks = Object.keys(o);
+    for (var i2 = 0; i2 < ks.length; i2++) {
+      var k = ks[i2];
+      f(k, o[k]);
+    }
+  }
+  function diffWithIxE(a1, a2, f1, f2, f3) {
+    var a3 = [];
+    var l1 = a1.length;
+    var l2 = a2.length;
+    var i2 = 0;
+    while (1) {
+      if (i2 < l1) {
+        if (i2 < l2) {
+          a3.push(f1(i2, a1[i2], a2[i2]));
+        } else {
+          f2(i2, a1[i2]);
+        }
+      } else if (i2 < l2) {
+        a3.push(f3(i2, a2[i2]));
+      } else {
+        break;
+      }
+      i2++;
+    }
+    return a3;
+  }
+  function strMapWithIxE(as, fk, f) {
+    var o = {};
+    for (var i2 = 0; i2 < as.length; i2++) {
+      var a2 = as[i2];
+      var k = fk(a2);
+      o[k] = f(k, i2, a2);
+    }
+    return o;
+  }
+  function diffWithKeyAndIxE(o1, as, fk, f1, f2, f3) {
+    var o2 = {};
+    for (var i2 = 0; i2 < as.length; i2++) {
+      var a2 = as[i2];
+      var k = fk(a2);
+      if (o1.hasOwnProperty(k)) {
+        o2[k] = f1(k, i2, o1[k], a2);
+      } else {
+        o2[k] = f3(k, i2, a2);
+      }
+    }
+    for (var k in o1) {
+      if (k in o2) {
+        continue;
+      }
+      f2(k, o1[k]);
+    }
+    return o2;
+  }
+  function refEq2(a2, b2) {
+    return a2 === b2;
+  }
+  function createTextNode(s, doc) {
+    return doc.createTextNode(s);
+  }
+  function setTextContent(s, n) {
+    n.textContent = s;
+  }
+  function createElement(ns, name16, doc) {
+    if (ns != null) {
+      return doc.createElementNS(ns, name16);
+    } else {
+      return doc.createElement(name16);
+    }
+  }
+  function insertChildIx(i2, a2, b2) {
+    var n = b2.childNodes.item(i2) || null;
+    if (n !== a2) {
+      b2.insertBefore(a2, n);
+    }
+  }
+  function removeChild(a2, b2) {
+    if (b2 && a2.parentNode === b2) {
+      b2.removeChild(a2);
+    }
+  }
+  function parentNode(a2) {
+    return a2.parentNode;
+  }
+  function setAttribute(ns, attr3, val, el) {
+    if (ns != null) {
+      el.setAttributeNS(ns, attr3, val);
+    } else {
+      el.setAttribute(attr3, val);
+    }
+  }
+  function removeAttribute(ns, attr3, el) {
+    if (ns != null) {
+      el.removeAttributeNS(ns, attr3);
+    } else {
+      el.removeAttribute(attr3);
+    }
+  }
+  function hasAttribute(ns, attr3, el) {
+    if (ns != null) {
+      return el.hasAttributeNS(ns, attr3);
+    } else {
+      return el.hasAttribute(attr3);
+    }
+  }
+  function addEventListener2(ev, listener, el) {
+    el.addEventListener(ev, listener, false);
+  }
+  function removeEventListener2(ev, listener, el) {
+    el.removeEventListener(ev, listener, false);
+  }
+  var jsUndefined = void 0;
+
+  // output/Halogen.VDom.Util/index.js
+  var unsafeLookup = unsafeGetAny;
+  var unsafeFreeze2 = unsafeCoerce2;
+  var pokeMutMap = unsafeSetAny;
+  var newMutMap = newImpl;
+
+  // output/Web.DOM.Element/foreign.js
+  var getProp = function(name16) {
+    return function(doctype) {
+      return doctype[name16];
+    };
+  };
+  var _namespaceURI = getProp("namespaceURI");
+  var _prefix = getProp("prefix");
+  var localName = getProp("localName");
+  var tagName = getProp("tagName");
+
+  // output/Web.DOM.Element/index.js
+  var toNode2 = unsafeCoerce2;
+
+  // output/Halogen.VDom.DOM/index.js
+  var $runtime_lazy3 = function(name16, moduleName, init3) {
+    var state3 = 0;
+    var val;
+    return function(lineNumber) {
+      if (state3 === 2)
+        return val;
+      if (state3 === 1)
+        throw new ReferenceError(name16 + " was needed before it finished initializing (module " + moduleName + ", line " + lineNumber + ")", moduleName, lineNumber);
+      state3 = 1;
+      val = init3();
+      state3 = 2;
+      return val;
+    };
+  };
+  var haltWidget = function(v) {
+    return halt(v.widget);
+  };
+  var $lazy_patchWidget = /* @__PURE__ */ $runtime_lazy3("patchWidget", "Halogen.VDom.DOM", function() {
+    return function(state3, vdom) {
+      if (vdom instanceof Grafted) {
+        return $lazy_patchWidget(291)(state3, runGraft(vdom.value0));
+      }
+      ;
+      if (vdom instanceof Widget) {
+        var res = step2(state3.widget, vdom.value0);
+        var res$prime = unStep(function(v) {
+          return mkStep(new Step(v.value0, {
+            build: state3.build,
+            widget: res
+          }, $lazy_patchWidget(296), haltWidget));
+        })(res);
+        return res$prime;
+      }
+      ;
+      haltWidget(state3);
+      return state3.build(vdom);
+    };
+  });
+  var patchWidget = /* @__PURE__ */ $lazy_patchWidget(286);
+  var haltText = function(v) {
+    var parent2 = parentNode(v.node);
+    return removeChild(v.node, parent2);
+  };
+  var $lazy_patchText = /* @__PURE__ */ $runtime_lazy3("patchText", "Halogen.VDom.DOM", function() {
+    return function(state3, vdom) {
+      if (vdom instanceof Grafted) {
+        return $lazy_patchText(82)(state3, runGraft(vdom.value0));
+      }
+      ;
+      if (vdom instanceof Text) {
+        if (state3.value === vdom.value0) {
+          return mkStep(new Step(state3.node, state3, $lazy_patchText(85), haltText));
+        }
+        ;
+        if (otherwise) {
+          var nextState = {
+            build: state3.build,
+            node: state3.node,
+            value: vdom.value0
+          };
+          setTextContent(vdom.value0, state3.node);
+          return mkStep(new Step(state3.node, nextState, $lazy_patchText(89), haltText));
+        }
+        ;
+      }
+      ;
+      haltText(state3);
+      return state3.build(vdom);
+    };
+  });
+  var patchText = /* @__PURE__ */ $lazy_patchText(77);
+  var haltKeyed = function(v) {
+    var parent2 = parentNode(v.node);
+    removeChild(v.node, parent2);
+    forInE(v.children, function(v1, s) {
+      return halt(s);
+    });
+    return halt(v.attrs);
+  };
+  var haltElem = function(v) {
+    var parent2 = parentNode(v.node);
+    removeChild(v.node, parent2);
+    forEachE(v.children, halt);
+    return halt(v.attrs);
+  };
+  var eqElemSpec = function(ns1, v, ns2, v1) {
+    var $58 = v === v1;
+    if ($58) {
+      if (ns1 instanceof Just && (ns2 instanceof Just && ns1.value0 === ns2.value0)) {
+        return true;
+      }
+      ;
+      if (ns1 instanceof Nothing && ns2 instanceof Nothing) {
+        return true;
+      }
+      ;
+      return false;
+    }
+    ;
+    return false;
+  };
+  var $lazy_patchElem = /* @__PURE__ */ $runtime_lazy3("patchElem", "Halogen.VDom.DOM", function() {
+    return function(state3, vdom) {
+      if (vdom instanceof Grafted) {
+        return $lazy_patchElem(135)(state3, runGraft(vdom.value0));
+      }
+      ;
+      if (vdom instanceof Elem && eqElemSpec(state3.ns, state3.name, vdom.value0, vdom.value1)) {
+        var v = length(vdom.value3);
+        var v1 = length(state3.children);
+        if (v1 === 0 && v === 0) {
+          var attrs2 = step2(state3.attrs, vdom.value2);
+          var nextState = {
+            build: state3.build,
+            node: state3.node,
+            attrs: attrs2,
+            ns: vdom.value0,
+            name: vdom.value1,
+            children: state3.children
+          };
+          return mkStep(new Step(state3.node, nextState, $lazy_patchElem(149), haltElem));
+        }
+        ;
+        var onThis = function(v2, s) {
+          return halt(s);
+        };
+        var onThese = function(ix, s, v2) {
+          var res = step2(s, v2);
+          insertChildIx(ix, extract2(res), state3.node);
+          return res;
+        };
+        var onThat = function(ix, v2) {
+          var res = state3.build(v2);
+          insertChildIx(ix, extract2(res), state3.node);
+          return res;
+        };
+        var children2 = diffWithIxE(state3.children, vdom.value3, onThese, onThis, onThat);
+        var attrs2 = step2(state3.attrs, vdom.value2);
+        var nextState = {
+          build: state3.build,
+          node: state3.node,
+          attrs: attrs2,
+          ns: vdom.value0,
+          name: vdom.value1,
+          children: children2
+        };
+        return mkStep(new Step(state3.node, nextState, $lazy_patchElem(172), haltElem));
+      }
+      ;
+      haltElem(state3);
+      return state3.build(vdom);
+    };
+  });
+  var patchElem = /* @__PURE__ */ $lazy_patchElem(130);
+  var $lazy_patchKeyed = /* @__PURE__ */ $runtime_lazy3("patchKeyed", "Halogen.VDom.DOM", function() {
+    return function(state3, vdom) {
+      if (vdom instanceof Grafted) {
+        return $lazy_patchKeyed(222)(state3, runGraft(vdom.value0));
+      }
+      ;
+      if (vdom instanceof Keyed && eqElemSpec(state3.ns, state3.name, vdom.value0, vdom.value1)) {
+        var v = length(vdom.value3);
+        if (state3.length === 0 && v === 0) {
+          var attrs2 = step2(state3.attrs, vdom.value2);
+          var nextState = {
+            build: state3.build,
+            node: state3.node,
+            attrs: attrs2,
+            ns: vdom.value0,
+            name: vdom.value1,
+            children: state3.children,
+            length: 0
+          };
+          return mkStep(new Step(state3.node, nextState, $lazy_patchKeyed(237), haltKeyed));
+        }
+        ;
+        var onThis = function(v2, s) {
+          return halt(s);
+        };
+        var onThese = function(v2, ix$prime, s, v3) {
+          var res = step2(s, v3.value1);
+          insertChildIx(ix$prime, extract2(res), state3.node);
+          return res;
+        };
+        var onThat = function(v2, ix, v3) {
+          var res = state3.build(v3.value1);
+          insertChildIx(ix, extract2(res), state3.node);
+          return res;
+        };
+        var children2 = diffWithKeyAndIxE(state3.children, vdom.value3, fst, onThese, onThis, onThat);
+        var attrs2 = step2(state3.attrs, vdom.value2);
+        var nextState = {
+          build: state3.build,
+          node: state3.node,
+          attrs: attrs2,
+          ns: vdom.value0,
+          name: vdom.value1,
+          children: children2,
+          length: v
+        };
+        return mkStep(new Step(state3.node, nextState, $lazy_patchKeyed(261), haltKeyed));
+      }
+      ;
+      haltKeyed(state3);
+      return state3.build(vdom);
+    };
+  });
+  var patchKeyed = /* @__PURE__ */ $lazy_patchKeyed(217);
+  var buildWidget = function(v, build, w) {
+    var res = v.buildWidget(v)(w);
+    var res$prime = unStep(function(v1) {
+      return mkStep(new Step(v1.value0, {
+        build,
+        widget: res
+      }, patchWidget, haltWidget));
+    })(res);
+    return res$prime;
+  };
+  var buildText = function(v, build, s) {
+    var node = createTextNode(s, v.document);
+    var state3 = {
+      build,
+      node,
+      value: s
+    };
+    return mkStep(new Step(node, state3, patchText, haltText));
+  };
+  var buildKeyed = function(v, build, ns1, name1, as1, ch1) {
+    var el = createElement(toNullable(ns1), name1, v.document);
+    var node = toNode2(el);
+    var onChild = function(v1, ix, v2) {
+      var res = build(v2.value1);
+      insertChildIx(ix, extract2(res), node);
+      return res;
+    };
+    var children2 = strMapWithIxE(ch1, fst, onChild);
+    var attrs = v.buildAttributes(el)(as1);
+    var state3 = {
+      build,
+      node,
+      attrs,
+      ns: ns1,
+      name: name1,
+      children: children2,
+      length: length(ch1)
+    };
+    return mkStep(new Step(node, state3, patchKeyed, haltKeyed));
+  };
+  var buildElem = function(v, build, ns1, name1, as1, ch1) {
+    var el = createElement(toNullable(ns1), name1, v.document);
+    var node = toNode2(el);
+    var onChild = function(ix, child) {
+      var res = build(child);
+      insertChildIx(ix, extract2(res), node);
+      return res;
+    };
+    var children2 = forE2(ch1, onChild);
+    var attrs = v.buildAttributes(el)(as1);
+    var state3 = {
+      build,
+      node,
+      attrs,
+      ns: ns1,
+      name: name1,
+      children: children2
+    };
+    return mkStep(new Step(node, state3, patchElem, haltElem));
+  };
+  var buildVDom = function(spec) {
+    var $lazy_build = $runtime_lazy3("build", "Halogen.VDom.DOM", function() {
+      return function(v) {
+        if (v instanceof Text) {
+          return buildText(spec, $lazy_build(59), v.value0);
+        }
+        ;
+        if (v instanceof Elem) {
+          return buildElem(spec, $lazy_build(60), v.value0, v.value1, v.value2, v.value3);
+        }
+        ;
+        if (v instanceof Keyed) {
+          return buildKeyed(spec, $lazy_build(61), v.value0, v.value1, v.value2, v.value3);
+        }
+        ;
+        if (v instanceof Widget) {
+          return buildWidget(spec, $lazy_build(62), v.value0);
+        }
+        ;
+        if (v instanceof Grafted) {
+          return $lazy_build(63)(runGraft(v.value0));
+        }
+        ;
+        throw new Error("Failed pattern match at Halogen.VDom.DOM (line 58, column 27 - line 63, column 52): " + [v.constructor.name]);
+      };
+    });
+    var build = $lazy_build(58);
+    return build;
+  };
+
+  // output/Halogen.VDom.DOM.Prop/index.js
+  var $runtime_lazy4 = function(name16, moduleName, init3) {
+    var state3 = 0;
+    var val;
+    return function(lineNumber) {
+      if (state3 === 2)
+        return val;
+      if (state3 === 1)
+        throw new ReferenceError(name16 + " was needed before it finished initializing (module " + moduleName + ", line " + lineNumber + ")", moduleName, lineNumber);
+      state3 = 1;
+      val = init3();
+      state3 = 2;
+      return val;
+    };
+  };
+  var Created = /* @__PURE__ */ function() {
+    function Created2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Created2.create = function(value0) {
+      return new Created2(value0);
+    };
+    return Created2;
+  }();
+  var Removed = /* @__PURE__ */ function() {
+    function Removed2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Removed2.create = function(value0) {
+      return new Removed2(value0);
+    };
+    return Removed2;
+  }();
+  var Attribute = /* @__PURE__ */ function() {
+    function Attribute2(value0, value1, value22) {
+      this.value0 = value0;
+      this.value1 = value1;
+      this.value2 = value22;
+    }
+    ;
+    Attribute2.create = function(value0) {
+      return function(value1) {
+        return function(value22) {
+          return new Attribute2(value0, value1, value22);
+        };
+      };
+    };
+    return Attribute2;
+  }();
+  var Property = /* @__PURE__ */ function() {
+    function Property2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    Property2.create = function(value0) {
+      return function(value1) {
+        return new Property2(value0, value1);
+      };
+    };
+    return Property2;
+  }();
+  var Handler = /* @__PURE__ */ function() {
+    function Handler2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    Handler2.create = function(value0) {
+      return function(value1) {
+        return new Handler2(value0, value1);
+      };
+    };
+    return Handler2;
+  }();
+  var Ref = /* @__PURE__ */ function() {
+    function Ref2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    Ref2.create = function(value0) {
+      return new Ref2(value0);
+    };
+    return Ref2;
+  }();
+  var unsafeGetProperty = unsafeGetAny;
+  var setProperty = unsafeSetAny;
+  var removeProperty = function(key, el) {
+    var v = hasAttribute(nullImpl, key, el);
+    if (v) {
+      return removeAttribute(nullImpl, key, el);
+    }
+    ;
+    var v1 = typeOf(unsafeGetAny(key, el));
+    if (v1 === "string") {
+      return unsafeSetAny(key, "", el);
+    }
+    ;
+    if (key === "rowSpan") {
+      return unsafeSetAny(key, 1, el);
+    }
+    ;
+    if (key === "colSpan") {
+      return unsafeSetAny(key, 1, el);
+    }
+    ;
+    return unsafeSetAny(key, jsUndefined, el);
+  };
+  var propToStrKey = function(v) {
+    if (v instanceof Attribute && v.value0 instanceof Just) {
+      return "attr/" + (v.value0.value0 + (":" + v.value1));
+    }
+    ;
+    if (v instanceof Attribute) {
+      return "attr/:" + v.value1;
+    }
+    ;
+    if (v instanceof Property) {
+      return "prop/" + v.value0;
+    }
+    ;
+    if (v instanceof Handler) {
+      return "handler/" + v.value0;
+    }
+    ;
+    if (v instanceof Ref) {
+      return "ref";
+    }
+    ;
+    throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 182, column 16 - line 187, column 16): " + [v.constructor.name]);
+  };
+  var propFromString = unsafeCoerce2;
+  var propFromInt = unsafeCoerce2;
+  var buildProp = function(emit) {
+    return function(el) {
+      var removeProp = function(prevEvents) {
+        return function(v, v1) {
+          if (v1 instanceof Attribute) {
+            return removeAttribute(toNullable(v1.value0), v1.value1, el);
+          }
+          ;
+          if (v1 instanceof Property) {
+            return removeProperty(v1.value0, el);
+          }
+          ;
+          if (v1 instanceof Handler) {
+            var handler3 = unsafeLookup(v1.value0, prevEvents);
+            return removeEventListener2(v1.value0, fst(handler3), el);
+          }
+          ;
+          if (v1 instanceof Ref) {
+            return unit;
+          }
+          ;
+          throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 169, column 5 - line 179, column 18): " + [v1.constructor.name]);
+        };
+      };
+      var mbEmit = function(v) {
+        if (v instanceof Just) {
+          return emit(v.value0)();
+        }
+        ;
+        return unit;
+      };
+      var haltProp = function(state3) {
+        var v = lookup("ref")(state3.props);
+        if (v instanceof Just && v.value0 instanceof Ref) {
+          return mbEmit(v.value0.value0(new Removed(el)));
+        }
+        ;
+        return unit;
+      };
+      var diffProp = function(prevEvents, events) {
+        return function(v, v1, v11, v2) {
+          if (v11 instanceof Attribute && v2 instanceof Attribute) {
+            var $57 = v11.value2 === v2.value2;
+            if ($57) {
+              return v2;
+            }
+            ;
+            setAttribute(toNullable(v2.value0), v2.value1, v2.value2, el);
+            return v2;
+          }
+          ;
+          if (v11 instanceof Property && v2 instanceof Property) {
+            var v4 = refEq2(v11.value1, v2.value1);
+            if (v4) {
+              return v2;
+            }
+            ;
+            if (v2.value0 === "value") {
+              var elVal = unsafeGetProperty("value", el);
+              var $66 = refEq2(elVal, v2.value1);
+              if ($66) {
+                return v2;
+              }
+              ;
+              setProperty(v2.value0, v2.value1, el);
+              return v2;
+            }
+            ;
+            setProperty(v2.value0, v2.value1, el);
+            return v2;
+          }
+          ;
+          if (v11 instanceof Handler && v2 instanceof Handler) {
+            var handler3 = unsafeLookup(v2.value0, prevEvents);
+            write(v2.value1)(snd(handler3))();
+            pokeMutMap(v2.value0, handler3, events);
+            return v2;
+          }
+          ;
+          return v2;
+        };
+      };
+      var applyProp = function(events) {
+        return function(v, v1, v2) {
+          if (v2 instanceof Attribute) {
+            setAttribute(toNullable(v2.value0), v2.value1, v2.value2, el);
+            return v2;
+          }
+          ;
+          if (v2 instanceof Property) {
+            setProperty(v2.value0, v2.value1, el);
+            return v2;
+          }
+          ;
+          if (v2 instanceof Handler) {
+            var v3 = unsafeGetAny(v2.value0, events);
+            if (unsafeHasAny(v2.value0, events)) {
+              write(v2.value1)(snd(v3))();
+              return v2;
+            }
+            ;
+            var ref2 = $$new(v2.value1)();
+            var listener = eventListener(function(ev) {
+              return function __do2() {
+                var f$prime = read(ref2)();
+                return mbEmit(f$prime(ev));
+              };
+            })();
+            pokeMutMap(v2.value0, new Tuple(listener, ref2), events);
+            addEventListener2(v2.value0, listener, el);
+            return v2;
+          }
+          ;
+          if (v2 instanceof Ref) {
+            mbEmit(v2.value0(new Created(el)));
+            return v2;
+          }
+          ;
+          throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 113, column 5 - line 135, column 15): " + [v2.constructor.name]);
+        };
+      };
+      var $lazy_patchProp = $runtime_lazy4("patchProp", "Halogen.VDom.DOM.Prop", function() {
+        return function(state3, ps2) {
+          var events = newMutMap();
+          var onThis = removeProp(state3.events);
+          var onThese = diffProp(state3.events, events);
+          var onThat = applyProp(events);
+          var props = diffWithKeyAndIxE(state3.props, ps2, propToStrKey, onThese, onThis, onThat);
+          var nextState = {
+            events: unsafeFreeze2(events),
+            props
+          };
+          return mkStep(new Step(unit, nextState, $lazy_patchProp(100), haltProp));
+        };
+      });
+      var patchProp = $lazy_patchProp(87);
+      var renderProp = function(ps1) {
+        var events = newMutMap();
+        var ps1$prime = strMapWithIxE(ps1, propToStrKey, applyProp(events));
+        var state3 = {
+          events: unsafeFreeze2(events),
+          props: ps1$prime
+        };
+        return mkStep(new Step(unit, state3, patchProp, haltProp));
+      };
+      return renderProp;
+    };
+  };
+
+  // output/Halogen.HTML.Core/index.js
+  var HTML = function(x) {
+    return x;
+  };
+  var toPropValue = function(dict) {
+    return dict.toPropValue;
+  };
+  var text5 = function($20) {
+    return HTML(Text.create($20));
+  };
+  var prop = function(dictIsProp) {
+    return function(v) {
+      var $22 = Property.create(v);
+      var $23 = toPropValue(dictIsProp);
+      return function($24) {
+        return $22($23($24));
+      };
+    };
+  };
+  var isPropString = {
+    toPropValue: propFromString
+  };
+  var isPropInt = {
+    toPropValue: propFromInt
+  };
+  var handler = /* @__PURE__ */ function() {
+    return Handler.create;
+  }();
+  var element = function(ns) {
+    return function(name16) {
+      return function(props) {
+        return function(children2) {
+          return new Elem(ns, name16, props, children2);
+        };
+      };
+    };
+  };
+
+  // output/Halogen.HTML.Elements/index.js
+  var element2 = /* @__PURE__ */ function() {
+    return element(Nothing.value);
+  }();
+  var img = function(props) {
+    return element2("img")(props)([]);
+  };
+  var input2 = function(props) {
+    return element2("input")(props)([]);
+  };
+  var li = /* @__PURE__ */ element2("li");
+  var p = /* @__PURE__ */ element2("p");
+  var p_ = /* @__PURE__ */ p([]);
+  var span3 = /* @__PURE__ */ element2("span");
+  var span_ = /* @__PURE__ */ span3([]);
+  var ul = /* @__PURE__ */ element2("ul");
+  var ul_ = /* @__PURE__ */ ul([]);
+  var div2 = /* @__PURE__ */ element2("div");
+  var div_ = /* @__PURE__ */ div2([]);
+  var button = /* @__PURE__ */ element2("button");
+  var a = /* @__PURE__ */ element2("a");
+
+  // output/Foreign.Index/foreign.js
+  function unsafeReadPropImpl(f, s, key, value14) {
+    return value14 == null ? f : s(value14[key]);
+  }
+
+  // output/Foreign.Index/index.js
+  var unsafeReadProp = function(dictMonad) {
+    return function(k) {
+      return function(value14) {
+        return unsafeReadPropImpl(fail(dictMonad)(new TypeMismatch("object", typeOf(value14))), pure(applicativeExceptT(dictMonad)), k, value14);
+      };
+    };
+  };
+  var readProp = function(dictMonad) {
+    return unsafeReadProp(dictMonad);
+  };
+
+  // output/Web.Event.Event/foreign.js
+  function _currentTarget(e) {
+    return e.currentTarget;
+  }
+  function preventDefault(e) {
+    return function() {
+      return e.preventDefault();
+    };
+  }
+
+  // output/Web.Event.Event/index.js
+  var currentTarget = function($4) {
+    return toMaybe(_currentTarget($4));
+  };
+
+  // output/Web.UIEvent.MouseEvent.EventTypes/index.js
+  var click2 = "click";
+
+  // output/Halogen.HTML.Events/index.js
+  var mouseHandler = unsafeCoerce2;
+  var handler$prime = function(et) {
+    return function(f) {
+      return handler(et)(function(ev) {
+        return map(functorMaybe)(Action.create)(f(ev));
+      });
+    };
+  };
+  var handler2 = function(et) {
+    return function(f) {
+      return handler(et)(function(ev) {
+        return new Just(new Action(f(ev)));
+      });
+    };
+  };
+  var onClick = /* @__PURE__ */ function() {
+    var $3 = handler2(click2);
+    return function($4) {
+      return $3(mouseHandler($4));
+    };
+  }();
+  var addForeignPropHandler = function(key) {
+    return function(prop3) {
+      return function(reader) {
+        return function(f) {
+          var go2 = function(a2) {
+            return composeKleisliFlipped(bindExceptT(monadIdentity))(reader)(readProp(monadIdentity)(prop3))(unsafeToForeign(a2));
+          };
+          return handler$prime(key)(composeKleisli(bindMaybe)(currentTarget)(function(e) {
+            return either($$const(Nothing.value))(function($73) {
+              return Just.create(f($73));
+            })(runExcept(go2(e)));
+          }));
+        };
+      };
+    };
+  };
+  var onValueInput = /* @__PURE__ */ addForeignPropHandler(input)("value")(/* @__PURE__ */ readString(monadIdentity));
+
+  // output/Halogen.HTML.Properties/index.js
+  var prop2 = function(dictIsProp) {
+    return prop(dictIsProp);
+  };
+  var src9 = /* @__PURE__ */ prop2(isPropString)("src");
+  var target6 = /* @__PURE__ */ prop2(isPropString)("target");
+  var value13 = function(dictIsProp) {
+    return prop2(dictIsProp)("value");
+  };
+  var width8 = /* @__PURE__ */ prop2(isPropInt)("width");
+  var placeholder3 = /* @__PURE__ */ prop2(isPropString)("placeholder");
+  var href4 = /* @__PURE__ */ prop2(isPropString)("href");
+  var height8 = /* @__PURE__ */ prop2(isPropInt)("height");
+  var classes = /* @__PURE__ */ function() {
+    var $10 = prop2(isPropString)("className");
+    var $11 = joinWith(" ");
+    var $12 = map(functorArray)(unwrap());
+    return function($13) {
+      return $10($11($12($13)));
+    };
+  }();
+  var class_ = /* @__PURE__ */ function() {
+    var $14 = prop2(isPropString)("className");
+    var $15 = unwrap();
+    return function($16) {
+      return $14($15($16));
+    };
+  }();
+
+  // output/Control.Monad.Fork.Class/index.js
+  var monadForkAff = {
+    suspend: suspendAff,
+    fork: forkAff,
+    join: joinFiber,
+    Monad0: function() {
+      return monadAff;
+    },
+    Functor1: function() {
+      return functorFiber;
+    }
+  };
+  var fork = function(dict) {
+    return dict.fork;
+  };
 
   // output/Data.Map.Internal/index.js
   var Leaf = /* @__PURE__ */ function() {
@@ -5995,6 +7060,49 @@
     };
   };
 
+  // output/Data.Exists/index.js
+  var runExists = unsafeCoerce2;
+  var mkExists = unsafeCoerce2;
+
+  // output/Data.Coyoneda/index.js
+  var CoyonedaF = /* @__PURE__ */ function() {
+    function CoyonedaF2(value0, value1) {
+      this.value0 = value0;
+      this.value1 = value1;
+    }
+    ;
+    CoyonedaF2.create = function(value0) {
+      return function(value1) {
+        return new CoyonedaF2(value0, value1);
+      };
+    };
+    return CoyonedaF2;
+  }();
+  var unCoyoneda = function(f) {
+    return function(v) {
+      return runExists(function(v1) {
+        return f(v1.value0)(v1.value1);
+      })(v);
+    };
+  };
+  var coyoneda = function(k) {
+    return function(fi) {
+      return mkExists(new CoyonedaF(k, fi));
+    };
+  };
+  var functorCoyoneda = {
+    map: function(f) {
+      return function(v) {
+        return runExists(function(v1) {
+          return coyoneda(function($83) {
+            return f(v1.value0($83));
+          })(v1.value1);
+        })(v);
+      };
+    }
+  };
+  var liftCoyoneda = /* @__PURE__ */ coyoneda(/* @__PURE__ */ identity(categoryFn));
+
   // output/Halogen.Data.Slot/index.js
   var foreachSlot = function(dictApplicative) {
     return function(v) {
@@ -6006,972 +7114,6 @@
     };
   };
   var empty4 = empty3;
-
-  // output/Halogen.Query.Input/index.js
-  var RefUpdate = /* @__PURE__ */ function() {
-    function RefUpdate2(value0, value1) {
-      this.value0 = value0;
-      this.value1 = value1;
-    }
-    ;
-    RefUpdate2.create = function(value0) {
-      return function(value1) {
-        return new RefUpdate2(value0, value1);
-      };
-    };
-    return RefUpdate2;
-  }();
-  var Action = /* @__PURE__ */ function() {
-    function Action3(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Action3.create = function(value0) {
-      return new Action3(value0);
-    };
-    return Action3;
-  }();
-
-  // output/Halogen.VDom.Machine/index.js
-  var Step = /* @__PURE__ */ function() {
-    function Step3(value0, value1, value22, value32) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value22;
-      this.value3 = value32;
-    }
-    ;
-    Step3.create = function(value0) {
-      return function(value1) {
-        return function(value22) {
-          return function(value32) {
-            return new Step3(value0, value1, value22, value32);
-          };
-        };
-      };
-    };
-    return Step3;
-  }();
-  var unStep = unsafeCoerce2;
-  var step3 = function(v, a2) {
-    return v.value2(v.value1, a2);
-  };
-  var mkStep = unsafeCoerce2;
-  var halt = function(v) {
-    return v.value3(v.value1);
-  };
-  var extract2 = /* @__PURE__ */ unStep(function(v) {
-    return v.value0;
-  });
-
-  // output/Halogen.VDom.Types/index.js
-  var Text = /* @__PURE__ */ function() {
-    function Text2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Text2.create = function(value0) {
-      return new Text2(value0);
-    };
-    return Text2;
-  }();
-  var Elem = /* @__PURE__ */ function() {
-    function Elem2(value0, value1, value22, value32) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value22;
-      this.value3 = value32;
-    }
-    ;
-    Elem2.create = function(value0) {
-      return function(value1) {
-        return function(value22) {
-          return function(value32) {
-            return new Elem2(value0, value1, value22, value32);
-          };
-        };
-      };
-    };
-    return Elem2;
-  }();
-  var Keyed = /* @__PURE__ */ function() {
-    function Keyed2(value0, value1, value22, value32) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value22;
-      this.value3 = value32;
-    }
-    ;
-    Keyed2.create = function(value0) {
-      return function(value1) {
-        return function(value22) {
-          return function(value32) {
-            return new Keyed2(value0, value1, value22, value32);
-          };
-        };
-      };
-    };
-    return Keyed2;
-  }();
-  var Widget = /* @__PURE__ */ function() {
-    function Widget2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Widget2.create = function(value0) {
-      return new Widget2(value0);
-    };
-    return Widget2;
-  }();
-  var Grafted = /* @__PURE__ */ function() {
-    function Grafted2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Grafted2.create = function(value0) {
-      return new Grafted2(value0);
-    };
-    return Grafted2;
-  }();
-  var Graft = /* @__PURE__ */ function() {
-    function Graft2(value0, value1, value22) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value22;
-    }
-    ;
-    Graft2.create = function(value0) {
-      return function(value1) {
-        return function(value22) {
-          return new Graft2(value0, value1, value22);
-        };
-      };
-    };
-    return Graft2;
-  }();
-  var unGraft = function(f) {
-    return function($55) {
-      return f($55);
-    };
-  };
-  var graft = unsafeCoerce2;
-  var bifunctorGraft = {
-    bimap: function(f) {
-      return function(g) {
-        return unGraft(function(v) {
-          return graft(new Graft(function($57) {
-            return f(v.value0($57));
-          }, function($58) {
-            return g(v.value1($58));
-          }, v.value2));
-        });
-      };
-    }
-  };
-  var runGraft = /* @__PURE__ */ unGraft(function(v) {
-    var go2 = function(v2) {
-      if (v2 instanceof Text) {
-        return new Text(v2.value0);
-      }
-      ;
-      if (v2 instanceof Elem) {
-        return new Elem(v2.value0, v2.value1, v.value0(v2.value2), map(functorArray)(go2)(v2.value3));
-      }
-      ;
-      if (v2 instanceof Keyed) {
-        return new Keyed(v2.value0, v2.value1, v.value0(v2.value2), map(functorArray)(map(functorTuple)(go2))(v2.value3));
-      }
-      ;
-      if (v2 instanceof Widget) {
-        return new Widget(v.value1(v2.value0));
-      }
-      ;
-      if (v2 instanceof Grafted) {
-        return new Grafted(bimap(bifunctorGraft)(v.value0)(v.value1)(v2.value0));
-      }
-      ;
-      throw new Error("Failed pattern match at Halogen.VDom.Types (line 86, column 7 - line 86, column 27): " + [v2.constructor.name]);
-    };
-    return go2(v.value2);
-  });
-
-  // output/Halogen.VDom.Util/foreign.js
-  function unsafeGetAny(key, obj) {
-    return obj[key];
-  }
-  function unsafeHasAny(key, obj) {
-    return obj.hasOwnProperty(key);
-  }
-  function unsafeSetAny(key, val, obj) {
-    obj[key] = val;
-  }
-  function forE2(a2, f) {
-    var b2 = [];
-    for (var i2 = 0; i2 < a2.length; i2++) {
-      b2.push(f(i2, a2[i2]));
-    }
-    return b2;
-  }
-  function forEachE(a2, f) {
-    for (var i2 = 0; i2 < a2.length; i2++) {
-      f(a2[i2]);
-    }
-  }
-  function forInE(o, f) {
-    var ks = Object.keys(o);
-    for (var i2 = 0; i2 < ks.length; i2++) {
-      var k = ks[i2];
-      f(k, o[k]);
-    }
-  }
-  function diffWithIxE(a1, a2, f1, f2, f3) {
-    var a3 = [];
-    var l1 = a1.length;
-    var l2 = a2.length;
-    var i2 = 0;
-    while (1) {
-      if (i2 < l1) {
-        if (i2 < l2) {
-          a3.push(f1(i2, a1[i2], a2[i2]));
-        } else {
-          f2(i2, a1[i2]);
-        }
-      } else if (i2 < l2) {
-        a3.push(f3(i2, a2[i2]));
-      } else {
-        break;
-      }
-      i2++;
-    }
-    return a3;
-  }
-  function strMapWithIxE(as, fk, f) {
-    var o = {};
-    for (var i2 = 0; i2 < as.length; i2++) {
-      var a2 = as[i2];
-      var k = fk(a2);
-      o[k] = f(k, i2, a2);
-    }
-    return o;
-  }
-  function diffWithKeyAndIxE(o1, as, fk, f1, f2, f3) {
-    var o2 = {};
-    for (var i2 = 0; i2 < as.length; i2++) {
-      var a2 = as[i2];
-      var k = fk(a2);
-      if (o1.hasOwnProperty(k)) {
-        o2[k] = f1(k, i2, o1[k], a2);
-      } else {
-        o2[k] = f3(k, i2, a2);
-      }
-    }
-    for (var k in o1) {
-      if (k in o2) {
-        continue;
-      }
-      f2(k, o1[k]);
-    }
-    return o2;
-  }
-  function refEq2(a2, b2) {
-    return a2 === b2;
-  }
-  function createTextNode(s, doc) {
-    return doc.createTextNode(s);
-  }
-  function setTextContent(s, n) {
-    n.textContent = s;
-  }
-  function createElement(ns, name16, doc) {
-    if (ns != null) {
-      return doc.createElementNS(ns, name16);
-    } else {
-      return doc.createElement(name16);
-    }
-  }
-  function insertChildIx(i2, a2, b2) {
-    var n = b2.childNodes.item(i2) || null;
-    if (n !== a2) {
-      b2.insertBefore(a2, n);
-    }
-  }
-  function removeChild(a2, b2) {
-    if (b2 && a2.parentNode === b2) {
-      b2.removeChild(a2);
-    }
-  }
-  function parentNode(a2) {
-    return a2.parentNode;
-  }
-  function setAttribute(ns, attr3, val, el) {
-    if (ns != null) {
-      el.setAttributeNS(ns, attr3, val);
-    } else {
-      el.setAttribute(attr3, val);
-    }
-  }
-  function removeAttribute(ns, attr3, el) {
-    if (ns != null) {
-      el.removeAttributeNS(ns, attr3);
-    } else {
-      el.removeAttribute(attr3);
-    }
-  }
-  function hasAttribute(ns, attr3, el) {
-    if (ns != null) {
-      return el.hasAttributeNS(ns, attr3);
-    } else {
-      return el.hasAttribute(attr3);
-    }
-  }
-  function addEventListener2(ev, listener, el) {
-    el.addEventListener(ev, listener, false);
-  }
-  function removeEventListener2(ev, listener, el) {
-    el.removeEventListener(ev, listener, false);
-  }
-  var jsUndefined = void 0;
-
-  // output/Halogen.VDom.Util/index.js
-  var unsafeLookup = unsafeGetAny;
-  var unsafeFreeze2 = unsafeCoerce2;
-  var pokeMutMap = unsafeSetAny;
-  var newMutMap = newImpl;
-
-  // output/Web.DOM.Element/foreign.js
-  var getProp = function(name16) {
-    return function(doctype) {
-      return doctype[name16];
-    };
-  };
-  var _namespaceURI = getProp("namespaceURI");
-  var _prefix = getProp("prefix");
-  var localName = getProp("localName");
-  var tagName = getProp("tagName");
-
-  // output/Web.DOM.Element/index.js
-  var toNode2 = unsafeCoerce2;
-
-  // output/Halogen.VDom.DOM/index.js
-  var $runtime_lazy3 = function(name16, moduleName, init3) {
-    var state3 = 0;
-    var val;
-    return function(lineNumber) {
-      if (state3 === 2)
-        return val;
-      if (state3 === 1)
-        throw new ReferenceError(name16 + " was needed before it finished initializing (module " + moduleName + ", line " + lineNumber + ")", moduleName, lineNumber);
-      state3 = 1;
-      val = init3();
-      state3 = 2;
-      return val;
-    };
-  };
-  var haltWidget = function(v) {
-    return halt(v.widget);
-  };
-  var $lazy_patchWidget = /* @__PURE__ */ $runtime_lazy3("patchWidget", "Halogen.VDom.DOM", function() {
-    return function(state3, vdom) {
-      if (vdom instanceof Grafted) {
-        return $lazy_patchWidget(291)(state3, runGraft(vdom.value0));
-      }
-      ;
-      if (vdom instanceof Widget) {
-        var res = step3(state3.widget, vdom.value0);
-        var res$prime = unStep(function(v) {
-          return mkStep(new Step(v.value0, {
-            build: state3.build,
-            widget: res
-          }, $lazy_patchWidget(296), haltWidget));
-        })(res);
-        return res$prime;
-      }
-      ;
-      haltWidget(state3);
-      return state3.build(vdom);
-    };
-  });
-  var patchWidget = /* @__PURE__ */ $lazy_patchWidget(286);
-  var haltText = function(v) {
-    var parent2 = parentNode(v.node);
-    return removeChild(v.node, parent2);
-  };
-  var $lazy_patchText = /* @__PURE__ */ $runtime_lazy3("patchText", "Halogen.VDom.DOM", function() {
-    return function(state3, vdom) {
-      if (vdom instanceof Grafted) {
-        return $lazy_patchText(82)(state3, runGraft(vdom.value0));
-      }
-      ;
-      if (vdom instanceof Text) {
-        if (state3.value === vdom.value0) {
-          return mkStep(new Step(state3.node, state3, $lazy_patchText(85), haltText));
-        }
-        ;
-        if (otherwise) {
-          var nextState = {
-            build: state3.build,
-            node: state3.node,
-            value: vdom.value0
-          };
-          setTextContent(vdom.value0, state3.node);
-          return mkStep(new Step(state3.node, nextState, $lazy_patchText(89), haltText));
-        }
-        ;
-      }
-      ;
-      haltText(state3);
-      return state3.build(vdom);
-    };
-  });
-  var patchText = /* @__PURE__ */ $lazy_patchText(77);
-  var haltKeyed = function(v) {
-    var parent2 = parentNode(v.node);
-    removeChild(v.node, parent2);
-    forInE(v.children, function(v1, s) {
-      return halt(s);
-    });
-    return halt(v.attrs);
-  };
-  var haltElem = function(v) {
-    var parent2 = parentNode(v.node);
-    removeChild(v.node, parent2);
-    forEachE(v.children, halt);
-    return halt(v.attrs);
-  };
-  var eqElemSpec = function(ns1, v, ns2, v1) {
-    var $58 = v === v1;
-    if ($58) {
-      if (ns1 instanceof Just && (ns2 instanceof Just && ns1.value0 === ns2.value0)) {
-        return true;
-      }
-      ;
-      if (ns1 instanceof Nothing && ns2 instanceof Nothing) {
-        return true;
-      }
-      ;
-      return false;
-    }
-    ;
-    return false;
-  };
-  var $lazy_patchElem = /* @__PURE__ */ $runtime_lazy3("patchElem", "Halogen.VDom.DOM", function() {
-    return function(state3, vdom) {
-      if (vdom instanceof Grafted) {
-        return $lazy_patchElem(135)(state3, runGraft(vdom.value0));
-      }
-      ;
-      if (vdom instanceof Elem && eqElemSpec(state3.ns, state3.name, vdom.value0, vdom.value1)) {
-        var v = length(vdom.value3);
-        var v1 = length(state3.children);
-        if (v1 === 0 && v === 0) {
-          var attrs2 = step3(state3.attrs, vdom.value2);
-          var nextState = {
-            build: state3.build,
-            node: state3.node,
-            attrs: attrs2,
-            ns: vdom.value0,
-            name: vdom.value1,
-            children: state3.children
-          };
-          return mkStep(new Step(state3.node, nextState, $lazy_patchElem(149), haltElem));
-        }
-        ;
-        var onThis = function(v2, s) {
-          return halt(s);
-        };
-        var onThese = function(ix, s, v2) {
-          var res = step3(s, v2);
-          insertChildIx(ix, extract2(res), state3.node);
-          return res;
-        };
-        var onThat = function(ix, v2) {
-          var res = state3.build(v2);
-          insertChildIx(ix, extract2(res), state3.node);
-          return res;
-        };
-        var children2 = diffWithIxE(state3.children, vdom.value3, onThese, onThis, onThat);
-        var attrs2 = step3(state3.attrs, vdom.value2);
-        var nextState = {
-          build: state3.build,
-          node: state3.node,
-          attrs: attrs2,
-          ns: vdom.value0,
-          name: vdom.value1,
-          children: children2
-        };
-        return mkStep(new Step(state3.node, nextState, $lazy_patchElem(172), haltElem));
-      }
-      ;
-      haltElem(state3);
-      return state3.build(vdom);
-    };
-  });
-  var patchElem = /* @__PURE__ */ $lazy_patchElem(130);
-  var $lazy_patchKeyed = /* @__PURE__ */ $runtime_lazy3("patchKeyed", "Halogen.VDom.DOM", function() {
-    return function(state3, vdom) {
-      if (vdom instanceof Grafted) {
-        return $lazy_patchKeyed(222)(state3, runGraft(vdom.value0));
-      }
-      ;
-      if (vdom instanceof Keyed && eqElemSpec(state3.ns, state3.name, vdom.value0, vdom.value1)) {
-        var v = length(vdom.value3);
-        if (state3.length === 0 && v === 0) {
-          var attrs2 = step3(state3.attrs, vdom.value2);
-          var nextState = {
-            build: state3.build,
-            node: state3.node,
-            attrs: attrs2,
-            ns: vdom.value0,
-            name: vdom.value1,
-            children: state3.children,
-            length: 0
-          };
-          return mkStep(new Step(state3.node, nextState, $lazy_patchKeyed(237), haltKeyed));
-        }
-        ;
-        var onThis = function(v2, s) {
-          return halt(s);
-        };
-        var onThese = function(v2, ix$prime, s, v3) {
-          var res = step3(s, v3.value1);
-          insertChildIx(ix$prime, extract2(res), state3.node);
-          return res;
-        };
-        var onThat = function(v2, ix, v3) {
-          var res = state3.build(v3.value1);
-          insertChildIx(ix, extract2(res), state3.node);
-          return res;
-        };
-        var children2 = diffWithKeyAndIxE(state3.children, vdom.value3, fst, onThese, onThis, onThat);
-        var attrs2 = step3(state3.attrs, vdom.value2);
-        var nextState = {
-          build: state3.build,
-          node: state3.node,
-          attrs: attrs2,
-          ns: vdom.value0,
-          name: vdom.value1,
-          children: children2,
-          length: v
-        };
-        return mkStep(new Step(state3.node, nextState, $lazy_patchKeyed(261), haltKeyed));
-      }
-      ;
-      haltKeyed(state3);
-      return state3.build(vdom);
-    };
-  });
-  var patchKeyed = /* @__PURE__ */ $lazy_patchKeyed(217);
-  var buildWidget = function(v, build, w) {
-    var res = v.buildWidget(v)(w);
-    var res$prime = unStep(function(v1) {
-      return mkStep(new Step(v1.value0, {
-        build,
-        widget: res
-      }, patchWidget, haltWidget));
-    })(res);
-    return res$prime;
-  };
-  var buildText = function(v, build, s) {
-    var node = createTextNode(s, v.document);
-    var state3 = {
-      build,
-      node,
-      value: s
-    };
-    return mkStep(new Step(node, state3, patchText, haltText));
-  };
-  var buildKeyed = function(v, build, ns1, name1, as1, ch1) {
-    var el = createElement(toNullable(ns1), name1, v.document);
-    var node = toNode2(el);
-    var onChild = function(v1, ix, v2) {
-      var res = build(v2.value1);
-      insertChildIx(ix, extract2(res), node);
-      return res;
-    };
-    var children2 = strMapWithIxE(ch1, fst, onChild);
-    var attrs = v.buildAttributes(el)(as1);
-    var state3 = {
-      build,
-      node,
-      attrs,
-      ns: ns1,
-      name: name1,
-      children: children2,
-      length: length(ch1)
-    };
-    return mkStep(new Step(node, state3, patchKeyed, haltKeyed));
-  };
-  var buildElem = function(v, build, ns1, name1, as1, ch1) {
-    var el = createElement(toNullable(ns1), name1, v.document);
-    var node = toNode2(el);
-    var onChild = function(ix, child) {
-      var res = build(child);
-      insertChildIx(ix, extract2(res), node);
-      return res;
-    };
-    var children2 = forE2(ch1, onChild);
-    var attrs = v.buildAttributes(el)(as1);
-    var state3 = {
-      build,
-      node,
-      attrs,
-      ns: ns1,
-      name: name1,
-      children: children2
-    };
-    return mkStep(new Step(node, state3, patchElem, haltElem));
-  };
-  var buildVDom = function(spec) {
-    var $lazy_build = $runtime_lazy3("build", "Halogen.VDom.DOM", function() {
-      return function(v) {
-        if (v instanceof Text) {
-          return buildText(spec, $lazy_build(59), v.value0);
-        }
-        ;
-        if (v instanceof Elem) {
-          return buildElem(spec, $lazy_build(60), v.value0, v.value1, v.value2, v.value3);
-        }
-        ;
-        if (v instanceof Keyed) {
-          return buildKeyed(spec, $lazy_build(61), v.value0, v.value1, v.value2, v.value3);
-        }
-        ;
-        if (v instanceof Widget) {
-          return buildWidget(spec, $lazy_build(62), v.value0);
-        }
-        ;
-        if (v instanceof Grafted) {
-          return $lazy_build(63)(runGraft(v.value0));
-        }
-        ;
-        throw new Error("Failed pattern match at Halogen.VDom.DOM (line 58, column 27 - line 63, column 52): " + [v.constructor.name]);
-      };
-    });
-    var build = $lazy_build(58);
-    return build;
-  };
-
-  // output/Halogen.VDom.DOM.Prop/index.js
-  var $runtime_lazy4 = function(name16, moduleName, init3) {
-    var state3 = 0;
-    var val;
-    return function(lineNumber) {
-      if (state3 === 2)
-        return val;
-      if (state3 === 1)
-        throw new ReferenceError(name16 + " was needed before it finished initializing (module " + moduleName + ", line " + lineNumber + ")", moduleName, lineNumber);
-      state3 = 1;
-      val = init3();
-      state3 = 2;
-      return val;
-    };
-  };
-  var Created = /* @__PURE__ */ function() {
-    function Created2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Created2.create = function(value0) {
-      return new Created2(value0);
-    };
-    return Created2;
-  }();
-  var Removed = /* @__PURE__ */ function() {
-    function Removed2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Removed2.create = function(value0) {
-      return new Removed2(value0);
-    };
-    return Removed2;
-  }();
-  var Attribute = /* @__PURE__ */ function() {
-    function Attribute2(value0, value1, value22) {
-      this.value0 = value0;
-      this.value1 = value1;
-      this.value2 = value22;
-    }
-    ;
-    Attribute2.create = function(value0) {
-      return function(value1) {
-        return function(value22) {
-          return new Attribute2(value0, value1, value22);
-        };
-      };
-    };
-    return Attribute2;
-  }();
-  var Property = /* @__PURE__ */ function() {
-    function Property2(value0, value1) {
-      this.value0 = value0;
-      this.value1 = value1;
-    }
-    ;
-    Property2.create = function(value0) {
-      return function(value1) {
-        return new Property2(value0, value1);
-      };
-    };
-    return Property2;
-  }();
-  var Handler = /* @__PURE__ */ function() {
-    function Handler2(value0, value1) {
-      this.value0 = value0;
-      this.value1 = value1;
-    }
-    ;
-    Handler2.create = function(value0) {
-      return function(value1) {
-        return new Handler2(value0, value1);
-      };
-    };
-    return Handler2;
-  }();
-  var Ref = /* @__PURE__ */ function() {
-    function Ref2(value0) {
-      this.value0 = value0;
-    }
-    ;
-    Ref2.create = function(value0) {
-      return new Ref2(value0);
-    };
-    return Ref2;
-  }();
-  var unsafeGetProperty = unsafeGetAny;
-  var setProperty = unsafeSetAny;
-  var removeProperty = function(key, el) {
-    var v = hasAttribute(nullImpl, key, el);
-    if (v) {
-      return removeAttribute(nullImpl, key, el);
-    }
-    ;
-    var v1 = typeOf(unsafeGetAny(key, el));
-    if (v1 === "string") {
-      return unsafeSetAny(key, "", el);
-    }
-    ;
-    if (key === "rowSpan") {
-      return unsafeSetAny(key, 1, el);
-    }
-    ;
-    if (key === "colSpan") {
-      return unsafeSetAny(key, 1, el);
-    }
-    ;
-    return unsafeSetAny(key, jsUndefined, el);
-  };
-  var propToStrKey = function(v) {
-    if (v instanceof Attribute && v.value0 instanceof Just) {
-      return "attr/" + (v.value0.value0 + (":" + v.value1));
-    }
-    ;
-    if (v instanceof Attribute) {
-      return "attr/:" + v.value1;
-    }
-    ;
-    if (v instanceof Property) {
-      return "prop/" + v.value0;
-    }
-    ;
-    if (v instanceof Handler) {
-      return "handler/" + v.value0;
-    }
-    ;
-    if (v instanceof Ref) {
-      return "ref";
-    }
-    ;
-    throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 182, column 16 - line 187, column 16): " + [v.constructor.name]);
-  };
-  var propFromString = unsafeCoerce2;
-  var propFromInt = unsafeCoerce2;
-  var buildProp = function(emit) {
-    return function(el) {
-      var removeProp = function(prevEvents) {
-        return function(v, v1) {
-          if (v1 instanceof Attribute) {
-            return removeAttribute(toNullable(v1.value0), v1.value1, el);
-          }
-          ;
-          if (v1 instanceof Property) {
-            return removeProperty(v1.value0, el);
-          }
-          ;
-          if (v1 instanceof Handler) {
-            var handler3 = unsafeLookup(v1.value0, prevEvents);
-            return removeEventListener2(v1.value0, fst(handler3), el);
-          }
-          ;
-          if (v1 instanceof Ref) {
-            return unit;
-          }
-          ;
-          throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 169, column 5 - line 179, column 18): " + [v1.constructor.name]);
-        };
-      };
-      var mbEmit = function(v) {
-        if (v instanceof Just) {
-          return emit(v.value0)();
-        }
-        ;
-        return unit;
-      };
-      var haltProp = function(state3) {
-        var v = lookup("ref")(state3.props);
-        if (v instanceof Just && v.value0 instanceof Ref) {
-          return mbEmit(v.value0.value0(new Removed(el)));
-        }
-        ;
-        return unit;
-      };
-      var diffProp = function(prevEvents, events) {
-        return function(v, v1, v11, v2) {
-          if (v11 instanceof Attribute && v2 instanceof Attribute) {
-            var $57 = v11.value2 === v2.value2;
-            if ($57) {
-              return v2;
-            }
-            ;
-            setAttribute(toNullable(v2.value0), v2.value1, v2.value2, el);
-            return v2;
-          }
-          ;
-          if (v11 instanceof Property && v2 instanceof Property) {
-            var v4 = refEq2(v11.value1, v2.value1);
-            if (v4) {
-              return v2;
-            }
-            ;
-            if (v2.value0 === "value") {
-              var elVal = unsafeGetProperty("value", el);
-              var $66 = refEq2(elVal, v2.value1);
-              if ($66) {
-                return v2;
-              }
-              ;
-              setProperty(v2.value0, v2.value1, el);
-              return v2;
-            }
-            ;
-            setProperty(v2.value0, v2.value1, el);
-            return v2;
-          }
-          ;
-          if (v11 instanceof Handler && v2 instanceof Handler) {
-            var handler3 = unsafeLookup(v2.value0, prevEvents);
-            write(v2.value1)(snd(handler3))();
-            pokeMutMap(v2.value0, handler3, events);
-            return v2;
-          }
-          ;
-          return v2;
-        };
-      };
-      var applyProp = function(events) {
-        return function(v, v1, v2) {
-          if (v2 instanceof Attribute) {
-            setAttribute(toNullable(v2.value0), v2.value1, v2.value2, el);
-            return v2;
-          }
-          ;
-          if (v2 instanceof Property) {
-            setProperty(v2.value0, v2.value1, el);
-            return v2;
-          }
-          ;
-          if (v2 instanceof Handler) {
-            var v3 = unsafeGetAny(v2.value0, events);
-            if (unsafeHasAny(v2.value0, events)) {
-              write(v2.value1)(snd(v3))();
-              return v2;
-            }
-            ;
-            var ref2 = $$new(v2.value1)();
-            var listener = eventListener(function(ev) {
-              return function __do2() {
-                var f$prime = read(ref2)();
-                return mbEmit(f$prime(ev));
-              };
-            })();
-            pokeMutMap(v2.value0, new Tuple(listener, ref2), events);
-            addEventListener2(v2.value0, listener, el);
-            return v2;
-          }
-          ;
-          if (v2 instanceof Ref) {
-            mbEmit(v2.value0(new Created(el)));
-            return v2;
-          }
-          ;
-          throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 113, column 5 - line 135, column 15): " + [v2.constructor.name]);
-        };
-      };
-      var $lazy_patchProp = $runtime_lazy4("patchProp", "Halogen.VDom.DOM.Prop", function() {
-        return function(state3, ps2) {
-          var events = newMutMap();
-          var onThis = removeProp(state3.events);
-          var onThese = diffProp(state3.events, events);
-          var onThat = applyProp(events);
-          var props = diffWithKeyAndIxE(state3.props, ps2, propToStrKey, onThese, onThis, onThat);
-          var nextState = {
-            events: unsafeFreeze2(events),
-            props
-          };
-          return mkStep(new Step(unit, nextState, $lazy_patchProp(100), haltProp));
-        };
-      });
-      var patchProp = $lazy_patchProp(87);
-      var renderProp = function(ps1) {
-        var events = newMutMap();
-        var ps1$prime = strMapWithIxE(ps1, propToStrKey, applyProp(events));
-        var state3 = {
-          events: unsafeFreeze2(events),
-          props: ps1$prime
-        };
-        return mkStep(new Step(unit, state3, patchProp, haltProp));
-      };
-      return renderProp;
-    };
-  };
-
-  // output/Halogen.HTML.Core/index.js
-  var HTML = function(x) {
-    return x;
-  };
-  var toPropValue = function(dict) {
-    return dict.toPropValue;
-  };
-  var text5 = function($20) {
-    return HTML(Text.create($20));
-  };
-  var prop = function(dictIsProp) {
-    return function(v) {
-      var $22 = Property.create(v);
-      var $23 = toPropValue(dictIsProp);
-      return function($24) {
-        return $22($23($24));
-      };
-    };
-  };
-  var isPropString = {
-    toPropValue: propFromString
-  };
-  var isPropInt = {
-    toPropValue: propFromInt
-  };
-  var handler = /* @__PURE__ */ function() {
-    return Handler.create;
-  }();
-  var element = function(ns) {
-    return function(name16) {
-      return function(props) {
-        return function(children2) {
-          return new Elem(ns, name16, props, children2);
-        };
-      };
-    };
-  };
 
   // output/Control.Applicative.Free/index.js
   var Pure = /* @__PURE__ */ function() {
@@ -7899,7 +8041,7 @@
           return mkStep(new Step(extract2(state3.vdom), state3, $lazy_patchThunk(112), haltThunk));
         }
         ;
-        var vdom = step3(state3.vdom, toVDom(runThunk(t2)));
+        var vdom = step2(state3.vdom, toVDom(runThunk(t2)));
         return mkStep(new Step(extract2(vdom), {
           vdom,
           thunk: t2
@@ -7982,148 +8124,6 @@
       finalize: Nothing.value
     };
   }();
-
-  // output/Halogen.HTML.Elements/index.js
-  var element2 = /* @__PURE__ */ function() {
-    return element(Nothing.value);
-  }();
-  var img = function(props) {
-    return element2("img")(props)([]);
-  };
-  var input2 = function(props) {
-    return element2("input")(props)([]);
-  };
-  var li = /* @__PURE__ */ element2("li");
-  var p = /* @__PURE__ */ element2("p");
-  var p_ = /* @__PURE__ */ p([]);
-  var span3 = /* @__PURE__ */ element2("span");
-  var span_ = /* @__PURE__ */ span3([]);
-  var ul = /* @__PURE__ */ element2("ul");
-  var ul_ = /* @__PURE__ */ ul([]);
-  var div2 = /* @__PURE__ */ element2("div");
-  var div_ = /* @__PURE__ */ div2([]);
-  var button = /* @__PURE__ */ element2("button");
-  var a = /* @__PURE__ */ element2("a");
-
-  // output/Foreign.Index/foreign.js
-  function unsafeReadPropImpl(f, s, key, value14) {
-    return value14 == null ? f : s(value14[key]);
-  }
-
-  // output/Foreign.Index/index.js
-  var unsafeReadProp = function(dictMonad) {
-    return function(k) {
-      return function(value14) {
-        return unsafeReadPropImpl(fail(dictMonad)(new TypeMismatch("object", typeOf(value14))), pure(applicativeExceptT(dictMonad)), k, value14);
-      };
-    };
-  };
-  var readProp = function(dictMonad) {
-    return unsafeReadProp(dictMonad);
-  };
-
-  // output/Web.Event.Event/foreign.js
-  function _currentTarget(e) {
-    return e.currentTarget;
-  }
-  function preventDefault(e) {
-    return function() {
-      return e.preventDefault();
-    };
-  }
-
-  // output/Web.Event.Event/index.js
-  var currentTarget = function($4) {
-    return toMaybe(_currentTarget($4));
-  };
-
-  // output/Web.UIEvent.MouseEvent.EventTypes/index.js
-  var click2 = "click";
-
-  // output/Halogen.HTML.Events/index.js
-  var mouseHandler = unsafeCoerce2;
-  var handler$prime = function(et) {
-    return function(f) {
-      return handler(et)(function(ev) {
-        return map(functorMaybe)(Action.create)(f(ev));
-      });
-    };
-  };
-  var handler2 = function(et) {
-    return function(f) {
-      return handler(et)(function(ev) {
-        return new Just(new Action(f(ev)));
-      });
-    };
-  };
-  var onClick = /* @__PURE__ */ function() {
-    var $3 = handler2(click2);
-    return function($4) {
-      return $3(mouseHandler($4));
-    };
-  }();
-  var addForeignPropHandler = function(key) {
-    return function(prop3) {
-      return function(reader) {
-        return function(f) {
-          var go2 = function(a2) {
-            return composeKleisliFlipped(bindExceptT(monadIdentity))(reader)(readProp(monadIdentity)(prop3))(unsafeToForeign(a2));
-          };
-          return handler$prime(key)(composeKleisli(bindMaybe)(currentTarget)(function(e) {
-            return either($$const(Nothing.value))(function($73) {
-              return Just.create(f($73));
-            })(runExcept(go2(e)));
-          }));
-        };
-      };
-    };
-  };
-  var onValueInput = /* @__PURE__ */ addForeignPropHandler(input)("value")(/* @__PURE__ */ readString(monadIdentity));
-
-  // output/Halogen.HTML.Properties/index.js
-  var prop2 = function(dictIsProp) {
-    return prop(dictIsProp);
-  };
-  var src9 = /* @__PURE__ */ prop2(isPropString)("src");
-  var target6 = /* @__PURE__ */ prop2(isPropString)("target");
-  var value13 = function(dictIsProp) {
-    return prop2(dictIsProp)("value");
-  };
-  var width8 = /* @__PURE__ */ prop2(isPropInt)("width");
-  var placeholder3 = /* @__PURE__ */ prop2(isPropString)("placeholder");
-  var href4 = /* @__PURE__ */ prop2(isPropString)("href");
-  var height8 = /* @__PURE__ */ prop2(isPropInt)("height");
-  var classes = /* @__PURE__ */ function() {
-    var $10 = prop2(isPropString)("className");
-    var $11 = joinWith(" ");
-    var $12 = map(functorArray)(unwrap());
-    return function($13) {
-      return $10($11($12($13)));
-    };
-  }();
-  var class_ = /* @__PURE__ */ function() {
-    var $14 = prop2(isPropString)("className");
-    var $15 = unwrap();
-    return function($16) {
-      return $14($15($16));
-    };
-  }();
-
-  // output/Control.Monad.Fork.Class/index.js
-  var monadForkAff = {
-    suspend: suspendAff,
-    fork: forkAff,
-    join: joinFiber,
-    Monad0: function() {
-      return monadAff;
-    },
-    Functor1: function() {
-      return functorFiber;
-    }
-  };
-  var fork = function(dict) {
-    return dict.fork;
-  };
 
   // output/Halogen.Aff.Driver.State/index.js
   var unRenderStateX = unsafeCoerce2;
@@ -8864,7 +8864,7 @@
                 }
                 ;
                 if (slot instanceof ThunkSlot) {
-                  var step$prime = step3(st.value0, slot.value0);
+                  var step$prime = step2(st.value0, slot.value0);
                   return mkStep(new Step(extract2(step$prime), new Just(step$prime), $lazy_patch(103), done));
                 }
                 ;
@@ -8936,7 +8936,7 @@
                   write(child)(v1.value0.renderChildRef)();
                   var parent2 = parentNode2(v1.value0.node)();
                   var nextSib = nextSibling(v1.value0.node)();
-                  var machine$prime = step3(v1.value0.machine, v);
+                  var machine$prime = step2(v1.value0.machine, v);
                   var newNode = extract2(machine$prime);
                   when(applicativeEffect)(not(heytingAlgebraFunction(heytingAlgebraFunction(heytingAlgebraBoolean)))(unsafeRefEq)(v1.value0.node)(newNode))(substInParent(newNode)(nextSib)(parent2))();
                   return {
@@ -9590,6 +9590,13 @@
     JavaScriptSourceTarget2.value = new JavaScriptSourceTarget2();
     return JavaScriptSourceTarget2;
   }();
+  var HtmlSourceTarget = /* @__PURE__ */ function() {
+    function HtmlSourceTarget2() {
+    }
+    ;
+    HtmlSourceTarget2.value = new HtmlSourceTarget2();
+    return HtmlSourceTarget2;
+  }();
   var JSONTarget = /* @__PURE__ */ function() {
     function JSONTarget2() {
     }
@@ -9660,26 +9667,30 @@
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0 instanceof Inl)))))) {
-        return JSONTarget.value;
+        return HtmlSourceTarget.value;
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))) {
-        return RootFileTarget.value;
+        return JSONTarget.value;
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))) {
-        return ArticleTarget.value;
+        return RootFileTarget.value;
       }
       ;
       if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl))))))))) {
+        return ArticleTarget.value;
+      }
+      ;
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inl)))))))))) {
         return GeneratedTarget.value;
       }
       ;
-      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr))))))))) {
+      if (x instanceof Inr && (x.value0 instanceof Inr && (x.value0.value0 instanceof Inr && (x.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && (x.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr && x.value0.value0.value0.value0.value0.value0.value0.value0.value0.value0 instanceof Inr)))))))))) {
         return TopicsIndexTarget.value;
       }
       ;
-      throw new Error("Failed pattern match at KitchenSink.Blog (line 59, column 1 - line 59, column 58): " + [x.constructor.name]);
+      throw new Error("Failed pattern match at KitchenSink.Blog (line 60, column 1 - line 60, column 58): " + [x.constructor.name]);
     },
     from: function(x) {
       if (x instanceof CssTarget) {
@@ -9706,27 +9717,31 @@
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))));
       }
       ;
-      if (x instanceof JSONTarget) {
+      if (x instanceof HtmlSourceTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))));
       }
       ;
-      if (x instanceof RootFileTarget) {
+      if (x instanceof JSONTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))))));
       }
       ;
-      if (x instanceof ArticleTarget) {
+      if (x instanceof RootFileTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))))));
       }
       ;
-      if (x instanceof GeneratedTarget) {
+      if (x instanceof ArticleTarget) {
         return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value))))))))));
       }
       ;
-      if (x instanceof TopicsIndexTarget) {
-        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(NoArguments.value))))))))));
+      if (x instanceof GeneratedTarget) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inl(NoArguments.value)))))))))));
       }
       ;
-      throw new Error("Failed pattern match at KitchenSink.Blog (line 59, column 1 - line 59, column 58): " + [x.constructor.name]);
+      if (x instanceof TopicsIndexTarget) {
+        return new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(new Inr(NoArguments.value)))))))))));
+      }
+      ;
+      throw new Error("Failed pattern match at KitchenSink.Blog (line 60, column 1 - line 60, column 58): " + [x.constructor.name]);
     }
   };
   var genericTargetSummary = {
@@ -9815,6 +9830,10 @@
       }
     }))(/* @__PURE__ */ decodeAesonSum$prime(/* @__PURE__ */ decodeAesonConstructorNoArguments$prime({
       reflectSymbol: function() {
+        return "HtmlSourceTarget";
+      }
+    }))(/* @__PURE__ */ decodeAesonSum$prime(/* @__PURE__ */ decodeAesonConstructorNoArguments$prime({
+      reflectSymbol: function() {
         return "JSONTarget";
       }
     }))(/* @__PURE__ */ decodeAesonSum$prime(/* @__PURE__ */ decodeAesonConstructorNoArguments$prime({
@@ -9833,7 +9852,7 @@
       reflectSymbol: function() {
         return "TopicsIndexTarget";
       }
-    }))))))))))))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))))))))))))(isSingleConstructor_Sum))(defaultOptions)
+    })))))))))))))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Sum(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments))(/* @__PURE__ */ areAllConstructorsNullary_Constructor(areAllConstructorsNullary_NoArguments)))))))))))))(isSingleConstructor_Sum))(defaultOptions)
   };
   var decodeJsonPreambleSummary = {
     decodeJson: /* @__PURE__ */ genericDecodeAeson(genericPreambleSummary)(/* @__PURE__ */ decodeAesonConstructor(/* @__PURE__ */ decodeRepArgsArgument(/* @__PURE__ */ decodeRecord(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString))(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldMaybe(decodeJsonString))(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString))(/* @__PURE__ */ gDecodeJsonCons(/* @__PURE__ */ decodeFieldId(decodeJsonString))(gDecodeJsonNil)({
@@ -9969,7 +9988,7 @@
   // output/Web.UIEvent.MouseEvent/index.js
   var toEvent = unsafeCoerce2;
 
-  // output/Main/index.js
+  // output/Searchbox/index.js
   var Hidden = /* @__PURE__ */ function() {
     function Hidden2() {
     }
@@ -9983,6 +10002,20 @@
     ;
     Visible2.value = new Visible2();
     return Visible2;
+  }();
+  var Expanded = /* @__PURE__ */ function() {
+    function Expanded2() {
+    }
+    ;
+    Expanded2.value = new Expanded2();
+    return Expanded2;
+  }();
+  var Collapsed = /* @__PURE__ */ function() {
+    function Collapsed2() {
+    }
+    ;
+    Collapsed2.value = new Collapsed2();
+    return Collapsed2;
   }();
   var SetFilterString = /* @__PURE__ */ function() {
     function SetFilterString2(value0) {
@@ -10020,6 +10053,131 @@
     };
     return ToggleItemVisibility2;
   }();
+  var component = function(dictMonadAff) {
+    return function(props) {
+      var renderFilter = function(str) {
+        return input2([class_("routes-filter-input"), onValueInput(function(e) {
+          return new SetFilterString(e);
+        }), onClick(function(v) {
+          return new SetVisibility(Visible.value);
+        }), value13(isPropString)(str), placeholder3("search")]);
+      };
+      var renderCollapseListButton = button([class_("collapse-button"), onClick(function(v) {
+        return new SetVisibility(Hidden.value);
+      })])([text5("\u{1F53A}\uFE0Fhide results")]);
+      var itemVisibility = function(expanded) {
+        return function(v) {
+          var $12 = eq(eqMaybe(eqString))(new Just(v.value0))(expanded);
+          if ($12) {
+            return Expanded.value;
+          }
+          ;
+          return Collapsed.value;
+        };
+      };
+      var renderRoutes = function(state3) {
+        return function(visibility) {
+          return function(rts) {
+            var visibilityClass = function(v) {
+              if (v instanceof Hidden) {
+                return "hidden";
+              }
+              ;
+              if (v instanceof Visible) {
+                var $16 = $$null(rts);
+                if ($16) {
+                  return "hidden";
+                }
+                ;
+                return "visible";
+              }
+              ;
+              throw new Error("Failed pattern match at Searchbox (line 88, column 14 - line 90, column 73): " + [v.constructor.name]);
+            };
+            return div2([classes(["routes-list", visibilityClass(visibility)])])([div_([renderCollapseListButton]), ul_(map(functorArray)(function(x) {
+              return props.renderRoute(itemVisibility(state3.expanded)(x))(x);
+            })(rts))]);
+          };
+        };
+      };
+      var render = function(state3) {
+        return div_([renderFilter(state3.filter), renderRoutes(state3)(state3.visibility)(filter(props.matchRoute(state3.filter))(state3.routes))]);
+      };
+      var initialState = function(input3) {
+        return {
+          routes: input3.routes,
+          filter: input3.filter,
+          visibility: Hidden.value,
+          expanded: Nothing.value
+        };
+      };
+      var handleAction = function(v) {
+        if (v instanceof SetFilterString) {
+          return modify_2(monadStateHalogenM)(function(v1) {
+            var $18 = {};
+            for (var $19 in v1) {
+              if ({}.hasOwnProperty.call(v1, $19)) {
+                $18[$19] = v1[$19];
+              }
+              ;
+            }
+            ;
+            $18.filter = v.value0;
+            return $18;
+          });
+        }
+        ;
+        if (v instanceof SetVisibility) {
+          return modify_2(monadStateHalogenM)(function(v2) {
+            var $22 = {};
+            for (var $23 in v2) {
+              if ({}.hasOwnProperty.call(v2, $23)) {
+                $22[$23] = v2[$23];
+              }
+              ;
+            }
+            ;
+            $22.visibility = v.value0;
+            return $22;
+          });
+        }
+        ;
+        if (v instanceof ToggleItemVisibility) {
+          return bind(bindHalogenM)(get(monadStateHalogenM))(function(st0) {
+            return discard(discardUnit)(bindHalogenM)(put(monadStateHalogenM)(function() {
+              var $26 = {};
+              for (var $27 in st0) {
+                if ({}.hasOwnProperty.call(st0, $27)) {
+                  $26[$27] = st0[$27];
+                }
+                ;
+              }
+              ;
+              $26.expanded = new Just(v.value1);
+              return $26;
+            }()))(function() {
+              return when(applicativeHalogenM)(notEq(eqMaybe(eqString))(st0.expanded)(new Just(v.value1)) && v.value0)(liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()))(preventDefault(toEvent(v.value2))));
+            });
+          });
+        }
+        ;
+        throw new Error("Failed pattern match at Searchbox (line 112, column 18 - line 119, column 63): " + [v.constructor.name]);
+      };
+      return mkComponent({
+        initialState,
+        render,
+        "eval": mkEval({
+          handleAction,
+          handleQuery: defaultEval.handleQuery,
+          receive: defaultEval.receive,
+          initialize: defaultEval.initialize,
+          finalize: defaultEval.finalize
+        })
+      });
+    };
+  };
+
+  // output/Main/index.js
   var showTargetType = function(v) {
     if (v instanceof CssTarget) {
       return "A css file";
@@ -10039,6 +10197,10 @@
     ;
     if (v instanceof JavaScriptSourceTarget) {
       return "Some JS code";
+    }
+    ;
+    if (v instanceof HtmlSourceTarget) {
+      return "Some raw HTML file.";
     }
     ;
     if (v instanceof JSONTarget) {
@@ -10065,7 +10227,13 @@
       return "An index.";
     }
     ;
-    throw new Error("Failed pattern match at Main (line 214, column 18 - line 225, column 35): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 136, column 18 - line 148, column 35): " + [v.constructor.name]);
+  };
+  var renderTopicImage = function(url) {
+    return img([src9(url)]);
+  };
+  var renderFavicon = function(url) {
+    return img([src9(url), width8(32), height8(32)]);
   };
   var preventMouseClickBeforeExpand = function(v) {
     if (v instanceof ArticleTarget) {
@@ -10073,6 +10241,81 @@
     }
     ;
     return false;
+  };
+  var renderRoute = function(visibility) {
+    return function(v) {
+      var visibilityClass = function() {
+        if (visibility instanceof Expanded) {
+          return "visible";
+        }
+        ;
+        if (visibility instanceof Collapsed) {
+          return "hidden";
+        }
+        ;
+        throw new Error("Failed pattern match at Main (line 74, column 23 - line 76, column 46): " + [visibility.constructor.name]);
+      }();
+      var topicImage = preview(function() {
+        var $31 = _TargetSummary(profunctorForget);
+        var $32 = to2(function(v1) {
+          return v1.topicSummary;
+        });
+        var $33 = _Just(choiceForget(monoidFirst));
+        var $34 = _TopicSummary(profunctorForget);
+        var $35 = to2(function(v1) {
+          return v1.imageLink;
+        });
+        var $36 = _Just(choiceForget(monoidFirst));
+        return function($37) {
+          return $31($32($33($34($35($36($37))))));
+        };
+      }())(v.value1);
+      var targetType = view(function() {
+        var $38 = _TargetSummary(profunctorForget);
+        var $39 = to2(function(v1) {
+          return v1.targetType;
+        });
+        return function($40) {
+          return $38($39($40));
+        };
+      }())(v.value1);
+      var summaryTitle = view(function() {
+        var $41 = _TargetSummary(profunctorForget);
+        var $42 = to2(function(v1) {
+          return v1.textualTitle;
+        });
+        return function($43) {
+          return $41($42($43));
+        };
+      }())(v.value1);
+      var summaryDescription = view(function() {
+        var $44 = _TargetSummary(profunctorForget);
+        var $45 = to2(function(v1) {
+          return v1.textualSummary;
+        });
+        return function($46) {
+          return $44($45($46));
+        };
+      }())(v.value1);
+      var preambleFavicon = preview(function() {
+        var $47 = _TargetSummary(profunctorForget);
+        var $48 = to2(function(v1) {
+          return v1.preambleSummary;
+        });
+        var $49 = _Just(choiceForget(monoidFirst));
+        var $50 = _PreambleSummary(profunctorForget);
+        var $51 = to2(function(v1) {
+          return v1.faviconUrl;
+        });
+        return function($52) {
+          return $47($48($49($50($51($52)))));
+        };
+      }())(v.value1);
+      var defaultTitle = showTargetType(targetType);
+      return li([classes(["routes-list-item", "link-description", visibilityClass]), onClick(function(e) {
+        return new ToggleItemVisibility(preventMouseClickBeforeExpand(targetType), v.value0, e);
+      })])([p([class_("link-description-header")])([a([href4(v.value0), target6("_blank"), class_("link")])([maybe(text5(""))(renderFavicon)(preambleFavicon), span_([text5(v.value0)])]), span3([class_("link-description-title")])([text5(fromMaybe(defaultTitle)(summaryTitle))])]), div2([classes(["link-description-body", visibilityClass])])([p_([text5(fromMaybe("")(summaryDescription))]), maybe(text5(""))(renderTopicImage)(topicImage)])]);
+    };
   };
   var matchFilter = function(filter4) {
     return function(str) {
@@ -10086,25 +10329,25 @@
     return function(v) {
       var f = matchFilter(filter4);
       var inSummary = preview(function() {
-        var $55 = _TargetSummary(profunctorForget);
-        var $56 = to2(function(v1) {
+        var $53 = _TargetSummary(profunctorForget);
+        var $54 = to2(function(v1) {
           return v1.textualSummary;
         });
-        var $57 = _Just(choiceForget(monoidFirst));
-        var $58 = to2(f);
-        return function($59) {
-          return $55($56($57($58($59))));
+        var $55 = _Just(choiceForget(monoidFirst));
+        var $56 = to2(f);
+        return function($57) {
+          return $53($54($55($56($57))));
         };
       }())(v.value1);
       var inTitle = preview(function() {
-        var $60 = _TargetSummary(profunctorForget);
-        var $61 = to2(function(v1) {
+        var $58 = _TargetSummary(profunctorForget);
+        var $59 = to2(function(v1) {
           return v1.textualTitle;
         });
-        var $62 = _Just(choiceForget(monoidFirst));
-        var $63 = to2(f);
-        return function($64) {
-          return $60($61($62($63($64))));
+        var $60 = _Just(choiceForget(monoidFirst));
+        var $61 = to2(f);
+        return function($62) {
+          return $58($59($60($61($62))));
         };
       }())(v.value1);
       return or(foldableArray)(heytingAlgebraBoolean)([f(v.value0), fromMaybe(false)(inTitle), fromMaybe(false)(inSummary)]);
@@ -10127,212 +10370,30 @@
       return pure(applicativeAff)(new Just(res.value0.value0));
     }
     ;
-    throw new Error("Failed pattern match at Main (line 33, column 3 - line 40, column 41): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 32, column 3 - line 39, column 41): " + [res.constructor.name]);
   });
-  var component = function(dictMonadAff) {
-    var renderTopicImage = function(url) {
-      return img([src9(url)]);
-    };
-    var renderFilter = function(str) {
-      return input2([class_("routes-filter-input"), onValueInput(function(e) {
-        return new SetFilterString(e);
-      }), onClick(function(e) {
-        return new SetVisibility(Visible.value);
-      }), value13(isPropString)(str), placeholder3("search")]);
-    };
-    var renderFavicon = function(url) {
-      return img([src9(url), width8(32), height8(32)]);
-    };
-    var renderRoute = function(expanded) {
-      return function(v) {
-        var visibilityClass = function() {
-          var $35 = eq(eqMaybe(eqString))(new Just(v.value0))(expanded);
-          if ($35) {
-            return "visible";
-          }
-          ;
-          return "hidden";
-        }();
-        var topicImage = preview(function() {
-          var $65 = _TargetSummary(profunctorForget);
-          var $66 = to2(function(v1) {
-            return v1.topicSummary;
-          });
-          var $67 = _Just(choiceForget(monoidFirst));
-          var $68 = _TopicSummary(profunctorForget);
-          var $69 = to2(function(v1) {
-            return v1.imageLink;
-          });
-          var $70 = _Just(choiceForget(monoidFirst));
-          return function($71) {
-            return $65($66($67($68($69($70($71))))));
-          };
-        }())(v.value1);
-        var targetType = view(function() {
-          var $72 = _TargetSummary(profunctorForget);
-          var $73 = to2(function(v1) {
-            return v1.targetType;
-          });
-          return function($74) {
-            return $72($73($74));
-          };
-        }())(v.value1);
-        var summaryTitle = view(function() {
-          var $75 = _TargetSummary(profunctorForget);
-          var $76 = to2(function(v1) {
-            return v1.textualTitle;
-          });
-          return function($77) {
-            return $75($76($77));
-          };
-        }())(v.value1);
-        var summaryDescription = view(function() {
-          var $78 = _TargetSummary(profunctorForget);
-          var $79 = to2(function(v1) {
-            return v1.textualSummary;
-          });
-          return function($80) {
-            return $78($79($80));
-          };
-        }())(v.value1);
-        var preambleFavicon = preview(function() {
-          var $81 = _TargetSummary(profunctorForget);
-          var $82 = to2(function(v1) {
-            return v1.preambleSummary;
-          });
-          var $83 = _Just(choiceForget(monoidFirst));
-          var $84 = _PreambleSummary(profunctorForget);
-          var $85 = to2(function(v1) {
-            return v1.faviconUrl;
-          });
-          return function($86) {
-            return $81($82($83($84($85($86)))));
-          };
-        }())(v.value1);
-        var defaultTitle = showTargetType(targetType);
-        return li([classes(["routes-list-item", "link-description", visibilityClass]), onClick(function(e) {
-          return new ToggleItemVisibility(targetType, v.value0, e);
-        })])([p([class_("link-description-header")])([a([href4(v.value0), target6("_blank"), class_("link")])([maybe(text5(""))(renderFavicon)(preambleFavicon), span_([text5(v.value0)])]), span3([class_("link-description-title")])([text5(fromMaybe(defaultTitle)(summaryTitle))])]), div2([classes(["link-description-body", visibilityClass])])([p_([text5(fromMaybe("")(summaryDescription))]), maybe(text5(""))(renderTopicImage)(topicImage)])]);
-      };
-    };
-    var renderCollapseListButton = button([class_("collapse-button"), onClick(function(e) {
-      return new SetVisibility(Hidden.value);
-    })])([text5("\u{1F53A}\uFE0F")]);
-    var renderRoutes = function(state3) {
-      return function(visibility) {
-        return function(rts) {
-          var visibilityClass = function(v) {
-            if (v instanceof Hidden) {
-              return "hidden";
-            }
-            ;
-            if (v instanceof Visible) {
-              var $39 = $$null(rts);
-              if ($39) {
-                return "hidden";
-              }
-              ;
-              return "visible";
-            }
-            ;
-            throw new Error("Failed pattern match at Main (line 125, column 14 - line 127, column 73): " + [v.constructor.name]);
-          };
-          return div2([classes(["routes-list", visibilityClass(visibility)])])([div_([renderCollapseListButton]), ul_(map(functorArray)(renderRoute(state3.expanded))(rts))]);
-        };
-      };
-    };
-    var render = function(state3) {
-      return div_([renderFilter(state3.filter), renderRoutes(state3)(state3.visibility)(filter(matchRoute(state3.filter))(state3.routes))]);
-    };
-    var initialState = function(input3) {
-      return {
-        routes: input3.routes,
-        filter: ".html",
-        visibility: Hidden.value,
-        expanded: Nothing.value
-      };
-    };
-    var handleAction = function(v) {
-      if (v instanceof SetFilterString) {
-        return modify_2(monadStateHalogenM)(function(v1) {
-          var $41 = {};
-          for (var $42 in v1) {
-            if ({}.hasOwnProperty.call(v1, $42)) {
-              $41[$42] = v1[$42];
-            }
-            ;
-          }
-          ;
-          $41.filter = v.value0;
-          return $41;
-        });
-      }
-      ;
-      if (v instanceof SetVisibility) {
-        return modify_2(monadStateHalogenM)(function(v2) {
-          var $45 = {};
-          for (var $46 in v2) {
-            if ({}.hasOwnProperty.call(v2, $46)) {
-              $45[$46] = v2[$46];
-            }
-            ;
-          }
-          ;
-          $45.visibility = v.value0;
-          return $45;
-        });
-      }
-      ;
-      if (v instanceof ToggleItemVisibility) {
-        return bind(bindHalogenM)(get(monadStateHalogenM))(function(st0) {
-          return discard(discardUnit)(bindHalogenM)(put(monadStateHalogenM)(function() {
-            var $49 = {};
-            for (var $50 in st0) {
-              if ({}.hasOwnProperty.call(st0, $50)) {
-                $49[$50] = st0[$50];
-              }
-              ;
-            }
-            ;
-            $49.expanded = new Just(v.value1);
-            return $49;
-          }()))(function() {
-            return when(applicativeHalogenM)(notEq(eqMaybe(eqString))(st0.expanded)(new Just(v.value1)) && preventMouseClickBeforeExpand(v.value0))(liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()))(preventDefault(toEvent(v.value2))));
-          });
-        });
-      }
-      ;
-      throw new Error("Failed pattern match at Main (line 199, column 18 - line 206, column 63): " + [v.constructor.name]);
-    };
-    return mkComponent({
-      initialState,
-      render,
-      "eval": mkEval({
-        handleAction,
-        handleQuery: defaultEval.handleQuery,
-        receive: defaultEval.receive,
-        initialize: defaultEval.initialize,
-        finalize: defaultEval.finalize
-      })
-    });
-  };
   var main2 = /* @__PURE__ */ runHalogenAff(/* @__PURE__ */ bind(bindAff)(awaitBody)(function(body2) {
     return bind(bindAff)(liftAff(monadAffAff)(fetchPathList))(function(blogPaths) {
       var routes = toArrayOf(function() {
-        var $87 = _Just(choiceForget(monoidEndo(categoryFn)));
-        var $88 = _PathList(profunctorForget);
-        var $89 = to2(function(v) {
+        var $63 = _Just(choiceForget(monoidEndo(categoryFn)));
+        var $64 = _PathList(profunctorForget);
+        var $65 = to2(function(v) {
           return v.paths;
         });
-        var $90 = traversed(traversableArray)(wanderForget(monoidEndo(categoryFn)));
-        return function($91) {
-          return $87($88($89($90($91))));
+        var $66 = traversed(traversableArray)(wanderForget(monoidEndo(categoryFn)));
+        return function($67) {
+          return $63($64($65($66($67))));
         };
       }())(blogPaths);
       return bind(bindAff)(selectElement("#search-box"))(function(elem3) {
         var tgt = fromMaybe(body2)(elem3);
-        return runUI2(component(monadAffAff))({
-          routes
+        var props = {
+          matchRoute,
+          renderRoute
+        };
+        return runUI2(component(monadAffAff)(props))({
+          routes,
+          filter: ".html"
         })(tgt);
       });
     });
