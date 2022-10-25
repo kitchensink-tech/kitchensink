@@ -29,7 +29,9 @@ import qualified Prod.Status as Prod
 
 import Data.Maybe (fromMaybe, isJust)
 import Data.ByteString (ByteString)
+import Network.HTTP.Client as HTTP (Manager, newManager, defaultManagerSettings)
 import Network.HTTP.Types (status200, status404)
+import Network.HTTP.ReverseProxy
 import Network.Wai as Wai
 import Network.Wai.Handler.Warp as Warp
 import qualified Network.Wai.Middleware.RequestLogger as RequestLogger
@@ -101,6 +103,7 @@ data DevServerRuntime = DevServerRuntime
   , traceDev :: Tracer IO DevServerTrack
   , liveSite :: BackgroundVal Site
   , counters :: Counters
+  , httpManager :: HTTP.Manager
   }
 
 initDevServerRuntime :: Engine -> FilePath -> Tracer IO DevServerTrack -> IO DevServerRuntime
@@ -118,6 +121,7 @@ initDevServerRuntime engine path devtracer = do
     <*> pure devtracer
     <*> (load rtCounters >>= (\s -> background (contramap f devtracer) 0 s (reloadSite rtCounters siteTMVar watches)))
     <*> pure rtCounters
+    <*> newManager defaultManagerSettings
   where
     load :: Counters -> IO Site
     load cntrs = do
@@ -200,6 +204,7 @@ type DevApi = DevWatchApi
   :<|> DevListCommandsApi
   :<|> DevExecCommandApi
   :<|> DevForceReloadApi
+  :<|> ProxyApi
   :<|> OnTheFlyProductionApi
 
 type ServeApi = OnTheFlyProductionApi
@@ -227,6 +232,8 @@ data ForceReloadStatus = ForceReloaded
 instance ToJSON ForceReloadStatus
 
 type DevForceReloadApi = "dev" :> "reload" :> Post '[JSON] (Maybe ForceReloadStatus)
+
+type ProxyApi = "api" :> Raw
 
 type OnTheFlyProductionApi = Raw
 
@@ -370,9 +377,12 @@ data Command = Command {
 instance FromJSON Command
 instance ToJSON Command
 
+type HostName = Text
+type PortNum = Int
 data KitchenSinkEngineConfig = KitchenSinkEngineConfig {
     publishScript :: Maybe FilePath
   , commands :: [Command]
+  , api :: Maybe (HostName, PortNum)
   } deriving (Generic, Show)
 instance FromJSON KitchenSinkEngineConfig
 
@@ -426,12 +436,19 @@ serveDevApi config devengine prodengine rt =
   :<|> handleDevListCommands config rt
   :<|> handleExecCommand config rt
   :<|> handleDevForceReload rt
+  :<|> coerce (handleProxyApi config rt)
   :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget devengine rt))
 
 serveApi :: Engine -> DevServerRuntime -> Server ServeApi
 serveApi engine rt =
   coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget engine rt))
 
+handleProxyApi :: KitchenSinkEngineConfig -> DevServerRuntime -> Application
+handleProxyApi cfg rt = case api cfg of
+  Nothing ->
+      \_ resp -> resp $ Wai.responseLBS status404 [] "not found"
+  Just (host, port) ->
+    waiProxyTo (const $ pure $ WPRProxyDest $ ProxyDest (Text.encodeUtf8 host) port) defaultOnExc (httpManager rt)
 
 -- primitives required to run an engine
 data Engine = Engine {

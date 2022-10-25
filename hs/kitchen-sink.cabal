@@ -55,6 +55,8 @@ library
                     , lens-family-core
                     , feed
                     , filepath
+                    , http-reverse-proxy
+                    , http-client
                     , process-extras
                     , text
                     , time
