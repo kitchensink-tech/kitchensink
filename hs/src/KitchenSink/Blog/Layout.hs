@@ -83,13 +83,17 @@ assembleFooter a = r <$> (fmap extract . jsonSection @SocialData =<< getSection 
       footer_ [ class_ "footing" ] $ do
         div_ [ class_ "social-links" ] $ do
           twtr $ twitter s 
+          maybe mempty masto (mastodon s)
+          maybe mempty chost (cohost s)
           maybe mempty ghub (github s)
           maybe mempty lkdn (linkedin s)
 
-    twtr, ghub, lkdn :: Text -> Lucid.Html ()
+    twtr, ghub, lkdn, masto, chost :: Text -> Lucid.Html ()
     twtr h = a_ [ href_ $ "https://twitter.com/" <> h ] (mconcat ["twitter: @", toHtml h])
     ghub h = a_ [ href_ $ "https://github.com/" <> h ] (mconcat ["github: ", toHtml $ h])
     lkdn h = a_ [ href_ $ "https://linkedin.com/in/" <> h ] (mconcat ["linkedin: ", toHtml $ h])
+    masto h = a_ [ href_ $ h ] (mconcat ["mastodon: ", toHtml $ h])
+    chost h = a_ [ href_ $ "https://cohost.org/" <> h ] (mconcat ["cohost: @", toHtml h])
 
 assembleDefaultLayoutWarning :: Article [Text] -> Assembler (Lucid.Html ())
 assembleDefaultLayoutWarning _ = pure $ do

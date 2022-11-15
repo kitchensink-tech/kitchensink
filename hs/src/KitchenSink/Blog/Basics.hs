@@ -48,6 +48,8 @@ data SocialData = SocialData {
     twitter :: Text
   , linkedin :: Maybe Text
   , github :: Maybe Text
+  , mastodon :: Maybe Text
+  , cohost :: Maybe Text
   } deriving (Show, Eq, Generic)
 instance FromJSON SocialData
 instance ToJSON SocialData
