@@ -20,7 +20,7 @@ import Data.Tuple (Tuple(..))
 import Data.List.NonEmpty (NonEmptyList, singleton)
 import Foreign (Foreign, ForeignError(..), readArray, readBoolean, readInt, readString, readNullOrUndefined)
 import Foreign.Index ((!))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Array (concat)
 import Data.Lens (view, toArrayOf, traversed, to, filtered)
 import EChart as EChart
@@ -82,10 +82,11 @@ type Series =
   { name :: String
   , type :: String
   , layout :: String
-  , data :: Array { id :: String, name :: String, category :: Int }
+  , data :: Array { id :: String, name :: String, category :: Int , symbol :: String }
   , links :: Array { source :: String, target:: String }
   , categories :: Array { name::String }
   , roam :: Boolean
+  , draggable :: Boolean
   , label :: { position :: String }
   , force :: { repulsion :: Int }
   }
@@ -95,13 +96,19 @@ type Options =
   , series :: Array Series
   )
 
-chartOptions :: TopicGraph -> EChart.Input Options
-chartOptions graph =
+chartOptions :: TopicGraph -> Maybe Node -> EChart.Input Options
+chartOptions graph focusedNode =
   let
+    
+    imageSymbol :: String -> String -> String
+    imageSymbol url n1id
+      | maybe false (\n2 -> n2.id == n1id) focusedNode = "image://" <> url
+      | otherwise = "circle"
+
     echartNode (Tuple key node) = case node of
-      KS.ArticleNode title _ -> {id: key, name:title, category: 0}
-      KS.TopicNode _ -> {id: key, name:key, category: 1}
-      KS.ImageNode url -> {id: key, name:url, category: 2}
+      KS.ArticleNode title _ -> {id: key, name:title, category: 0, symbol: "rect"}
+      KS.TopicNode _ -> {id: key, name:key, category: 1, symbol: "diamond"}
+      KS.ImageNode url -> {id: key, name:url, category: 2, symbol: (imageSymbol url key)}
 
     echartEdge (Tuple source target) = {source, target}
 
@@ -119,6 +126,7 @@ chartOptions graph =
         , links: toArrayOf (_TopicGraph <<< to _.edges <<< traversed <<< to echartEdge) graph
         , categories: categories
         , roam: true
+        , draggable: true
         , label: {
             position: "right"
           }
@@ -129,4 +137,4 @@ chartOptions graph =
       ]
     }
   in
-  {options,modified:false}
+  {options,modified:true}

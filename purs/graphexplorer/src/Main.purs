@@ -5,6 +5,7 @@ import Prelude
 import Affjax.Web as AX
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Either (Either(..))
+import Data.Traversable (traverse_)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
@@ -50,7 +51,7 @@ _ksgraph = Proxy :: Proxy "ksgraph"
 type Input = Maybe TopicGraph
 
 data Action
-  = Noop
+  = HandleGraphEvent (EChart.Output KSGraph.Event)
 
 component
   :: forall query output m. MonadAff m
@@ -65,7 +66,7 @@ component =
     }
   where
 
-  initialState graph = {graph}
+  initialState graph = {graph, focusedNode: Nothing}
 
   render state =
     HH.div
@@ -73,7 +74,7 @@ component =
     ]
     [ case state.graph of
         Nothing -> renderEmpty
-        Just graph -> renderGraph graph
+        Just graph -> renderGraph graph state.focusedNode
     ]
 
   renderEmpty =
@@ -87,11 +88,18 @@ component =
       ]
     ]
 
-  renderGraph graph =
+  renderGraph graph focusedNode =
     HH.div_
     [ HH.text "got a graph"
-    , HH.slot_ _ksgraph unit EChart.component (KSGraph.chartOptions graph)
+    , HH.slot _ksgraph unit EChart.component (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
     ]
 
   handleAction = case _ of
-    Noop -> pure unit
+    HandleGraphEvent ev -> do
+      let event = KSGraph.runExcept (KSGraph.decodeEvent ev) 
+      traverse_ onClick event
+
+  onClick (KSGraph.ClickedNode node) = onNodeClicked node
+  onClick _ = pure unit
+
+  onNodeClicked node =  H.modify_ _ { focusedNode = Just node }
