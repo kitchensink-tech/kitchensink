@@ -87,4 +87,10 @@ div.tag-prevnext {
 div.social-links {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+div.social-links a {
+  margin: 1rem;
+  justify-content: space-between;
 }
