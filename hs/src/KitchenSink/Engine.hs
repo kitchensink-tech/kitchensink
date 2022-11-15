@@ -207,7 +207,8 @@ type DevApi = DevWatchApi
   :<|> ProxyApi
   :<|> OnTheFlyProductionApi
 
-type ServeApi = OnTheFlyProductionApi
+type ServeApi = ProxyApi
+  :<|> OnTheFlyProductionApi
 
 type TargetPathName = Text
 
@@ -439,9 +440,10 @@ serveDevApi config devengine prodengine rt =
   :<|> coerce (handleProxyApi config rt)
   :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget devengine rt))
 
-serveApi :: Engine -> DevServerRuntime -> Server ServeApi
-serveApi engine rt =
-  coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget engine rt))
+serveApi :: KitchenSinkEngineConfig -> Engine -> DevServerRuntime -> Server ServeApi
+serveApi config engine rt =
+  coerce (handleProxyApi config rt)
+  :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget engine rt))
 
 handleProxyApi :: KitchenSinkEngineConfig -> DevServerRuntime -> Application
 handleProxyApi cfg rt = case api cfg of
@@ -479,7 +481,7 @@ defaultMain = do
     Serve _ _ mode _ -> do
       case (coerce mode) of
         DEV   -> runDev kitchensinkFilePath devengine prodengine srcPath portnum
-        SERVE -> runServe prodengine srcPath portnum
+        SERVE -> runServe kitchensinkFilePath prodengine srcPath portnum
   where
     runDev kspath devengine prodengine path portnum = do
       ksconfig <- loadJSONFile kspath >>= maybe (error "couldn't load kitchensink.json") pure
@@ -496,7 +498,8 @@ defaultMain = do
            (serveDevApi ksconfig devengine prodengine rt)
            (Proxy @DevApi)
 
-    runServe engine path portnum = do
+    runServe kspath engine path portnum = do
+      ksconfig <- loadJSONFile kspath >>= maybe (error "couldn't load kitchensink.json") pure
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
       rt <- initDevServerRuntime engine path tracePrint
@@ -507,7 +510,7 @@ defaultMain = do
            init
            apiStatus
            (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
-           (serveApi engine rt)
+           (serveApi ksconfig engine rt)
            (Proxy @ServeApi)
 
 

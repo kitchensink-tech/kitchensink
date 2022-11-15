@@ -8,5 +8,6 @@ source-repository-package
 
 source-repository-package
     type: git
-    location: https://github.com/eskimor/purescript-bridge.git
-    tag: 359102889031f3cd0dc46318b620198cbcbf4253
+    location: /home/lucasdicioccio/code/opensource/purescript-bridge/
+    tag: 64d847544342fa58fb3f1e34d657c6838b51fa20
+
