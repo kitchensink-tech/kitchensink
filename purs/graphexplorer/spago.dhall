@@ -24,6 +24,7 @@ to generate this file without the comments in this block.
   , "halogen-subscriptions"
   , "kitchen-sink-compat"
   , "maybe"
+  , "numbers"
   , "prelude"
   , "web-dom"
   , "web-events"

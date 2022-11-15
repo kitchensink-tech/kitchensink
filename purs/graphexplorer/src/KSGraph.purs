@@ -20,13 +20,17 @@ import Data.Tuple (Tuple(..))
 import Data.List.NonEmpty (NonEmptyList, singleton)
 import Foreign (Foreign, ForeignError(..), readArray, readBoolean, readInt, readString, readNullOrUndefined)
 import Foreign.Index ((!))
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Array (concat)
 import Data.Lens (view, toArrayOf, traversed, to, filtered)
-import EChart as EChart
+import Data.Lens.Fold (anyOf)
+import Data.Number as Number
 
 import KitchenSink.Blog.Advanced (TopicGraph, _TopicGraph)
 import KitchenSink.Blog.Advanced as KS
+
+import EChart as EChart
 
 type Legend = { data :: Array String }
 
@@ -82,7 +86,7 @@ type Series =
   { name :: String
   , type :: String
   , layout :: String
-  , data :: Array { id :: String, name :: String, category :: Int , symbol :: String }
+  , data :: Array { id :: String, name :: String, category :: Int , symbol :: String , symbolSize :: Number }
   , links :: Array { source :: String, target:: String }
   , categories :: Array { name::String }
   , roam :: Boolean
@@ -99,16 +103,60 @@ type Options =
 chartOptions :: TopicGraph -> Maybe Node -> EChart.Input Options
 chartOptions graph focusedNode =
   let
+    isSelection :: String -> Boolean
+    isSelection n1id = maybe false (\n2 -> n2.id == n1id) focusedNode
+    
+    hasUndirectedEdge :: String -> String -> Boolean
+    hasUndirectedEdge n1 n2 =
+      let match (Tuple m1 m2) = (n1 == m1 && n2 == m2) || (n2 == m1 && n1 == m2)
+      in
+      anyOf (_TopicGraph <<< to _.edges <<< traversed) match graph
+
+    isSelectionNeighbor :: String -> Boolean
+    isSelectionNeighbor n1id = maybe false (\n2 -> hasUndirectedEdge n1id n2.id) focusedNode
     
     imageSymbol :: String -> String -> String
     imageSymbol url n1id
-      | maybe false (\n2 -> n2.id == n1id) focusedNode = "image://" <> url
+      | isSelection n1id || isSelectionNeighbor n1id = "image://" <> url
       | otherwise = "circle"
 
+    selectionSize :: String -> Number -> Number
+    selectionSize n1id default
+      | isSelection n1id = 35.0
+      | isSelectionNeighbor n1id = 30.0
+      | otherwise = default
+
+    articleSize :: Int -> String -> Number
+    articleSize n _ = 10.0 + Number.log(toNumber n) / Number.log(2.0)
+
+    topicSize :: String -> Number
+    topicSize _ = 10.0
+
+    imageSize :: String -> Number
+    imageSize _ = 5.0
+
     echartNode (Tuple key node) = case node of
-      KS.ArticleNode title _ -> {id: key, name:title, category: 0, symbol: "rect"}
-      KS.TopicNode _ -> {id: key, name:key, category: 1, symbol: "diamond"}
-      KS.ImageNode url -> {id: key, name:url, category: 2, symbol: (imageSymbol url key)}
+      KS.ArticleNode title n ->
+        { id: key
+        , name: title
+        , category: 0
+        , symbol: "rect"
+        , symbolSize: selectionSize key $ articleSize n key
+        }
+      KS.TopicNode _ ->
+        { id: key
+        , name: key
+        , category: 1
+        , symbol: "diamond"
+        , symbolSize: selectionSize key $ topicSize key
+        }
+      KS.ImageNode url ->
+        { id: key
+        , name: url
+        , category: 2
+        , symbol: imageSymbol url key
+        , symbolSize: selectionSize key $ imageSize key
+        }
 
     echartEdge (Tuple source target) = {source, target}
 
