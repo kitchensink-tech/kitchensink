@@ -136,14 +136,14 @@ chartOptions graph focusedNode =
     imageSize _ = 5.0
 
     echartNode (Tuple key node) = case node of
-      KS.ArticleNode title n ->
+      KS.ArticleNode url n ->
         { id: key
-        , name: title
+        , name: url
         , category: 0
         , symbol: "rect"
         , symbolSize: selectionSize key $ articleSize n key
         }
-      KS.TopicNode _ ->
+      KS.TopicNode _ _ ->
         { id: key
         , name: key
         , category: 1

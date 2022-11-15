@@ -18,6 +18,7 @@ import KitchenSink.Blog.Target
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.AssembleSections
 import KitchenSink.Commonmark.Free as CMark
+import KitchenSink.Blog.Destinations
 
 data FileCount = FileCount {
     srctype :: Text
@@ -37,7 +38,6 @@ filecounts site =
   , FileCount "dot" (length $ dotSourceFiles site)
   ]
 
-type Tag = Text
 data TopicStats = TopicStats {
     byTopic      :: Map Tag [(Target (), Article [Text])]
   , knownTargets :: [(Target (), Article [Text])]
@@ -64,7 +64,7 @@ buildTopicStats arts mkTarget =
 
 type NodeKey = Text
 data Node
-  = TopicNode Int
+  = TopicNode Text Int
   | ArticleNode Text Int
   | ImageNode Text
   deriving (Generic, Show)
@@ -85,7 +85,7 @@ topicsgraph stats =
       (topicArticleEdges <> articleArticleEdges <> articleImageEdges)
   where
     topicNodes,articleNodes :: [(NodeKey, Node)]
-    topicNodes = [ (topicKey t, TopicNode (length xs)) | (t,xs) <- Map.toList (byTopic stats) ]
+    topicNodes = [ (topicKey t, TopicNode (destinationUrl $ destTag "" t) (length xs)) | (t,xs) <- Map.toList (byTopic stats) ]
     articleNodes = [ (articleKey t, ArticleNode (targetUrl t) histsize) | (t,histsize) <- uniqueTargetArticles ]
     imagesNodes = [ (imageKey url, ImageNode url) | url <- uniqueImages ]
 

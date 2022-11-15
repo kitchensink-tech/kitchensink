@@ -32,6 +32,7 @@ import qualified Text.Feed.Export as Export (textFeedWith)
 
 import KitchenSink.Blog.Target hiding (Target)
 import qualified KitchenSink.Blog.Target as BlogTarget
+import KitchenSink.Blog.Destinations
 import KitchenSink.Blog.Generator
 import KitchenSink.Blog.Section
 import KitchenSink.Blog.Site

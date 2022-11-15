@@ -30,6 +30,7 @@ import KitchenSink.Blog.Basics
 
 import KitchenSink.Blog.AssembleSections
 import KitchenSink.Blog.Wordcount
+import KitchenSink.Blog.Destinations
 import KitchenSink.Blog.Advanced
 
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
@@ -412,21 +413,11 @@ extractDate art = either (const Nothing) (date . extract)
   $ runAssembler
   $ json @PreambleData art Preamble
 
-destTag :: OutputPrefix -> Tag -> DestinationLocation
-destTag prefix tag = VirtualFileDestination
-    (Text.pack $ "/topics/" <> tagFileName tag)
-    (prefix </> "topics" </> tagFileName tag)
-
-tagFileName :: Tag -> FilePath
-tagFileName t = Text.unpack (Text.replace " " "-" t) <> ".html"
-
 destImage :: OutputPrefix -> SourceLocation -> DestinationLocation
 destImage prefix (FileSource path) =
   StaticFileDestination
     (Text.pack $ "/images/" <> takeFileName path)
     (prefix </> "images" </> takeFileName path)
-
-type OutputPrefix = FilePath
 
 data GenFileExtension
   = GenPngFile

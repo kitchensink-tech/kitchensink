@@ -6,6 +6,8 @@ import Affjax.Web as AX
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Either (Either(..))
 import Data.Traversable (traverse_)
+import Data.Lens
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
@@ -17,13 +19,16 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
-import KitchenSink (fetchGraph)
-import KitchenSink.Blog.Advanced (TopicGraph)
 import Type.Proxy (Proxy(..))
 import Web.DOM.ParentNode (QuerySelector(..))
+import Web.HTML (window)
+import Web.HTML.Window (Window, open)
 
 import EChart as EChart
 import KSGraph as KSGraph
+import KitchenSink (fetchGraph)
+import KitchenSink.Blog.Advanced (TopicGraph, _TopicGraph)
+import KitchenSink.Blog.Advanced as KS
 
 getGraph :: Aff (Maybe TopicGraph)
 getGraph = do
@@ -102,4 +107,22 @@ component =
   onClick (KSGraph.ClickedNode node) = onNodeClicked node
   onClick _ = pure unit
 
-  onNodeClicked node =  H.modify_ _ { focusedNode = Just node }
+  onNodeClicked node = do
+    st0 <- H.get
+    let u = url node =<< st0.graph
+    when (map _.id st0.focusedNode == Just node.id) $ do
+      H.liftEffect $ traverse_ openPage u
+    H.modify_ _ { focusedNode = Just node }
+
+openPage :: String -> Effect (Maybe Window)
+openPage url = window >>= open url "_blank" ""
+
+url :: KSGraph.Node -> TopicGraph -> Maybe String
+url node graph =
+  let
+    match (Tuple k _) = k == node.id
+    f (Tuple key n) = case n of
+      KS.ArticleNode url _ -> Just url
+      KS.TopicNode url _ -> Just url
+      KS.ImageNode url -> Just url
+  in preview (_TopicGraph <<< to _.nodes <<< folded <<< filtered match <<< to f <<< _Just) graph

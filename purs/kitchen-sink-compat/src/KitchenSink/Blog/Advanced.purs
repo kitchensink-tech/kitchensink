@@ -37,7 +37,7 @@ _TopicGraph = _Newtype
 
 --------------------------------------------------------------------------------
 data Node =
-    TopicNode Int
+    TopicNode String Int
   | ArticleNode String Int
   | ImageNode String
 
@@ -48,10 +48,10 @@ instance decodeJsonNode :: DecodeJson Node where
 derive instance genericNode :: Generic Node _
 
 --------------------------------------------------------------------------------
-_TopicNode :: Prism' Node Int
-_TopicNode = prism' TopicNode f
+_TopicNode :: Prism' Node { a :: String, b :: Int }
+_TopicNode = prism' (\{ a, b } -> TopicNode a b) f
   where
-    f (TopicNode a) = Just $ a
+    f (TopicNode a b) = Just $ { a: a, b: b }
     f _ = Nothing
 
 _ArticleNode :: Prism' Node { a :: String, b :: Int }
