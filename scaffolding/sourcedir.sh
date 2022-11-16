@@ -13,7 +13,7 @@ cp -v "scaffolding/js/autoreload.js" "${path}/autoreload.js"
 cp -v "scaffolding/js/echart-histogram.js" "${path}/echart-histogram.js"
 cp -v "scaffolding/js/echarts.min.js" "${path}/echarts.min.js"
 cp -v "scaffolding/js/search-box.js" "${path}/search-box.js"
-cp -v "scaffolding/js/site-graph.js" "${path}/site-graph.js"
+cp -v "scaffolding/js/topicgraph.js" "${path}/topicgraph.js"
 
 cp "./website-src/article.css" "${path}/article.css"
 cp "./website-src/articles-listing.css" "${path}/articles-listing.css"

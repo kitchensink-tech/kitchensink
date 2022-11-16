@@ -518,11 +518,11 @@ Kitchen-Sink processes all of the above information (topics, links between
 pages, image lists, etc.) to populate a [JSON representation of a
 graph](/json/topicsgraph.json) summarizing the structure of the whole site.
 This special target is built with the website and you can be creative with it.
-So far, Kitchen-Sink provides a minimal [JavaScript](/js/site-graph.js) to turn
-the graph into an interactive-picture using [Apache
-Echarts](https://echarts.apache.org/en/index.html).
+So far, Kitchen-Sink provides a [PureScript compiled to
+JavaScript](/js/topicgraph.js) minimal app to turn the graph into an
+interactive-picture using [Apache Echarts](https://echarts.apache.org/en/index.html).
 
 ::: {#echartzone}
 :::
 
-<script src="js/site-graph.js"></script>
+<script src="js/topicgraph.js"></script>

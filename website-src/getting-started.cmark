@@ -68,7 +68,7 @@ We illustrate these steps in the following picture (which we refer as _the depen
 
 ::: {.figure}
 
-![KitchenSink building pipeline](http://localhost:7654/gen/images/architecture-01-pipeline.dot.png)
+![KitchenSink building pipeline](/gen/images/architecture-01-pipeline.dot.png)
 
 :::
 

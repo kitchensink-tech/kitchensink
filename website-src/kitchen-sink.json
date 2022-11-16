@@ -4,6 +4,7 @@
 , "commands":
   [ {"display": "publish to github", "handle": "publish", "exe": "./scripts/publish.sh" }
   , {"display": "notify to google", "handle": "notify-google", "exe": "./scripts/notify-google.sh" }
+  , {"display": "bundle JSes", "handle": "bundle-js", "exe": "./scripts/build-js-components.sh" }
   , {"display": "update scaffold", "handle": "import-scaffold", "exe": "./scripts/import-scaffold.sh" }
   , {"display": "run scaffold", "handle": "run-scaffold", "exe": "./scripts/test-scaffold.sh" }
   ]

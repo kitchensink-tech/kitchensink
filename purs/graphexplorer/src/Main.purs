@@ -46,7 +46,7 @@ main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   graph <- H.liftAff getGraph
-  elem <- HA.selectElement (QuerySelector "#graph-explorer")
+  elem <- HA.selectElement (QuerySelector "#echartzone")
   let tgt = fromMaybe body elem
   runUI component graph tgt
 
@@ -95,8 +95,7 @@ component =
 
   renderGraph graph focusedNode =
     HH.div_
-    [ HH.text "got a graph"
-    , HH.slot _ksgraph unit EChart.component (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
+    [ HH.slot _ksgraph unit EChart.component (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
     ]
 
   handleAction = case _ of
