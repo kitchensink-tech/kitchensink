@@ -41,9 +41,9 @@ assembleHeader prefix stats currentDestination art =
   where
     r :: PreambleData -> Maybe SocialData -> Maybe TopicData -> Lucid.Html ()
     r content social topic = do
-      let author_ = case social of
+      let author_ = case social >>= twitter of
                       Nothing -> span_ (toHtml . author $ content)
-                      Just d -> a_ [ href_ $ "https://twitter.com/" <> twitter d ] (mconcat ["@", toHtml $ twitter d])
+                      Just handle -> a_ [ href_ $ "https://twitter.com/" <> handle ] (mconcat ["@", toHtml handle])
 
       let taglist_ =
             case topic of
@@ -83,7 +83,7 @@ assembleFooter a = r <$> (fmap extract . jsonSection @SocialData =<< getSection 
     r s =
       footer_ [ class_ "footing" ] $ do
         div_ [ class_ "social-links" ] $ do
-          twtr $ twitter s 
+          maybe mempty twtr (twitter s)
           maybe mempty masto (mastodon s)
           maybe mempty chost (cohost s)
           maybe mempty ghub (github s)
@@ -223,7 +223,7 @@ metaheaders extra dloc jsondloc art = do
     , Just $ meta_ [ name_ "twitter:card" , content_ "summary"]
     , Just $ meta_ [ name_ "twitter:title" , content_ titleTxt ]
     , (\x -> meta_ [ name_ "twitter:site" , content_ $ "@" <> x ]) <$> twitterSiteLogin extra
-    , fmap (\x -> meta_ [ name_ "twitter:creator" , content_ $ "@" <> twitter x]) social
+    , (\x -> meta_ [ name_ "twitter:creator" , content_ $ "@" <> x]) <$> (twitter =<< social)
     , fmap (\x -> meta_ [ property_ "twitter:description" , content_ $ compactSummary x ]) summary
 
     , Just $ meta_ [ name_ "type" , property_ "og:type", content_ "article" ]

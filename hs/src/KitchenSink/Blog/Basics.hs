@@ -45,7 +45,7 @@ instance FromJSON PreambleData
 instance ToJSON PreambleData
 
 data SocialData = SocialData {
-    twitter :: Text
+    twitter :: Maybe Text
   , linkedin :: Maybe Text
   , github :: Maybe Text
   , mastodon :: Maybe Text
