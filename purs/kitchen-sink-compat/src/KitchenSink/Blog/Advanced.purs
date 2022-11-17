@@ -40,6 +40,7 @@ data Node =
     TopicNode String Int
   | ArticleNode String Int
   | ImageNode String
+  | ExternalKitchenSinkSiteNode String
 
 instance encodeJsonNode :: EncodeJson Node where
   encodeJson = genericEncodeAeson Argonaut.defaultOptions
@@ -64,6 +65,12 @@ _ImageNode :: Prism' Node String
 _ImageNode = prism' ImageNode f
   where
     f (ImageNode a) = Just $ a
+    f _ = Nothing
+
+_ExternalKitchenSinkSiteNode :: Prism' Node String
+_ExternalKitchenSinkSiteNode = prism' ExternalKitchenSinkSiteNode f
+  where
+    f (ExternalKitchenSinkSiteNode a) = Just $ a
     f _ = Nothing
 
 --------------------------------------------------------------------------------

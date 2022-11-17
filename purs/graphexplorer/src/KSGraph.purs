@@ -63,12 +63,14 @@ data Category
   = Articles
   | Topics
   | Images
+  | ExternalSites
 
 readCategory :: Int -> Except (NonEmptyList ForeignError) Category
 readCategory = case _ of
   0 -> pure Articles
   1 -> pure Topics
   2 -> pure Images
+  3 -> pure ExternalSites
   _ -> throwError $ singleton (ForeignError "Unsupported category")
 
 type NodeId = String
@@ -135,6 +137,9 @@ chartOptions graph focusedNode =
     imageSize :: String -> Number
     imageSize _ = 5.0
 
+    externalSiteSize :: String -> Number
+    externalSiteSize _ = 15.0
+
     echartNode (Tuple key node) = case node of
       KS.ArticleNode url n ->
         { id: key
@@ -157,10 +162,17 @@ chartOptions graph focusedNode =
         , symbol: imageSymbol url key
         , symbolSize: selectionSize key $ imageSize key
         }
+      KS.ExternalKitchenSinkSiteNode url ->
+        { id: key
+        , name: url
+        , category: 3
+        , symbol: "triangle"
+        , symbolSize: externalSiteSize key
+        }
 
     echartEdge (Tuple source target) = {source, target}
 
-    categories = [{name:"articles"}, {name:"topics"}, {name:"images"}]
+    categories = [{name:"articles"}, {name:"topics"}, {name:"images"}, {name:"external"}]
 
     options = {
       legend: [

@@ -8,5 +8,8 @@
   , {"display": "update scaffold", "handle": "import-scaffold", "exe": "./scripts/import-scaffold.sh" }
   , {"display": "run scaffold", "handle": "run-scaffold", "exe": "./scripts/test-scaffold.sh" }
   ]
+, "linkedSites":
+  [ {"baseURL": "https://lucasdicioccio.github.io/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
+  , {"baseURL": "https://en.wikipedia.org/", "siteTitle": "The English WikiPedia.", "siteType": "website"}
+  ]
 }
-

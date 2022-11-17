@@ -175,7 +175,7 @@ siteTargets prefix tracer extra site = allTargets
     jsonDataTargets =
       [ jsonDataTarget prefix (pathList) "paths.json"
       , jsonDataTarget prefix (filecounts site) "filecounts.json"
-      , jsonDataTarget prefix (topicsgraph stats) "topicsgraph.json"
+      , jsonDataTarget prefix (topicsgraph (ExternalSitesInfo $ externalKitchenSinkURLs extra) stats) "topicsgraph.json"
       ] <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- articles site
       ]
 

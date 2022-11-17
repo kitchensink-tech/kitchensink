@@ -387,16 +387,24 @@ data KitchenSinkEngineConfig = KitchenSinkEngineConfig {
   } deriving (Generic, Show)
 instance FromJSON KitchenSinkEngineConfig
 
+data LinkedSiteConfig = LinkedSiteConfig {
+    baseURL :: Text
+  , siteType :: Text
+  , siteTitle :: Text
+  } deriving (Generic, Show)
+instance FromJSON LinkedSiteConfig
+
 data GlobalSiteConfig = GlobalSiteConfig {
     title      :: Text
   , publishURL :: Text
   , twitterLogin :: Maybe Text
+  , linkedSites :: Maybe [LinkedSiteConfig]
   } deriving (Generic, Show)
 instance FromJSON GlobalSiteConfig
 
 defaultGlobalSiteConfig :: GlobalSiteConfig
 defaultGlobalSiteConfig =
-  GlobalSiteConfig "invalid siteconfig!" "/" Nothing
+  GlobalSiteConfig "invalid siteconfig!" "/" Nothing Nothing
 
 defaultGetExtraData :: FilePath -> IO MetaExtraData
 defaultGetExtraData path = do
@@ -407,6 +415,7 @@ defaultGetExtraData path = do
     <*> pure (publishURL config)
     <*> pure (twitterLogin config)
     <*> pure noExtraHeaders
+    <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
   where
     noExtraHeaders _ = pure mempty
 
@@ -419,6 +428,7 @@ getDevExtraData path = do
     <*> pure (publishURL config)
     <*> pure (twitterLogin config)
     <*> pure jsReloadExtraHeaders
+    <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
   where
     jsReloadExtraHeaders :: Article [Text] -> Assembler (Lucid.Html ())
     jsReloadExtraHeaders _ =

@@ -194,6 +194,7 @@ data MetaExtraData = MetaExtraData
   , publishBaseURL :: Text
   , twitterSiteLogin :: Maybe Text
   , extraHeaders :: Article [Text] -> Assembler (Lucid.Html ())
+  , externalKitchenSinkURLs :: [Text]
   }
 
 -- see https://ogp.me/#types

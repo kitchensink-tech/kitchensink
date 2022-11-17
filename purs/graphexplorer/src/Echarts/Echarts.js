@@ -30,8 +30,6 @@ export const on = function(chart) {
   return function(ev) {
     return function (f) {
       const go = (x) => {
-        // TODO: conditional logging of raw event here
-        console.log(x);
         f(x)();
       };
       return function () {

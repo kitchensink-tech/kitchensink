@@ -1,6 +1,6 @@
 module KitchenSink where
 
-import Prelude (bind, pure, ($))
+import Prelude (bind, pure, ($), (<>))
 
 import Data.Argonaut.Decode.Error (JsonDecodeError)
 import Data.Argonaut.Aeson.Decode.Generic (genericDecodeAeson)
@@ -20,9 +20,11 @@ topicsGraphPath = "/json/topicsgraph.json"
 sitePaths :: String
 sitePaths = "/json/paths.json"
 
-fetchGraph :: Aff (Either Web.Error (Either JsonDecodeError TopicGraph))
-fetchGraph = do
-  resp <- Web.get json topicsGraphPath
+type BaseUrl = String
+
+fetchGraph :: BaseUrl -> Aff (Either Web.Error (Either JsonDecodeError TopicGraph))
+fetchGraph baseUrl = do
+  resp <- Web.get json (baseUrl <> topicsGraphPath)
   pure $ map (\x -> genericDecodeAeson defaultOptions x.body) resp
 
 fetchPaths :: Aff (Either Web.Error (Either JsonDecodeError PathList))

@@ -30,9 +30,11 @@ import KitchenSink (fetchGraph)
 import KitchenSink.Blog.Advanced (TopicGraph, _TopicGraph)
 import KitchenSink.Blog.Advanced as KS
 
-getGraph :: Aff (Maybe TopicGraph)
-getGraph = do
-  res <- fetchGraph
+type BaseUrl = String
+
+getGraph :: BaseUrl -> Aff (Maybe TopicGraph)
+getGraph baseUrl = do
+  res <- fetchGraph baseUrl
   case res of
     Left err -> do 
       liftEffect $ log $ "failed: " <> AX.printError err
@@ -45,7 +47,7 @@ getGraph = do
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  graph <- H.liftAff getGraph
+  graph <- H.liftAff $ getGraph ""
   elem <- HA.selectElement (QuerySelector "#echartzone")
   let tgt = fromMaybe body elem
   runUI component graph tgt
@@ -124,4 +126,5 @@ url node graph =
       KS.ArticleNode url _ -> Just url
       KS.TopicNode url _ -> Just url
       KS.ImageNode url -> Just url
+      KS.ExternalKitchenSinkSiteNode url -> Just url
   in preview (_TopicGraph <<< to _.nodes <<< folded <<< filtered match <<< to f <<< _Just) graph

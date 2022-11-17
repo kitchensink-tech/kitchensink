@@ -51,7 +51,11 @@ As the time of writing this article, `kitchen-sink.json` supports the following 
   - a  `handle` that must be unique across command and gives a command name, this value is used as a query-param (suggestion: a lower-kebab-case word)
   - a  `exe` as a path to a script that is executable from the webserver
 - `publishScript` (deprecated, use a command instead): an historical "blessed" command. This is documented only if you ever encounter a kitchen-sink.json with this field, the support for this field will be removed in the feature.
-- `api` (experimental): asks kitchen-sink, __when run in DEV mode__, to proxy `/api`-prefixed requests to an `[host,port]` destination
+- `api` (optional,experimental): asks kitchen-sink, __when run in DEV mode__, to proxy `/api`-prefixed requests to an `[host,port]` destination
+- `linkedSites` (optional, experimental): a series of json objects containing a listing of the external sites you consider especially important (and they show up on the site-graph for instance):
+  - a `baseUrl` string
+  - a `siteTitle` string
+  - a `siteType` string
 
 An example of kitchen-sink.json
 
@@ -63,6 +67,10 @@ An example of kitchen-sink.json
   [ {"display": "publish to github", "handle": "publish", "exe": "./scripts/publish.sh" }
   ]
 , "api": ["localhost", 3000]
+, "linkedSites":
+  [ {"baseURL": "https://lucasdicioccio.github.io/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
+  , {"baseURL": "https://en.wikipedia.org/", "siteTitle": "The English WikiPedia.", "siteType": "website"}
+  ]
 }
 ```
 
