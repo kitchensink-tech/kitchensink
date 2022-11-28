@@ -39,8 +39,8 @@ instance IsBlock Html Html  where
   list ty sp xs = Html (list ty sp [coerce x | x <- xs])
   codeBlock lang code =
     case highlightCode (CodeLanguage lang) (Code code) of
-       Nothing -> Html (codeBlock lang code)
-       Just lbs -> Html $ Commonmark.htmlRaw $ toStrict $ decodeUtf8 $ lbs
+       Nothing  -> Html (codeBlock lang code)
+       Just lbs -> Html $ Commonmark.htmlRaw $ mconcat [ "<div class=\"code code--highlighted\">", toStrict $ decodeUtf8 $ lbs, "</div>" ]
 
 
 renderHtml :: Html -> TL.Text
