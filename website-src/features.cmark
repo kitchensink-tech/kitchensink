@@ -533,3 +533,5 @@ connection between this page and [a random WikiPedia
 article](https://en.wikipedia.org/wiki/Special:Random) exists because we
 defined an entry for WikiPedia.
 Think of this feature like a revisit of the good-old webrings.
+
+<script src="js/copy-snippets.js"></script>

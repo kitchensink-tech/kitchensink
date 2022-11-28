@@ -98,7 +98,7 @@ Requirements correspond to the "left leaves" tools in the dependency graph.
 The goal here is to build `kitchen-sink-exe` in the dependency graph.
 Cabal's install directory must be in your execution `PATH` environment variable afterwards.
 
-```
+```console
 git clone https://github.com/kitchensink-tech/kitchensink.git
 cd kitchensink/hs
 cabal build
@@ -112,14 +112,14 @@ The goal here is to run KitchenSink in server-mode (i.e., we do not output
 
 __prepare a directory structure__
 
-```
+```console
 bash scaffolding/outputdir.sh www
 bash scaffolding/sourcedir.sh site-source
 ```
 
 __start the live-edit server__
 
-```
+```console
 kitchen-sink serve --srcDir site-source/ --outDir www/ --servMode DEV --port 7654
 ```
 
@@ -149,8 +149,11 @@ to be taken into account) while running KitchenSink in serve mode.
 
 __Alternatively__ you separately run the following command:
 
-```
+```console
 kitchen-sink produce --srcDir site-source/ --outDir www/
 ```
 
 At this point the `www` output dir should have the content for your website.
+
+
+<script src="js/copy-snippets.js"></script>
