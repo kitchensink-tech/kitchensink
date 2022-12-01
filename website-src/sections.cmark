@@ -45,6 +45,13 @@ h2 {
   border-left: 8px solid salmon;
 }
 
+=base:glossary.json
+{"glossary":
+  [ {"term": "KS", "definition": "Kitchen Sink"}
+  , {"term": "TLA", "definition": "Three-letter acroynym"}
+  ]
+}
+
 =base:summary.cmark
 
 Writing articles in KitchenSink requires to write text files with a specific
@@ -390,6 +397,30 @@ __example__
     in
     { contents =  cmarkContents
     , format = "cmark"
+    }
+
+:::
+
+## glossary [experimental]
+
+::: {.section-details}
+
+Whether its a TLA or some other term, you sometimes want to introduce glossary
+terms. KitchenSink has some support for glossary in the form of parsing a
+special section and turning that in a series of `dl/dt/dd` HTML tags towards
+the end of the article.
+
+In the future we may modify the  generated HTML to include some glossary-links
+directly in the render body of articles or collecting the whole glossary terms
+like article tags.
+
+__example__
+
+    =base:glossary.json
+    {"glossary":
+      [ {"term": "KS", "definition": "Kitchen Sink"}
+      , {"term": "TLA", "definition": "Three-letter acroynym"}
+      ]
     }
 
 :::

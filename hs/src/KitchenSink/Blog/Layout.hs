@@ -76,6 +76,19 @@ assembleHeader prefix stats currentDestination art =
         taglist_
 
 
+assembleGlossary :: Article [Text] -> Assembler (Lucid.Html ())
+assembleGlossary a = r <$> (fmap extract . jsonSection @GlossaryData =<< getSection a Glossary)
+  where
+    r :: GlossaryData -> Lucid.Html ()
+    r gd =
+      dl_ [ class_ "glossary" ] $ do
+        mconcat $ fmap rterm (glossary gd)
+
+    rterm :: GlossaryTerm -> Lucid.Html ()
+    rterm (GlossaryTerm t d) = do
+        dt_ [ class_ "term" ] (toHtml t)
+        dd_ [ class_ "definition" ] (toHtml d)
+
 assembleFooter :: Article [Text] -> Assembler (Lucid.Html ())
 assembleFooter a = r <$> (fmap extract . jsonSection @SocialData =<< getSection a Social)
   where

@@ -18,6 +18,7 @@ data SectionType
   | TakenOff
   | Social
   | GeneratorInstructions
+  | Glossary
   deriving (Show, Eq, Ord)
 
 data Format
@@ -43,7 +44,7 @@ type Parser = Parsec Void Text
 
 sectionType :: Parser SectionType
 sectionType =
-    build <|> preamble <|> topic <|> mainContent <|> summary <|> takenOff <|> mainCss <|> social <|> generator
+    build <|> preamble <|> topic <|> mainContent <|> summary <|> takenOff <|> mainCss <|> social <|> generator <|> glossary
   where
     build = string "base:build-info" *> pure BuildInfo
     preamble = string "base:preamble" *> pure Preamble
@@ -54,6 +55,7 @@ sectionType =
     takenOff = string "base:taken-off" *> pure TakenOff
     social = string "base:social" *> pure Social
     generator = string "generator:cmd" *> pure GeneratorInstructions
+    glossary = string "base:glossary" *> pure Glossary
 
 format :: Parser Format
 format = cmark <|> json <|> css <|> dhall

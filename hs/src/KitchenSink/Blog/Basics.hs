@@ -62,3 +62,17 @@ data GeneratorInstructionsData = GeneratorInstructionsData {
   } deriving (Show, Eq, Generic)
 instance FromJSON GeneratorInstructionsData
 instance ToJSON GeneratorInstructionsData
+
+data GlossaryTerm = GlossaryTerm {
+    term :: Text
+  , definition :: Text
+  } deriving (Show, Eq, Generic)
+instance FromJSON GlossaryTerm
+instance ToJSON GlossaryTerm
+
+data GlossaryData = GlossaryData {
+    glossary :: [GlossaryTerm]
+  } deriving (Show, Eq, Generic)
+instance FromJSON GlossaryData
+instance ToJSON GlossaryData
+

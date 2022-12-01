@@ -331,6 +331,7 @@ siteTargets prefix tracer extra site = allTargets
                       $ mconcat
                         [ assembleHeader prefix stats dloc
                         , assembleMain
+                        , assembleGlossary
                         , assembleFooter
                         ]
                       ]
@@ -415,6 +416,7 @@ siteTargets prefix tracer extra site = allTargets
                         [ assembleHeader prefix stats dloc
                         , assembleDefaultLayoutWarning
                         , assembleMain
+                        , assembleGlossary
                         , assembleFooter
                         ]
                       ]
