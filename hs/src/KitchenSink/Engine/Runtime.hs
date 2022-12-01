@@ -5,8 +5,9 @@ module KitchenSink.Engine.Runtime
   , initDevServerRuntime
   ) where
 
-import Control.Concurrent (threadDelay)
-import Control.Monad (when)
+import Control.Concurrent (forkIO,threadDelay)
+import Control.Exception (catch, SomeException)
+import Control.Monad (forever,when)
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TVar
 import Control.Concurrent.STM.TMVar
@@ -50,11 +51,13 @@ initDevServerRuntime engine path devtracer = do
   rtCounters <- initCounters
   initialSite <- load rtCounters
 
-  siteTMVar <- newEmptyTMVarIO
+  fsTVar <- newEmptyTMVarIO -- a swappable tmvar for debouncing
+  siteTMVar <- newEmptyTMVarIO -- a swappable tmvar that doubles as a watch-trigger
   watches <- newTVarIO []
 
   notify <- FSNotify.startManager
-  _ <- FSNotify.watchDir notify path shouldNotify (handleFSEvent rtCounters siteTMVar)
+  _ <- FSNotify.watchDir notify path shouldNotify (handleFSEvent fsTVar)
+  _ <- forkIO (loadDebouncedFsEvents rtCounters fsTVar siteTMVar)
 
   Runtime
     <$> pure (waitChanges watches)
@@ -70,16 +73,27 @@ initDevServerRuntime engine path devtracer = do
       Prometheus.setGauge (cnt_sources cntrs) (int2Double $ countSources $ site)
       pure site
 
-    handleFSEvent :: Counters -> TMVar Site -> FSNotify.Event -> IO ()
-    handleFSEvent cntrs x ev = do
+    handleFSEvent :: TMVar () -> FSNotify.Event -> IO ()
+    handleFSEvent x ev = do
       let modfile = getFilePath ev
       let shouldReload = (not . ignoreFileReload $ modfile)
       when shouldReload $ do
         runTracer devtracer $ FileWatch ev
-        site <- threadDelay 100000 >> load cntrs --give some time to FS to sync
-        atomically $ do
-          _ <- tryTakeTMVar x
-          putTMVar x site
+        void $ atomically $ tryPutTMVar x ()
+
+    loadDebouncedFsEvents :: Counters -> TMVar () -> TMVar Site -> IO ()
+    loadDebouncedFsEvents cntrs x y = forever $ do
+        atomically $ takeTMVar x
+        -- give some time in case FileSystem is still synching
+        threadDelay 100000
+        loaded <- (Right <$> load cntrs) `catch` (\(e::SomeException) -> pure (Left e))
+        case loaded of
+          Right site -> do
+            atomically $ do
+              _ <- tryTakeTMVar y
+              putTMVar y site
+          Left e -> do
+            runTracer devtracer $ SiteReloadException e
 
     pushNewSite :: Counters -> TMVar Site -> IO (Site, Bool)
     pushNewSite cntrs siteTMVar = do

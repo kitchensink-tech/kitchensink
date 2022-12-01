@@ -2,6 +2,7 @@
 
 module KitchenSink.Engine.Track where
 
+import Control.Exception (SomeException)
 import Data.Aeson (ToJSON)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
@@ -34,6 +35,7 @@ data DevServerTrack
   | WatchLeft (Maybe Text) WatchResult
   | FileWatch FSNotify.Event
   | SiteReloaded (Background.Track ())
+  | SiteReloadException SomeException
   | TargetRequested RequestedPath
   | TargetMissing ByteString
   | TargetBuilt ByteString Int64
