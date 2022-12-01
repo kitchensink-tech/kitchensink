@@ -32,7 +32,7 @@ import KitchenSink.Blog.Target hiding (Tracer)
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Counters (Counters(..), timeItWithLabel)
-import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..))
+import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..), RequestedPath(..), rootRequestPath, requestedPath)
 import KitchenSink.Engine.Runtime
 
 handleDevWatch :: Engine -> Runtime -> Maybe Text -> Maybe TargetPathName -> Handler (Prod.Identification, WatchResult)
@@ -45,7 +45,8 @@ handleDevWatch engine rt _ pathname = liftIO $ do
   Prometheus.withLabel (cnt_watches $ counters rt) "matching" Prometheus.incCounter
   runTracer (traceDev rt) (WatchAdded (coerce Prod.this) pathname)
   waitReload rt
-  targetStillExists <- isJust <$> maybe (pure Nothing) (fmap snd . findTarget engine rt . Text.encodeUtf8) pathname
+  let lookupTarget = fmap snd . findTarget engine rt . RequestedPath . Text.encodeUtf8
+  targetStillExists <- isJust <$> maybe (pure Nothing) lookupTarget pathname
   let res = if targetStillExists
             then Reloaded
             else Disappeared
@@ -119,23 +120,28 @@ handleDevForceReload rt = do
     let status = if worked then Just ForceReloaded else Nothing
     pure status
 
-handleOnTheFlyProduction :: Counters -> Tracer IO DevServerTrack -> (ByteString -> IO (ByteString, Maybe (Target ()))) -> Application
-handleOnTheFlyProduction cntrs track fetchTarget = go
+handleOnTheFlyProduction :: Runtime -> FetchTarget -> Application
+handleOnTheFlyProduction rt fetchTarget = go
   where
+    cntrs = counters rt
+    track = traceDev rt
+
     go :: Application
     go req resp = do
-      let origpath = Wai.rawPathInfo req
+      let origpath = requestedPath req
       (path, target) <- fetchTarget origpath
       maybe
         (handleNotFound origpath resp)
         (handleFound path resp)
         target
 
+    handleNotFound :: RequestedPath -> (Response -> IO a) -> IO a
     handleNotFound path resp = do
-      Prometheus.withLabel (cnt_targetRequests cntrs) ("not-found", Text.decodeUtf8 path) Prometheus.incCounter
-      runTracer track (TargetMissing path)
+      Prometheus.withLabel (cnt_targetRequests cntrs) ("not-found", Text.decodeUtf8 $ coerce path) Prometheus.incCounter
+      runTracer track (TargetMissing $ coerce path)
       resp $ Wai.responseLBS status404 [] "not found"
 
+    handleFound :: TargetPath -> (Response -> IO a) -> Target () -> IO a
     handleFound path resp tgt = do
       Prometheus.withLabel (cnt_targetRequests cntrs) ("found", Text.decodeUtf8 path) Prometheus.incCounter
       let produce :: IO x -> IO x
@@ -154,16 +160,14 @@ handleOnTheFlyProduction cntrs track fetchTarget = go
       | ".html" `ByteString.isSuffixOf` path = "text/html"
       | True = ""
 
-findTarget :: Engine -> Runtime -> ByteString -> IO (ByteString, Maybe (Target ()))
-findTarget engine rt origpath = do
-  let path = if origpath == "/" then "/index.html" else origpath
-  runTracer (traceDev rt) (TargetRequested origpath)
-  site <- readBackgroundVal (liveSite rt)
-  meta <- execLoadMetaExtradata engine
-  let tgts = evalTargets engine meta site
-  let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
-  pure (path, target)
+handleProxyApi :: Config -> Runtime -> Application
+handleProxyApi cfg rt = case api cfg of
+  Nothing ->
+      \_ resp -> resp $ Wai.responseLBS status404 [] "not found"
+  Just (host, port) ->
+    waiProxyTo (const $ pure $ WPRProxyDest $ ProxyDest (Text.encodeUtf8 host) port) defaultOnExc (httpManager rt)
 
+-- works with two configured engines: one for all of dev stuff and one in serve mode (for producing files)
 serveDevApi :: Config -> Engine -> Engine -> Runtime -> Server DevApi
 serveDevApi config devengine prodengine rt =
   handleDevWatch devengine rt
@@ -174,16 +178,23 @@ serveDevApi config devengine prodengine rt =
   :<|> handleExecCommand config rt
   :<|> handleDevForceReload rt
   :<|> coerce (handleProxyApi config rt)
-  :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget devengine rt))
+  :<|> coerce (handleOnTheFlyProduction rt (findTarget devengine rt))
 
 serveApi :: Config -> Engine -> Runtime -> Server ServeApi
 serveApi config engine rt =
   coerce (handleProxyApi config rt)
-  :<|> coerce (handleOnTheFlyProduction (counters rt) (traceDev rt) (findTarget engine rt))
+  :<|> coerce (handleOnTheFlyProduction rt (findTarget engine rt))
 
-handleProxyApi :: Config -> Runtime -> Application
-handleProxyApi cfg rt = case api cfg of
-  Nothing ->
-      \_ resp -> resp $ Wai.responseLBS status404 [] "not found"
-  Just (host, port) ->
-    waiProxyTo (const $ pure $ WPRProxyDest $ ProxyDest (Text.encodeUtf8 host) port) defaultOnExc (httpManager rt)
+type TargetPath = ByteString
+
+type FetchTarget = RequestedPath -> IO (TargetPath, Maybe (Target ()))
+
+findTarget :: Engine -> Runtime -> FetchTarget
+findTarget engine rt = \origpath -> do
+  runTracer (traceDev rt) (TargetRequested origpath)
+  let path = if origpath == rootRequestPath then "/index.html" else coerce origpath
+  site <- readBackgroundVal (liveSite rt)
+  meta <- execLoadMetaExtradata engine
+  let tgts = evalTargets engine meta site
+  let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
+  pure (path, target)

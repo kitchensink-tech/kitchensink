@@ -1,23 +1,30 @@
+{-# LANGUAGE OverloadedStrings #-}
 
 module KitchenSink.Engine.Track where
 
 import Data.Aeson (ToJSON)
+import Data.ByteString (ByteString)
+import Data.Int (Int64)
+import Data.Text (Text)
+import GHC.Generics (Generic)
+import Network.Wai (Request, rawPathInfo)
+import Prod.Background as Background
+import qualified System.FSNotify as FSNotify
 
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
 import KitchenSink.Blog.Target hiding (Tracer)
 import KitchenSink.Engine.Config (Command)
 
-import Prod.Background as Background
-import Data.ByteString (ByteString)
+-- we distinguish requested paths from effective target-path (for counters and other processing)
+newtype RequestedPath = RequestedPath ByteString
+  deriving (Eq, Ord, Show)
 
-import Data.Int (Int64)
+requestedPath :: Request -> RequestedPath
+requestedPath = RequestedPath . rawPathInfo
 
-import qualified System.FSNotify as FSNotify
-
-
-import GHC.Generics (Generic)
-import Data.Text (Text)
+rootRequestPath :: RequestedPath
+rootRequestPath = RequestedPath "/"
 
 data DevServerTrack
   = ProducedBuild
@@ -27,7 +34,7 @@ data DevServerTrack
   | WatchLeft (Maybe Text) WatchResult
   | FileWatch FSNotify.Event
   | SiteReloaded (Background.Track ())
-  | TargetRequested ByteString
+  | TargetRequested RequestedPath
   | TargetMissing ByteString
   | TargetBuilt ByteString Int64
   | Loading SiteLoader.LogMsg
