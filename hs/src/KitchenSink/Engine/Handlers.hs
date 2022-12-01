@@ -116,7 +116,7 @@ handleDevForceReload :: Runtime -> Handler (Maybe ForceReloadStatus)
 handleDevForceReload rt = do
     (_, worked) <- liftIO $ do
       Prometheus.incCounter $ cnt_forceReloads $ counters rt
-      tryPushNewSite rt
+      reloadSite rt
     let status = if worked then Just ForceReloaded else Nothing
     pure status
 

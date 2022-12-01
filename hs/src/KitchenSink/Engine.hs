@@ -57,13 +57,13 @@ defaultMain = do
   let srcPath = coerce $ srcDir cmd
   let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
   let portnum = coerce $ port cmd
-  serveMetadata <- getServeModeExtraData kitchensinkFilePath
+  serveMetadata <- loadServeModeExtraData kitchensinkFilePath
   let prodengine = Engine
                   (loadSite (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (pure serveMetadata)
                   (\med site -> fmap (fmap $ const ()) $ siteTargets (coerce $ outDir cmd) print med site)
                   (produceTarget print)
-  let devengine = prodengine { execLoadMetaExtradata = getDevModeExtraData kitchensinkFilePath }
+  let devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath }
   case cmd of
     Produce _ _ -> do
       site <- execLoadSite prodengine
@@ -105,8 +105,8 @@ defaultMain = do
            (serveApi ksconfig engine rt)
            (Proxy @ServeApi)
 
-getServeModeExtraData :: FilePath -> IO MetaExtraData
-getServeModeExtraData path = do
+loadServeModeExtraData :: FilePath -> IO MetaExtraData
+loadServeModeExtraData path = do
   config <- fromMaybe defaultGlobalSite <$> loadJSONFile path
   MetaExtraData
     <$> getCurrentTime
@@ -118,8 +118,8 @@ getServeModeExtraData path = do
   where
     noExtraHeaders _ = pure mempty
 
-getDevModeExtraData :: FilePath -> IO MetaExtraData
-getDevModeExtraData path = do
+loadDevModeExtraData :: FilePath -> IO MetaExtraData
+loadDevModeExtraData path = do
   config <- fromMaybe defaultGlobalSite <$> loadJSONFile path
   MetaExtraData
     <$> getCurrentTime

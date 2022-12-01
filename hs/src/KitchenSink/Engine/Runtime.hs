@@ -1,5 +1,9 @@
 
-module KitchenSink.Engine.Runtime where
+module KitchenSink.Engine.Runtime
+  ( Engine(..)
+  , Runtime(..)
+  , initDevServerRuntime
+  ) where
 
 import Control.Concurrent (threadDelay)
 import Control.Monad (when)
@@ -22,6 +26,8 @@ import KitchenSink.Blog.Layout
 import KitchenSink.Engine.Counters (Counters(..), initCounters)
 import KitchenSink.Engine.Track (DevServerTrack(..))
 
+-- | Part of the Engine that is shared between one-off production script and
+-- longstanding dev-servers.
 data Engine = Engine {
     execLoadSite :: IO Site
   , execLoadMetaExtradata :: IO MetaExtraData
@@ -29,9 +35,10 @@ data Engine = Engine {
   , execProduceTarget :: Target () -> IO ()
   }
 
+-- | Runtime concerned with auto-reloading, logging and other concernts.
 data Runtime = Runtime
   { waitReload :: IO ()
-  , tryPushNewSite :: IO (Site, Bool)
+  , reloadSite :: IO (Site, Bool)
   , traceDev :: Tracer IO DevServerTrack
   , liveSite :: BackgroundVal Site
   , counters :: Counters
@@ -41,17 +48,19 @@ data Runtime = Runtime
 initDevServerRuntime :: Engine -> FilePath -> Tracer IO DevServerTrack -> IO Runtime
 initDevServerRuntime engine path devtracer = do
   rtCounters <- initCounters
+  initialSite <- load rtCounters
+
   siteTMVar <- newEmptyTMVarIO
   watches <- newTVarIO []
 
   notify <- FSNotify.startManager
-  _ <- FSNotify.watchDir notify path notifyPredicate (handleFSEvent rtCounters siteTMVar)
-  
+  _ <- FSNotify.watchDir notify path shouldNotify (handleFSEvent rtCounters siteTMVar)
+
   Runtime
-    <$> pure (waitFsChanges watches)
+    <$> pure (waitChanges watches)
     <*> pure (pushNewSite rtCounters siteTMVar)
     <*> pure devtracer
-    <*> (load rtCounters >>= (\s -> background (contramap f devtracer) 0 s (reloadSite rtCounters siteTMVar watches)))
+    <*> background (contramap adaptTracer devtracer) 0 initialSite (waitSiteAndNotify rtCounters siteTMVar watches)
     <*> pure rtCounters
     <*> newManager defaultManagerSettings
   where
@@ -60,50 +69,6 @@ initDevServerRuntime engine path devtracer = do
       site <- execLoadSite engine
       Prometheus.setGauge (cnt_sources cntrs) (int2Double $ countSources $ site)
       pure site
-
-    pushNewSite :: Counters -> TMVar Site -> IO (Site, Bool)
-    pushNewSite cntrs siteTMVar = do
-      site <- load cntrs
-      res <- seq site $ atomically $ tryPutTMVar siteTMVar site
-      pure (site, res)
- 
-    reloadSite :: Counters -> TMVar Site -> TVar [TMVar ()] -> Int -> IO (Site, Int)
-    reloadSite cntrs siteTMVar watches v = do
-      Prometheus.incCounter $ cnt_reloads cntrs
-      -- wait for siteTMVar and fan-out to all watches
-      atomically $ do
-        site <- takeTMVar siteTMVar
-        old <- swapTVar watches []
-        traverse_ (flip putTMVar ()) old
-        pure (site, succ v)
-
-    waitFsChanges :: TVar [TMVar ()] -> IO ()
-    waitFsChanges watches = do
-      w <- newEmptyTMVarIO
-      -- append itself to watches
-      atomically $ do
-        modifyTVar' watches (\ws -> w:ws)
-      void . atomically $ takeTMVar w
-
-    notifyPredicate :: FSNotify.Event -> Bool
-    notifyPredicate ev = case ev of
-      FSNotify.Added _ _ _ -> True
-      FSNotify.CloseWrite _ _ _ -> True
-      FSNotify.Modified _ _ _ -> True
-      FSNotify.ModifiedAttributes _ _ _ -> False
-      FSNotify.Unknown _ _ _ _ -> True
-      FSNotify.Removed _ _ _ -> False
-      FSNotify.WatchedDirectoryRemoved _ _ _ -> False
-
-    getFilePath :: FSNotify.Event -> FilePath
-    getFilePath ev = case ev of
-      FSNotify.Added p _ _ -> p
-      FSNotify.CloseWrite p _ _ -> p
-      FSNotify.Modified p _ _ -> p
-      FSNotify.ModifiedAttributes p _ _ -> p
-      FSNotify.Removed p _ _ -> p
-      FSNotify.Unknown p _ _ _ -> p
-      FSNotify.WatchedDirectoryRemoved p _ _ -> p
 
     handleFSEvent :: Counters -> TMVar Site -> FSNotify.Event -> IO ()
     handleFSEvent cntrs x ev = do
@@ -116,8 +81,61 @@ initDevServerRuntime engine path devtracer = do
           _ <- tryTakeTMVar x
           putTMVar x site
 
-    ignoreFileReload :: FilePath -> Bool
-    ignoreFileReload p = takeExtension p == ".swp"
+    pushNewSite :: Counters -> TMVar Site -> IO (Site, Bool)
+    pushNewSite cntrs siteTMVar = do
+      site <- load cntrs
+      res <- seq site $ atomically $ tryPutTMVar siteTMVar site
+      pure (site, res)
 
-    f :: Track Site -> DevServerTrack
-    f trk = SiteReloaded $ fmap (const ()) trk
+type WatchQueue = [TMVar ()]
+
+-- Action waiting on a new Site and notifying a series of watches.
+--
+-- The action flushes the pending watches so that waiters do not have to remove
+-- themselves from the queue.
+waitSiteAndNotify :: Counters -> TMVar Site -> TVar WatchQueue -> Int -> IO (Site, Int)
+waitSiteAndNotify cntrs siteTMVar watches v = do
+  Prometheus.incCounter $ cnt_reloads cntrs
+  -- wait for siteTMVar and fan-out to all watches
+  atomically $ do
+    site <- takeTMVar siteTMVar
+    old <- swapTVar watches []
+    traverse_ (flip putTMVar ()) old
+    pure (site, succ v)
+
+-- | Enqueue oneself waiting for a new site.
+waitChanges :: TVar WatchQueue -> IO ()
+waitChanges watches = do
+  w <- newEmptyTMVarIO
+  -- append itself to watches
+  atomically $ do
+    modifyTVar' watches (\ws -> w:ws)
+  void . atomically $ takeTMVar w
+
+shouldNotify :: FSNotify.Event -> Bool
+shouldNotify ev = case ev of
+  FSNotify.Added _ _ _ -> True
+  FSNotify.CloseWrite _ _ _ -> True
+  FSNotify.Modified _ _ _ -> True
+  FSNotify.ModifiedAttributes _ _ _ -> False
+  FSNotify.Unknown _ _ _ _ -> False
+  FSNotify.Removed _ _ _ -> False
+  FSNotify.WatchedDirectoryRemoved _ _ _ -> False
+
+getFilePath :: FSNotify.Event -> FilePath
+getFilePath ev = case ev of
+  FSNotify.Added p _ _ -> p
+  FSNotify.CloseWrite p _ _ -> p
+  FSNotify.Modified p _ _ -> p
+  FSNotify.ModifiedAttributes p _ _ -> p
+  FSNotify.Removed p _ _ -> p
+  FSNotify.Unknown p _ _ _ -> p
+  FSNotify.WatchedDirectoryRemoved p _ _ -> p
+
+ignoreFileReload :: FilePath -> Bool
+ignoreFileReload p = takeExtension p == ".swp"
+
+-- | Adapt the background-value tracks with a site by dropping the Site content
+-- (which doesn't implement Show).
+adaptTracer :: Background.Track Site -> DevServerTrack
+adaptTracer trk = SiteReloaded $ fmap (const ()) trk
