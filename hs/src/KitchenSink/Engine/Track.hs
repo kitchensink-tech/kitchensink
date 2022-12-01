@@ -6,6 +6,7 @@ import Data.Aeson (ToJSON)
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
 import KitchenSink.Blog.Target hiding (Tracer)
+import KitchenSink.Engine.Config (Command)
 
 import Prod.Background as Background
 import Data.ByteString (ByteString)
@@ -31,6 +32,7 @@ data DevServerTrack
   | TargetBuilt ByteString Int64
   | Loading SiteLoader.LogMsg
   | BlogTargetTrace KitchenSink.Blog.Target.Trace
+  | CommandRan Command String
   deriving Show
 
 data WatchResult

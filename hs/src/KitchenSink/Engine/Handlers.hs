@@ -95,15 +95,16 @@ handleDevPublish config rt =
 handleExecCommand :: Config -> Runtime -> Text -> Handler DevTextOutput
 handleExecCommand config rt commandName =
     case List.find (\c -> handle c == commandName) $ commands config of
-      Just cmd -> runCommand $ exe cmd
+      Just cmd -> runCommand cmd
       Nothing -> pure $ DevTextOutput "no publish-script configured"
   where
-    runCommand path = liftIO $ do
+    runCommand cmd = liftIO $ do
+      let path =  exe cmd
       out <- timeIt time_publishing (counters rt) $ do
         procOut <- readCreateProcess (proc path []) ""
         seq (length procOut) $ pure procOut
-      Prometheus.incCounter $ cnt_publishs $ counters rt
-      runTracer (traceDev rt) (PublishedBuild out)
+      Prometheus.withLabel (cnt_commands $ counters rt) (handle cmd) Prometheus.incCounter
+      runTracer (traceDev rt) (CommandRan cmd out)
       pure (DevTextOutput $ Text.pack out)
 
 handleDevListCommands :: Config -> Runtime -> Handler [Command]

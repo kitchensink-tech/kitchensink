@@ -25,6 +25,7 @@ data Counters
       , cnt_targetSizes :: Prometheus.Vector (Text) Prometheus.Gauge
       , cnt_sources :: Prometheus.Gauge
       , cnt_forceReloads :: Prometheus.Counter
+      , cnt_commands :: Prometheus.Vector Text Prometheus.Counter
       }
 initCounters :: IO Counters
 initCounters =
@@ -41,6 +42,7 @@ initCounters =
     <*> reg1g "blog_targets_sizes" ("path") "sizes of targets in bytes"
     <*> reg0g "blog_targets_number" "number of targets"
     <*> reg0 "blog_forceReloads" "number of time the site has been reloaded upon user request"
+    <*> reg1 "blog_commands" "status" "number of command ran"
   where
     reg0 k h =
       Prometheus.register
