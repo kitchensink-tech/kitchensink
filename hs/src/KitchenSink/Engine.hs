@@ -57,12 +57,13 @@ defaultMain = do
   let srcPath = coerce $ srcDir cmd
   let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
   let portnum = coerce $ port cmd
+  serveMetadata <- getServeModeExtraData kitchensinkFilePath
   let prodengine = Engine
                   (loadSite (runTracer $ contramap Loading $ tracePrint) srcPath)
-                  (defaultGetExtraData kitchensinkFilePath)
+                  (pure serveMetadata)
                   (\med site -> fmap (fmap $ const ()) $ siteTargets (coerce $ outDir cmd) print med site)
                   (produceTarget print)
-  let devengine = prodengine { execLoadMetaExtradata = getDevExtraData kitchensinkFilePath }
+  let devengine = prodengine { execLoadMetaExtradata = getDevModeExtraData kitchensinkFilePath }
   case cmd of
     Produce _ _ -> do
       site <- execLoadSite prodengine
@@ -104,8 +105,8 @@ defaultMain = do
            (serveApi ksconfig engine rt)
            (Proxy @ServeApi)
 
-defaultGetExtraData :: FilePath -> IO MetaExtraData
-defaultGetExtraData path = do
+getServeModeExtraData :: FilePath -> IO MetaExtraData
+getServeModeExtraData path = do
   config <- fromMaybe defaultGlobalSite <$> loadJSONFile path
   MetaExtraData
     <$> getCurrentTime
@@ -117,8 +118,8 @@ defaultGetExtraData path = do
   where
     noExtraHeaders _ = pure mempty
 
-getDevExtraData :: FilePath -> IO MetaExtraData
-getDevExtraData path = do
+getDevModeExtraData :: FilePath -> IO MetaExtraData
+getDevModeExtraData path = do
   config <- fromMaybe defaultGlobalSite <$> loadJSONFile path
   MetaExtraData
     <$> getCurrentTime
@@ -135,4 +136,3 @@ getDevExtraData path = do
           js3 = Lucid.termRawWith "script" [ type_ "text/javascript" , src_ "/js/echarts.min.js" ] ""
           js5 = Lucid.termRawWith "script" [ type_ "text/javascript" , src_ "/js/echart-histogram.js" ] ""
       in pure (js1 *> js2 *> js3 *> js5)
-
