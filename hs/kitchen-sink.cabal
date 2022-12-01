@@ -40,6 +40,13 @@ library
                  , KitchenSink.Commonmark.BlogHTML
                  , KitchenSink.Commonmark.Free
                  , KitchenSink.Engine
+                 , KitchenSink.Engine.Api
+                 , KitchenSink.Engine.Config
+                 , KitchenSink.Engine.Counters
+                 , KitchenSink.Engine.Handlers
+                 , KitchenSink.Engine.Runtime
+                 , KitchenSink.Engine.SiteConfig
+                 , KitchenSink.Engine.Track
 
     -- LANGUAGE extensions used by modules in this package.
     default-extensions: OverloadedStrings

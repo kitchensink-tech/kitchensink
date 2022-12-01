@@ -24,6 +24,7 @@ module KitchenSink.Blog.Prelude (
   , module Text.Show
   , module GHC.Exception
   , module GHC.IO
+  , module Prelude
   ) where
 
 import Text.Show (Show, show)
@@ -44,6 +45,7 @@ import Data.Traversable (Traversable(..), traverse)
 import Data.Tuple (uncurry, fst, snd)
 import Control.Monad (Monad, Functor, void, fmap, join, (>>), (>>=), (=<<))
 import Control.Applicative (Applicative, pure, (<*>), (*>), (<*), (<|>))
+import Prelude (seq)
 
 import Data.String (String)
 import GHC.Exception (Exception)
