@@ -24,8 +24,13 @@ extra-source-files: CHANGELOG.md
 library
     exposed-modules: KitchenSink.Blog
                  , KitchenSink.Blog.Assembler
+                 , KitchenSink.Blog.Assembler.Base
+                 , KitchenSink.Blog.Assembler.Sections
+                 , KitchenSink.Blog.Assembler.Sections.CommonMark
+                 , KitchenSink.Blog.Assembler.Sections.PreRendered
+                 , KitchenSink.Blog.Assembler.Sections.Json
+                 , KitchenSink.Blog.Assembler.Sections.Primitives
                  , KitchenSink.Blog.Advanced
-                 , KitchenSink.Blog.AssembleSections
                  , KitchenSink.Blog.Basics
                  , KitchenSink.Blog.Destinations
                  , KitchenSink.Blog.Generator

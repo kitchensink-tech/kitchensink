@@ -28,7 +28,7 @@ import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Basics
 
-import KitchenSink.Blog.AssembleSections
+import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Blog.Wordcount
 import KitchenSink.Blog.Destinations
 import KitchenSink.Blog.Advanced
@@ -77,7 +77,10 @@ assembleHeader prefix stats currentDestination art =
 
 
 assembleGlossary :: Article [Text] -> Assembler (Lucid.Html ())
-assembleGlossary a = r <$> (fmap extract . jsonSection @GlossaryData =<< getSection a Glossary)
+assembleGlossary art = do
+    gd <- fmap extract <$> jsonm @GlossaryData art Glossary
+    let out = maybe mempty r gd
+    pure out
   where
     r :: GlossaryData -> Lucid.Html ()
     r gd =

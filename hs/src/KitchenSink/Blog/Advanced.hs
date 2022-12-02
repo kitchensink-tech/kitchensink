@@ -33,7 +33,7 @@ import KitchenSink.Blog.Section
 import KitchenSink.Blog.Site
 import KitchenSink.Blog.Target
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.AssembleSections
+import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Commonmark.Free as CMark
 import KitchenSink.Blog.Destinations
 

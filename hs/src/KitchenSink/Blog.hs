@@ -40,7 +40,7 @@ import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Basics hiding (PreambleData, target)
 import qualified KitchenSink.Blog.Basics as Basics
 import KitchenSink.Blog.Layout
-import KitchenSink.Blog.AssembleSections
+import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Blog.Advanced
 
 data TargetType
