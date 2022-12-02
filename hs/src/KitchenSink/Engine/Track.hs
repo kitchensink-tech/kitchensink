@@ -10,11 +10,12 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.Wai (Request, rawPathInfo)
 import Prod.Background as Background
+import Prod.Tracer (Tracer(..))
 import qualified System.FSNotify as FSNotify
 
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
-import KitchenSink.Blog.Build.Target hiding (Tracer)
+import qualified KitchenSink.Blog.Build.Trace as Build
 import KitchenSink.Engine.Config (Command)
 
 -- we distinguish requested paths from effective target-path (for counters and other processing)
@@ -40,9 +41,12 @@ data DevServerTrack
   | TargetMissing ByteString
   | TargetBuilt ByteString Int64
   | Loading SiteLoader.LogMsg
-  | BlogTargetTrace KitchenSink.Blog.Build.Target.Trace
+  | BlogTargetTrace Build.Trace
   | CommandRan Command String
   deriving Show
+
+blogTargetTracer :: Tracer IO DevServerTrack -> Build.Tracer
+blogTargetTracer t = runTracer t . BlogTargetTrace
 
 data WatchResult
   = Reloaded

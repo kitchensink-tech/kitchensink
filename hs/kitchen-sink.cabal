@@ -33,8 +33,10 @@ library
                  , KitchenSink.Blog.Assembler.Sections.PreRendered
                  , KitchenSink.Blog.Assembler.Sections.Json
                  , KitchenSink.Blog.Assembler.Sections.Primitives
+                 , KitchenSink.Blog.Build.IO
                  , KitchenSink.Blog.Build.Site
                  , KitchenSink.Blog.Build.Target
+                 , KitchenSink.Blog.Build.Trace
                  , KitchenSink.Blog.Generator
                  , KitchenSink.Blog.Prelude
                  , KitchenSink.Blog.Section

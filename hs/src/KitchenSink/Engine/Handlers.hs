@@ -28,11 +28,13 @@ import Servant
 import System.Process (readCreateProcess, proc)
 
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Build.Target hiding (Tracer)
+import KitchenSink.Blog.Build.Target (Target, destinationUrl, destination)
+import KitchenSink.Blog.Build.Trace as Build
+import KitchenSink.Blog.Build.IO
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Counters (Counters(..), timeItWithLabel)
-import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..), RequestedPath(..), rootRequestPath, requestedPath)
+import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..), RequestedPath(..), rootRequestPath, requestedPath, blogTargetTracer)
 import KitchenSink.Engine.Runtime
 
 handleDevWatch :: Engine -> Runtime -> Maybe Text -> Maybe TargetPathName -> Handler (Prod.Identification, WatchResult)
@@ -76,7 +78,7 @@ handleDevProduce engine rt = liftIO $ do
     mapConcurrently_ go tgts
   Prometheus.incCounter $ cnt_rebuilds $ counters rt
   runTracer (traceDev rt) ProducedBuild
-  let collateLogs = Text.pack . unlines . fmap show :: [KitchenSink.Blog.Build.Target.Trace] -> Text
+  let collateLogs = Text.pack . unlines . fmap show :: [Build.Trace] -> Text
   DevTextOutput . collateLogs <$> readIORef log
 
 handleDevPublish :: Config -> Runtime -> Handler DevTextOutput
@@ -147,7 +149,7 @@ handleOnTheFlyProduction rt fetchTarget = go
       let produce :: IO x -> IO x
           produce work = timeItWithLabel (time_ontheflybuild cntrs) (destinationUrl $ destination tgt) work
       (body,size) <- produce $ do
-        body <- LByteString.fromStrict <$> outputTarget tgt
+        body <- LByteString.fromStrict <$> outputTarget (blogTargetTracer track) tgt
         let size = LByteString.length body
         seq size (pure (body,size))
       runTracer track (TargetBuilt path size)

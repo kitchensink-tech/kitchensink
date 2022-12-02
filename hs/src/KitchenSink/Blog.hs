@@ -117,9 +117,9 @@ imageTargets :: OutputPrefix -> Site -> [Target]
 imageTargets prefix site =
   [ simpleTarget ImageTarget (destImage prefix loc) (copyFrom loc) | Sourced loc _ <- images site ]
 
-dotimageTargets :: OutputPrefix -> Tracer -> Site -> [Target]
-dotimageTargets prefix trace site =
-  [ simpleTarget GraphVizImageTarget (destGenImage prefix loc GenPngFile) (execCmd trace "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site ]
+dotimageTargets :: OutputPrefix -> Site -> [Target]
+dotimageTargets prefix site =
+  [ simpleTarget GraphVizImageTarget (destGenImage prefix loc GenPngFile) (execCmd "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site ]
 
 videoTargets :: OutputPrefix -> Site -> [Target]
 videoTargets prefix site =
@@ -143,20 +143,24 @@ htmlTargets prefix site =
 
 jsonDataTarget :: ToJSON a => OutputPrefix -> a -> FilePath -> Target
 jsonDataTarget prefix v loc =
-  simpleTarget JSONTarget (destJsonDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ LByteString.toStrict $ encode v)
+  simpleTarget JSONTarget (destJsonDataFile prefix loc) (ProduceGenerator f)
+  where
+    f _ = Generator $ pure $ Right $ LByteString.toStrict $ encode v
 
 rootDataTarget :: OutputPrefix -> Text -> FilePath -> Target
 rootDataTarget prefix v loc =
-  simpleTarget RootFileTarget (destRootDataFile prefix loc) (ProduceGenerator $ Generator $ pure $ Right $ Text.encodeUtf8 v)
+  simpleTarget RootFileTarget (destRootDataFile prefix loc) (ProduceGenerator f)
+  where
+    f _ = Generator $ pure $ Right $ Text.encodeUtf8 v
 
-siteTargets :: OutputPrefix -> Tracer -> MetaExtraData -> Site -> [Target]
-siteTargets prefix tracer extra site = allTargets
+siteTargets :: OutputPrefix -> MetaExtraData -> Site -> [Target]
+siteTargets prefix extra site = allTargets
   where
     allTargets = mconcat
       [ embeddedGeneratorTargets
       , fmap fst articleTargets
       , imageTargets prefix site
-      , dotimageTargets prefix tracer site
+      , dotimageTargets prefix site
       , videoTargets prefix site
       , rawTargets prefix site
       , cssTargets prefix site
@@ -241,7 +245,7 @@ siteTargets prefix tracer extra site = allTargets
         getTargets loc art = either (error . show) (fmap (genTarget loc)) . runAssembler $ (f art)
 
         genTarget :: SourceLocation -> GeneratorInstructionsData -> Target
-        genTarget loc g = let rule = execCmd tracer (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
+        genTarget loc g = let rule = execCmd (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
                       in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
 
         f :: Article [Text] -> Assembler [GeneratorInstructionsData]
