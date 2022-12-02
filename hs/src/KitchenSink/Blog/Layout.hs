@@ -653,6 +653,14 @@ articleTopicData :: Article [Text] -> Maybe TopicData
 articleTopicData =
   join . hush . runAssembler . assembleTopicData
 
+assembleGlossaryData :: Article [Text] -> Assembler (Maybe GlossaryData)
+assembleGlossaryData art = do
+  fmap extract <$> jsonm @GlossaryData art Glossary
+
+articleGlossaryData :: Article [Text] -> Maybe GlossaryData
+articleGlossaryData =
+  join . hush . runAssembler . assembleGlossaryData
+
 compactSummary :: [Text] -> Text
 compactSummary = Text.strip . Text.intercalate " "
 

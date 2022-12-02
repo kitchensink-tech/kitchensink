@@ -7,6 +7,7 @@ module KitchenSink.Blog (
   , PreambleSummary
   , TargetSummary
   , TopicSummary
+  , GlossarySummary
   ) where
 
 import GHC.Err (error)
@@ -14,7 +15,7 @@ import Data.Aeson (ToJSON, FromJSON, encode)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map.Strict as Map
 import GHC.Generics (Generic)
-import Lucid as Lucid
+import Lucid (div_, id_, nav_, class_, article_)
 import Data.Maybe (fromJust, catMaybes, listToMaybe)
 import Data.Text (Text)
 import Data.Time.Format.ISO8601 (iso8601Show)
@@ -76,6 +77,19 @@ data TopicSummary = TopicSummary {
 instance FromJSON TopicSummary
 instance ToJSON TopicSummary
 
+data GlossaryItem = GlossaryItem {
+    term :: Text
+  , definition :: Text
+  } deriving (Show, Eq, Generic)
+instance FromJSON GlossaryItem
+instance ToJSON GlossaryItem
+
+data GlossarySummary = GlossarySummary {
+    glossary :: [GlossaryItem]
+  } deriving (Show, Eq, Generic)
+instance FromJSON GlossarySummary
+instance ToJSON GlossarySummary
+
 summarizePreamble :: SectionBasics.PreambleData -> PreambleSummary
 summarizePreamble p =
   PreambleSummary
@@ -87,6 +101,11 @@ summarizePreamble p =
 summarizeTopic :: TopicData -> TopicSummary
 summarizeTopic (TopicData{..}) = TopicSummary{..}
 
+summarizeGlossary :: GlossaryData -> GlossarySummary
+summarizeGlossary (GlossaryData terms) = GlossarySummary (fmap f terms)
+  where
+    f (GlossaryTerm{..}) = GlossaryItem{..} 
+
 data TargetSummary
   = TargetSummary
   { targetType :: TargetType
@@ -94,6 +113,7 @@ data TargetSummary
   , textualSummary :: Maybe Text
   , preambleSummary :: Maybe PreambleSummary
   , topicSummary :: Maybe TopicSummary
+  , glossarySummary :: Maybe GlossarySummary
   } deriving (Show, Generic)
 instance ToJSON TargetSummary
 instance FromJSON TargetSummary
@@ -111,7 +131,7 @@ target :: TargetSummary -> DestinationLocation -> ProductionRule -> Target
 target z x y = BlogTarget.Target x y z
 
 simpleTarget :: TargetType -> DestinationLocation -> ProductionRule -> Target
-simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing) x y
+simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing Nothing) x y
 
 imageTargets :: OutputPrefix -> Site -> [Target]
 imageTargets prefix site =
@@ -223,7 +243,7 @@ siteTargets prefix extra site = allTargets
     articleTarget (Sourced loc@(FileSource path) art) =
       let u = destHtml prefix loc
           j = destJsonDataFile prefix (path <> ".json") -- todo:unify
-          tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art)
+          tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art)
       in target tgtSummary u (ProduceAssembler $ layoutFor u j art)
 
     articleTargets :: [(Target, Article [Text])]
