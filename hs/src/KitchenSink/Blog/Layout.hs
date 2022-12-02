@@ -26,12 +26,10 @@ import KitchenSink.Blog.Target
 import KitchenSink.Blog.Section
 import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Basics
 
 import KitchenSink.Blog.Assembler.Sections
-import KitchenSink.Blog.Wordcount
+import KitchenSink.Blog.Analyses
 import KitchenSink.Blog.Destinations
-import KitchenSink.Blog.Advanced
 
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 assembleHeader prefix stats currentDestination art =

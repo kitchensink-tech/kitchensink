@@ -23,6 +23,9 @@ extra-source-files: CHANGELOG.md
 
 library
     exposed-modules: KitchenSink.Blog
+                 , KitchenSink.Blog.Analyses
+                 , KitchenSink.Blog.Analyses.Advanced
+                 , KitchenSink.Blog.Analyses.Wordcount
                  , KitchenSink.Blog.Assembler
                  , KitchenSink.Blog.Assembler.Base
                  , KitchenSink.Blog.Assembler.Sections
@@ -30,18 +33,18 @@ library
                  , KitchenSink.Blog.Assembler.Sections.PreRendered
                  , KitchenSink.Blog.Assembler.Sections.Json
                  , KitchenSink.Blog.Assembler.Sections.Primitives
-                 , KitchenSink.Blog.Advanced
-                 , KitchenSink.Blog.Basics
                  , KitchenSink.Blog.Destinations
                  , KitchenSink.Blog.Generator
                  , KitchenSink.Blog.Highlighting
                  , KitchenSink.Blog.Layout
                  , KitchenSink.Blog.Prelude
                  , KitchenSink.Blog.Section
+                 , KitchenSink.Blog.Section.Base
+                 , KitchenSink.Blog.Section.Parser
+                 , KitchenSink.Blog.Section.Payloads
                  , KitchenSink.Blog.Site
                  , KitchenSink.Blog.SiteLoader
                  , KitchenSink.Blog.Target
-                 , KitchenSink.Blog.Wordcount
                  , KitchenSink.Commonmark.BlogHTML
                  , KitchenSink.Commonmark.Free
                  , KitchenSink.Engine

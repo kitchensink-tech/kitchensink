@@ -1,5 +1,6 @@
 
-module KitchenSink.Blog.Basics where
+module KitchenSink.Blog.Section.Payloads
+  where
 
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON,ToJSON)

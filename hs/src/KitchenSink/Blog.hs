@@ -34,14 +34,13 @@ import KitchenSink.Blog.Target hiding (Target)
 import qualified KitchenSink.Blog.Target as BlogTarget
 import KitchenSink.Blog.Destinations
 import KitchenSink.Blog.Generator
-import KitchenSink.Blog.Section
+import KitchenSink.Blog.Section hiding (target)
+import qualified KitchenSink.Blog.Section.Payloads as SectionBasics
 import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Basics hiding (PreambleData, target)
-import qualified KitchenSink.Blog.Basics as Basics
 import KitchenSink.Blog.Layout
 import KitchenSink.Blog.Assembler.Sections
-import KitchenSink.Blog.Advanced
+import KitchenSink.Blog.Analyses
 
 data TargetType
   = CssTarget
@@ -77,13 +76,13 @@ data TopicSummary = TopicSummary {
 instance FromJSON TopicSummary
 instance ToJSON TopicSummary
 
-summarizePreamble :: Basics.PreambleData -> PreambleSummary
+summarizePreamble :: SectionBasics.PreambleData -> PreambleSummary
 summarizePreamble p =
   PreambleSummary
-    (Basics.author p)
-    (Basics.datetxt p)
-    (Basics.title p)
-    (fromMaybe defaultFavicon $ Basics.faviconUrl p)
+    (SectionBasics.author p)
+    (SectionBasics.datetxt p)
+    (SectionBasics.title p)
+    (fromMaybe defaultFavicon $ SectionBasics.faviconUrl p)
 
 summarizeTopic :: TopicData -> TopicSummary
 summarizeTopic (TopicData{..}) = TopicSummary{..}

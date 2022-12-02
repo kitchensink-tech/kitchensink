@@ -1,6 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
-module KitchenSink.Blog.Advanced
+module KitchenSink.Blog.Analyses.Advanced
   ( filecounts
   , TopicGraph(..)
   , topicsgraph
@@ -28,7 +28,6 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Prelude (succ, (-))
 
-import KitchenSink.Blog.Basics
 import KitchenSink.Blog.Section
 import KitchenSink.Blog.Site
 import KitchenSink.Blog.Target
