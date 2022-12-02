@@ -22,7 +22,7 @@ import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
 import KitchenSink.Blog.Assembler (Assembler)
 import KitchenSink.Blog.Build.IO (produceTarget)
-import KitchenSink.Blog.Layout
+import KitchenSink.Blog.Layout.Metadata
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.SiteConfig

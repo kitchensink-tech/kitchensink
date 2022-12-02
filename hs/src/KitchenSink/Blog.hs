@@ -40,6 +40,7 @@ import KitchenSink.Blog.Section hiding (target)
 import qualified KitchenSink.Blog.Section.Payloads as SectionBasics
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Layout
+import KitchenSink.Blog.Layout.Metadata
 import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Blog.Analyses
 

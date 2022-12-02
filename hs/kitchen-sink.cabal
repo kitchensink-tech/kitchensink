@@ -54,9 +54,9 @@ library
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
                  , KitchenSink.Engine.Track
-
                  , KitchenSink.Blog.Layout
                  , KitchenSink.Blog.Layout.Destinations
+                 , KitchenSink.Blog.Layout.Metadata
                  , KitchenSink.Blog.SiteLoader
 
     -- LANGUAGE extensions used by modules in this package.
