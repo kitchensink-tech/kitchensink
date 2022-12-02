@@ -20,7 +20,7 @@ import System.FilePath.Posix ((</>))
 import KitchenSink.Blog
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
-import KitchenSink.Blog.Target hiding (Tracer)
+import KitchenSink.Blog.Build.Target hiding (Tracer)
 import KitchenSink.Blog.Layout
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config

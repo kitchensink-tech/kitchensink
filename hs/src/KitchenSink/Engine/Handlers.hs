@@ -28,7 +28,7 @@ import Servant
 import System.Process (readCreateProcess, proc)
 
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Target hiding (Tracer)
+import KitchenSink.Blog.Build.Target hiding (Tracer)
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Counters (Counters(..), timeItWithLabel)
@@ -76,7 +76,7 @@ handleDevProduce engine rt = liftIO $ do
     mapConcurrently_ go tgts
   Prometheus.incCounter $ cnt_rebuilds $ counters rt
   runTracer (traceDev rt) ProducedBuild
-  let collateLogs = Text.pack . unlines . fmap show :: [KitchenSink.Blog.Target.Trace] -> Text
+  let collateLogs = Text.pack . unlines . fmap show :: [KitchenSink.Blog.Build.Target.Trace] -> Text
   DevTextOutput . collateLogs <$> readIORef log
 
 handleDevPublish :: Config -> Runtime -> Handler DevTextOutput

@@ -6,9 +6,9 @@ module KitchenSink.Blog.Assembler.Sections.Primitives
 
 import qualified Data.List as List
 
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Site
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
 
 getSection :: Article a -> SectionType -> Assembler (Section a)

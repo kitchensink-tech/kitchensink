@@ -22,7 +22,7 @@ import System.FilePath.Posix (takeExtension)
 
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
-import KitchenSink.Blog.Target hiding (Tracer)
+import KitchenSink.Blog.Build.Target hiding (Tracer)
 import KitchenSink.Blog.Layout
 import KitchenSink.Engine.Counters (Counters(..), initCounters)
 import KitchenSink.Engine.Track (DevServerTrack(..))
@@ -153,3 +153,16 @@ ignoreFileReload p = takeExtension p == ".swp"
 -- (which doesn't implement Show).
 adaptTracer :: Background.Track Site -> DevServerTrack
 adaptTracer trk = SiteReloaded $ fmap (const ()) trk
+
+
+countSources :: Site -> Int
+countSources s = sum
+  [ length $ articles s
+  , length $ images s
+  , length $ videoFiles s
+  , length $ cssFiles s
+  , length $ jsFiles s
+  , length $ htmlFiles s
+  , length $ dotSourceFiles s
+  , length $ rawFiles s
+  ]

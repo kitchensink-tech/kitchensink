@@ -1,5 +1,5 @@
 
-module KitchenSink.Blog.Highlighting
+module KitchenSink.Commonmark.Highlighting
   ( CodeLanguage(..)
   , Code(..)
   , highlightCode

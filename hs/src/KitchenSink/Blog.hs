@@ -30,13 +30,13 @@ import Text.XML (def, rsPretty)
 import qualified Text.Atom.Feed as Atom
 import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Blog.Target hiding (Target)
-import qualified KitchenSink.Blog.Target as BlogTarget
-import KitchenSink.Blog.Destinations
+import KitchenSink.Blog.Build.Site
+import KitchenSink.Blog.Build.Target hiding (Target)
+import qualified KitchenSink.Blog.Build.Target as BlogTarget
+import KitchenSink.Blog.Layout.Destinations
 import KitchenSink.Blog.Generator
 import KitchenSink.Blog.Section hiding (target)
 import qualified KitchenSink.Blog.Section.Payloads as SectionBasics
-import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Layout
 import KitchenSink.Blog.Assembler.Sections

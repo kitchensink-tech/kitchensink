@@ -7,7 +7,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LText
 
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
 import KitchenSink.Blog.Prelude
 import qualified KitchenSink.Commonmark.Free as FreeCommonmark

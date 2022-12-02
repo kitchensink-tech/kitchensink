@@ -1,9 +1,9 @@
-module KitchenSink.Blog.Site where
+module KitchenSink.Blog.Build.Site where
 
 import Data.Text (Text)
 
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
 
 data Article a
@@ -48,14 +48,3 @@ data Site = Site
   }
   deriving (Show, Eq, Ord)
 
-countSources :: Site -> Int
-countSources s = sum
-  [ length $ articles s
-  , length $ images s
-  , length $ videoFiles s
-  , length $ cssFiles s
-  , length $ jsFiles s
-  , length $ htmlFiles s
-  , length $ dotSourceFiles s
-  , length $ rawFiles s
-  ]

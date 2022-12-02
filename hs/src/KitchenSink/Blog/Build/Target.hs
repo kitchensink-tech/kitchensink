@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Target (Target(..), ProductionRule(..), Url, DestinationLocation(..), destinationUrl, SourceLocation(..), Sourced(..), Assembler(..), AssemblerError(..), copyFrom, outputTarget, produceTarget, execIO, execCmd, Tracer, Trace(..))
+module KitchenSink.Blog.Build.Target (Target(..), ProductionRule(..), Url, DestinationLocation(..), destinationUrl, SourceLocation(..), Sourced(..), Assembler(..), AssemblerError(..), copyFrom, outputTarget, produceTarget, execIO, execCmd, Tracer, Trace(..))
   where
 
 import Control.Exception (throwIO)
@@ -103,3 +103,4 @@ data Trace
   deriving Show
 
 type Tracer = Trace -> IO ()
+

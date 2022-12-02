@@ -4,7 +4,7 @@ import qualified Commonmark
 import Data.Text (Text)
 import qualified Data.Text as Text
 
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Assembler.Sections

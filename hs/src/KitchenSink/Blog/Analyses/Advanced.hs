@@ -28,13 +28,13 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Prelude (succ, (-))
 
+import KitchenSink.Blog.Build.Site
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Site
-import KitchenSink.Blog.Target
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Commonmark.Free as CMark
-import KitchenSink.Blog.Destinations
+import KitchenSink.Blog.Layout.Destinations
 
 data FileCount = FileCount {
     srctype :: Text

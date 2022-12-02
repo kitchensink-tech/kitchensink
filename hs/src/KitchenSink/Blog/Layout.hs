@@ -22,14 +22,14 @@ import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 import qualified Text.Atom.Feed as Atom
 -- import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Site
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Site
 import KitchenSink.Blog.Prelude
 
 import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Blog.Analyses
-import KitchenSink.Blog.Destinations
+import KitchenSink.Blog.Layout.Destinations
 
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 assembleHeader prefix stats currentDestination art =

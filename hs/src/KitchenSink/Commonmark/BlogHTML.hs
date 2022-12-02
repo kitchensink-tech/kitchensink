@@ -7,13 +7,12 @@ module KitchenSink.Commonmark.BlogHTML where
 import qualified Commonmark
 import Commonmark.Extensions (HasDiv, HasSpan, HasEmoji, HasQuoted)
 import Commonmark (HasAttributes, IsInline, IsBlock(..), Rangeable, ToPlainText)
+import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.Text.Lazy (toStrict)
 import qualified Data.Text.Lazy as TL
 
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Highlighting
-
-import Data.Text.Lazy.Encoding (decodeUtf8)
-import Data.Text.Lazy (toStrict)
+import KitchenSink.Commonmark.Highlighting
 
 newtype Html = Html (Commonmark.Html ())
   deriving Show

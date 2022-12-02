@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module KitchenSink.Blog.SiteLoader (module KitchenSink.Blog.Site, loadSite, LogMsg(..))where
+module KitchenSink.Blog.SiteLoader (module KitchenSink.Blog.Build.Site, loadSite, LogMsg(..))where
 
 import Control.Exception (throwIO)
 import Data.Text (Text)
@@ -15,9 +15,9 @@ import Dhall (input, Vector)
 import Dhall.Marshal.Decode (FromDhall, auto)
 
 import KitchenSink.Blog.Prelude
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Site
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Site
 
 data LogMsg
   = LoadArticle FilePath

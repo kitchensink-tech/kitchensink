@@ -33,19 +33,16 @@ library
                  , KitchenSink.Blog.Assembler.Sections.PreRendered
                  , KitchenSink.Blog.Assembler.Sections.Json
                  , KitchenSink.Blog.Assembler.Sections.Primitives
-                 , KitchenSink.Blog.Destinations
+                 , KitchenSink.Blog.Build.Site
+                 , KitchenSink.Blog.Build.Target
                  , KitchenSink.Blog.Generator
-                 , KitchenSink.Blog.Highlighting
-                 , KitchenSink.Blog.Layout
                  , KitchenSink.Blog.Prelude
                  , KitchenSink.Blog.Section
                  , KitchenSink.Blog.Section.Base
                  , KitchenSink.Blog.Section.Parser
                  , KitchenSink.Blog.Section.Payloads
-                 , KitchenSink.Blog.Site
-                 , KitchenSink.Blog.SiteLoader
-                 , KitchenSink.Blog.Target
                  , KitchenSink.Commonmark.BlogHTML
+                 , KitchenSink.Commonmark.Highlighting
                  , KitchenSink.Commonmark.Free
                  , KitchenSink.Engine
                  , KitchenSink.Engine.Api
@@ -55,6 +52,10 @@ library
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
                  , KitchenSink.Engine.Track
+
+                 , KitchenSink.Blog.Layout
+                 , KitchenSink.Blog.Layout.Destinations
+                 , KitchenSink.Blog.SiteLoader
 
     -- LANGUAGE extensions used by modules in this package.
     default-extensions: OverloadedStrings

@@ -1,10 +1,10 @@
 
-module KitchenSink.Blog.Destinations (Tag, destTag, OutputPrefix) where
+module KitchenSink.Blog.Layout.Destinations (Tag, destTag, OutputPrefix) where
 
 import Data.Text (Text)
 import qualified Data.Text as Text
 
-import KitchenSink.Blog.Target
+import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Prelude
 import System.FilePath.Posix ((</>))
 

@@ -14,7 +14,7 @@ import qualified System.FSNotify as FSNotify
 
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
-import KitchenSink.Blog.Target hiding (Tracer)
+import KitchenSink.Blog.Build.Target hiding (Tracer)
 import KitchenSink.Engine.Config (Command)
 
 -- we distinguish requested paths from effective target-path (for counters and other processing)
@@ -40,7 +40,7 @@ data DevServerTrack
   | TargetMissing ByteString
   | TargetBuilt ByteString Int64
   | Loading SiteLoader.LogMsg
-  | BlogTargetTrace KitchenSink.Blog.Target.Trace
+  | BlogTargetTrace KitchenSink.Blog.Build.Target.Trace
   | CommandRan Command String
   deriving Show
 
