@@ -22,7 +22,7 @@ import Halogen.VDom.Driver (runUI)
 import Web.DOM.ParentNode (QuerySelector(..))
 
 import KitchenSink (fetchPaths)
-import KitchenSink.Blog (PathList, TargetSummary, _TargetSummary, _TopicSummary, _PreambleSummary, TargetType(..), _PathList)
+import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, _TargetSummary, _TopicSummary, _PreambleSummary, TargetType(..), _PathList)
 
 import Searchbox
 

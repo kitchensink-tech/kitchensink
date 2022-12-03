@@ -10,6 +10,7 @@ module KitchenSink.Layout.Blog.Analyses.Advanced
   , ArticleInfos(..)
   , LinkInfo(..)
   , ImageInfo(..)
+  , SnippetInfo(..)
   , ExternalSitesInfo(..)
   , Tag
   , TopicStats(..)

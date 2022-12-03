@@ -27,8 +27,8 @@ import Web.HTML.Window (Window, open)
 import EChart as EChart
 import KSGraph as KSGraph
 import KitchenSink (fetchGraph)
-import KitchenSink.Blog.Advanced (TopicGraph, _TopicGraph)
-import KitchenSink.Blog.Advanced as KS
+import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph, _TopicGraph)
+import KitchenSink.Layout.Blog.Analyses.Advanced as KS
 
 type BaseUrl = String
 

@@ -9,6 +9,7 @@ module KitchenSink.Layout.Blog.Summary (
   , TopicSummary(..)
   , summarizeTopic
   , GlossarySummary(..)
+  , GlossaryItem(..)
   , summarizeGlossary
   ) where
 

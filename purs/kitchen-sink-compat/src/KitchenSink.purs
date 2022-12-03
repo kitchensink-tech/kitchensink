@@ -11,8 +11,8 @@ import Effect.Aff (Aff)
 import Affjax.Web as Web
 import Affjax.ResponseFormat (json)
 
-import KitchenSink.Blog.Advanced (TopicGraph)
-import KitchenSink.Blog (PathList)
+import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph)
+import KitchenSink.Layout.Blog.Summary (PathList)
 
 topicsGraphPath :: String
 topicsGraphPath = "/json/topicsgraph.json"

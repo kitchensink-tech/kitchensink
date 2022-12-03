@@ -27,8 +27,8 @@ import Data.Lens (view, toArrayOf, traversed, to, filtered)
 import Data.Lens.Fold (anyOf)
 import Data.Number as Number
 
-import KitchenSink.Blog.Advanced (TopicGraph, _TopicGraph)
-import KitchenSink.Blog.Advanced as KS
+import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph, _TopicGraph)
+import KitchenSink.Layout.Blog.Analyses.Advanced as KS
 
 import EChart as EChart
 
