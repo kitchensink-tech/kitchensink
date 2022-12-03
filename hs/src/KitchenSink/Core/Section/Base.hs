@@ -3,7 +3,7 @@ where
 
 import KitchenSink.Prelude
 
-data SectionType
+data SectionType ext
   = BuildInfo
   | Preamble
   | Topic
@@ -14,6 +14,7 @@ data SectionType
   | Social
   | GeneratorInstructions
   | Glossary
+  | Extension ext
   deriving (Show, Eq, Ord)
 
 data Format
@@ -25,6 +26,6 @@ data Format
   | InMemory
   deriving (Show, Eq, Ord)
 
-data Section a
-  =  Section SectionType Format a
+data Section ext a
+  =  Section (SectionType ext) Format a
   deriving (Show, Eq, Ord, Functor, Foldable, Traversable)

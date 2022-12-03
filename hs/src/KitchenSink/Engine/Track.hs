@@ -28,7 +28,7 @@ requestedPath = RequestedPath . rawPathInfo
 rootRequestPath :: RequestedPath
 rootRequestPath = RequestedPath "/"
 
-data DevServerTrack
+data DevServerTrack ext
   = ProducedBuild
   | PublishedBuild String
   | WatchAdded Text (Maybe Text)
@@ -40,12 +40,12 @@ data DevServerTrack
   | TargetRequested RequestedPath
   | TargetMissing ByteString
   | TargetBuilt ByteString Int64
-  | Loading SiteLoader.LogMsg
+  | Loading (SiteLoader.LogMsg ext)
   | BlogTargetTrace Build.Trace
   | CommandRan Command String
   deriving Show
 
-blogTargetTracer :: Tracer IO DevServerTrack -> Build.Tracer
+blogTargetTracer :: Tracer IO (DevServerTrack ext) -> Build.Tracer
 blogTargetTracer t = runTracer t . BlogTargetTrace
 
 data WatchResult

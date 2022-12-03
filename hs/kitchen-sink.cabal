@@ -24,6 +24,7 @@ extra-source-files: CHANGELOG.md
 library
     exposed-modules: KitchenSink.Layout.Base
                  , KitchenSink.Layout.Blog
+                 , KitchenSink.Layout.Blog.Extensions
                  , KitchenSink.Layout.Blog.Targets
                  , KitchenSink.Layout.Blog.Summary
                  , KitchenSink.Layout.Blog.Analyses

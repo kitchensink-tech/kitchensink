@@ -7,6 +7,7 @@ import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text.Lazy.Encoding as LText
 import qualified Data.Text.Lazy.IO as LText
+import Data.Typeable (Typeable)
 import System.Directory (copyFile)
 
 import KitchenSink.Prelude
@@ -15,7 +16,7 @@ import KitchenSink.Core.Generator
 import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Build.Trace
 
-outputTarget :: Tracer -> Target a -> IO ByteString
+outputTarget :: (Typeable ext, Show ext) => Tracer -> Target ext a -> IO ByteString
 outputTarget trace t = do
   case productionRule t of
     ProduceAssembler assembler -> do
@@ -27,7 +28,7 @@ outputTarget trace t = do
     ProduceFileCopy (Sourced (FileSource src) _) -> do
       ByteString.readFile src
 
-produceTarget :: Tracer -> Target a -> IO ()
+produceTarget :: (Typeable ext, Show ext) => Tracer -> Target ext a -> IO ()
 produceTarget trace t = do
   case productionRule t of
     ProduceAssembler assembler -> do

@@ -59,7 +59,7 @@ defaultMain = do
   let portnum = coerce $ port cmd
   serveMetadata <- loadServeModeExtraData kitchensinkFilePath
   let prodengine = Engine
-                  (loadSite (runTracer $ contramap Loading $ tracePrint) srcPath)
+                  (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (pure serveMetadata)
                   (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
                   (produceTarget print)
@@ -129,7 +129,7 @@ loadDevModeExtraData path = do
     <*> pure jsReloadExtraHeaders
     <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
   where
-    jsReloadExtraHeaders :: Article [Text] -> Assembler (Lucid.Html ())
+    jsReloadExtraHeaders :: Article ext [Text] -> Assembler ext (Lucid.Html ())
     jsReloadExtraHeaders _ =
       let js1 = Lucid.termRawWith "script" [ type_ "text/javascript" , src_ "/js/autoreload.js" ] ""
           js2 = Lucid.termRawWith "script" [ type_ "text/javascript" , src_ "/js/add-dev-route.js" ] ""

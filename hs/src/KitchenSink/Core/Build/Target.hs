@@ -15,14 +15,14 @@ import KitchenSink.Core.Build.Trace
 
 type OutputPrefix = FilePath
 
-data ProductionRule
-  = ProduceAssembler (Assembler LText.Text)
+data ProductionRule ext
+  = ProduceAssembler (Assembler ext LText.Text)
   | ProduceGenerator (Tracer -> Generator ByteString.ByteString)
   | ProduceFileCopy (Sourced ())
 
-data Target a = Target
+data Target ext a = Target
   { destination :: DestinationLocation
-  , productionRule :: ProductionRule
+  , productionRule :: ProductionRule ext
   , summary :: a
   } deriving (Functor)
 
@@ -43,10 +43,10 @@ destinationUrl :: DestinationLocation -> Url
 destinationUrl (StaticFileDestination u _) = u
 destinationUrl (VirtualFileDestination u _)  = u
 
-copyFrom :: SourceLocation -> ProductionRule
+copyFrom :: SourceLocation -> ProductionRule ext
 copyFrom path = ProduceFileCopy (Sourced path ())
 
-execCmd :: FilePath -> [String] -> ByteString -> ProductionRule
+execCmd :: FilePath -> [String] -> ByteString -> ProductionRule ext
 execCmd path args input = ProduceGenerator f
   where
     f trace = Generator $ do

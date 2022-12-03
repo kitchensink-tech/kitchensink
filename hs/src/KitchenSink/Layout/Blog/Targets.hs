@@ -30,23 +30,25 @@ import Text.XML (def, rsPretty)
 import qualified Text.Atom.Feed as Atom
 import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Core.Build.Site
-import KitchenSink.Core.Build.Target hiding (Target)
-import qualified KitchenSink.Core.Build.Target as BlogTarget
+import KitchenSink.Core.Build.Site (images, dotSourceFiles, videoFiles, rawFiles, cssFiles, jsFiles, htmlFiles, articles)
+import KitchenSink.Core.Build.Target (DestinationLocation, OutputPrefix, Sourced(..), SourceLocation(..), copyFrom, execCmd, destinationUrl, destination, summary, runAssembler)
+import qualified KitchenSink.Core.Build.Target as Core
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
+import KitchenSink.Layout.Blog.Extensions (ProductionRule, Assembler, Site, Article)
+import qualified KitchenSink.Layout.Blog.Extensions as Ext
 import KitchenSink.Layout.Blog.Destinations
 import KitchenSink.Layout.Blog.Fragments
 import KitchenSink.Layout.Blog.Analyses
 import KitchenSink.Layout.Blog.Metadata
 import KitchenSink.Layout.Blog.Summary
 
-type Target = BlogTarget.Target TargetSummary
+type Target = Ext.Target TargetSummary
 
 target :: TargetSummary -> DestinationLocation -> ProductionRule -> Target
-target z x y = BlogTarget.Target x y z
+target z x y = Core.Target x y z
 
 simpleTarget :: TargetType -> DestinationLocation -> ProductionRule -> Target
 simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing Nothing) x y
@@ -81,13 +83,13 @@ htmlTargets prefix site =
 
 jsonDataTarget :: ToJSON a => OutputPrefix -> a -> FilePath -> Target
 jsonDataTarget prefix v loc =
-  simpleTarget JSONTarget (destJsonDataFile prefix loc) (ProduceGenerator f)
+  simpleTarget JSONTarget (destJsonDataFile prefix loc) (Core.ProduceGenerator f)
   where
     f _ = Generator $ pure $ Right $ LByteString.toStrict $ encode v
 
 rootDataTarget :: OutputPrefix -> Text -> FilePath -> Target
 rootDataTarget prefix v loc =
-  simpleTarget RootFileTarget (destRootDataFile prefix loc) (ProduceGenerator f)
+  simpleTarget RootFileTarget (destRootDataFile prefix loc) (Core.ProduceGenerator f)
   where
     f _ = Generator $ pure $ Right $ Text.encodeUtf8 v
 
@@ -162,7 +164,7 @@ siteTargets prefix extra site = allTargets
       let u = destHtml prefix loc
           j = destJsonDataFile prefix (path <> ".json") -- todo:unify
           tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art)
-      in target tgtSummary u (ProduceAssembler $ layoutFor u j art)
+      in target tgtSummary u (Core.ProduceAssembler $ layoutFor u j art)
 
     articleTargets :: [(Target, Article [Text])]
     articleTargets =
@@ -192,7 +194,7 @@ siteTargets prefix extra site = allTargets
 
     tagIndexesTargets :: Maybe (Article [Text]) -> [ Target ]
     tagIndexesTargets Nothing = []
-    tagIndexesTargets (Just art) = [ let u = destTag prefix tag in simpleTarget TopicsIndexTarget u (ProduceAssembler $ tagsLayout tag u u art) | tag <- Map.keys $ byTopic stats ]
+    tagIndexesTargets (Just art) = [ let u = destTag prefix tag in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ tagsLayout tag u u art) | tag <- Map.keys $ byTopic stats ]
 
     layoutFor :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     layoutFor dloc jsondloc art =

@@ -4,10 +4,12 @@ module KitchenSink.Core.Section.Parser
   , extract'
   , section
   , sectionType
+  , ExtraSectionType(..)
   , Parser
   )
 where
 
+import Data.Foldable (asum)
 import Data.Text (Text)
 import Text.Megaparsec
 import Text.Megaparsec.Char (string, newline)
@@ -16,28 +18,47 @@ import Data.Void (Void)
 import KitchenSink.Prelude
 import KitchenSink.Core.Section.Base
 
-extract' :: Coercible a b => Section a -> b
+extract' :: Coercible a b => Section ext a -> b
 extract' (Section _ _ a) = coerce a
 
-extract :: Section a -> a
+extract :: Section ext a -> a
 extract (Section _ _ a) = a
 
 type Parser = Parsec Void Text
 
-sectionType :: Parser SectionType
-sectionType =
-    build <|> preamble <|> topic <|> mainContent <|> summary <|> takenOff <|> mainCss <|> social <|> generator <|> glossary
+data ExtraSectionType userdef
+  = ExtraSectionType
+  { key :: Text
+  , val :: userdef
+  }
+
+sectionType :: [ExtraSectionType ext] -> Parser (SectionType ext)
+sectionType extras =
+    asum (basics <> dangerous <> extensions)
   where
-    build = string "base:build-info" *> pure BuildInfo
-    preamble = string "base:preamble" *> pure Preamble
-    topic = string "base:topic" *> pure Topic
-    mainContent = string "base:main-content" *> pure MainContent
-    summary = string "base:summary" *> pure Summary
-    mainCss = string "base:main-css" *> pure MainCss
-    takenOff = string "base:taken-off" *> pure TakenOff
-    social = string "base:social" *> pure Social
-    generator = string "generator:cmd" *> pure GeneratorInstructions
-    glossary = string "base:glossary" *> pure Glossary
+    mkSectionType ns k v = string (ns <> ":" <> k) *> pure v
+    base = mkSectionType "base"
+    gen = mkSectionType "generator"
+    ext = mkSectionType "ext"
+
+    basics = 
+      [ base "build-info" BuildInfo
+      , base "preamble" Preamble
+      , base "topic" Topic
+      , base "main-content" MainContent
+      , base "summary" Summary
+      , base "main-css" MainCss
+      , base "taken-off" TakenOff
+      , base "social" Social
+      , base "glossary" Glossary
+      ]
+
+    dangerous =
+      [ gen "cmd" GeneratorInstructions
+      ]
+
+    extensions =
+      [ ext k (Extension v) | ExtraSectionType k v <- extras ]
 
 format :: Parser Format
 format = cmark <|> json <|> css <|> dhall
@@ -47,13 +68,13 @@ format = cmark <|> json <|> css <|> dhall
     css = string "css" *> pure Css
     dhall = string "dhall" *> pure Dhall
 
-section :: Parser (Section [Text])
-section = f <$> (headers <?> "section-headers") <*> body
+section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])
+section extras = f <$> (headers <?> "section-headers") <*> body
   where
     f (ty, fmt) b = Section ty fmt b
 
-    headers :: Parser (SectionType, Format)
-    headers = (,) <$> (string "=" *> sectionType) <*> (string "." *> format)
+    headers :: Parser (SectionType ext, Format)
+    headers = (,) <$> (string "=" *> sectionType extras) <*> (string "." *> format)
 
     body :: Parser [Text]
     body = many (try emptyline <|> try contentLine)

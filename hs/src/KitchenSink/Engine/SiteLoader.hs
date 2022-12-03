@@ -5,8 +5,7 @@ import Control.Exception (throwIO)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Data.List as List
-import Text.Megaparsec
-import Text.Megaparsec.Char (newline)
+import Text.Megaparsec (runParser)
 import System.Directory (listDirectory)
 import System.FilePath.Posix ((</>), takeExtension)
 import Dhall
@@ -20,7 +19,7 @@ import KitchenSink.Core.Build.Site
 import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 
-data LogMsg
+data LogMsg ext
   = LoadArticle FilePath
   | LoadImage FilePath
   | LoadVideo FilePath
@@ -29,18 +28,15 @@ data LogMsg
   | LoadJs FilePath
   | LoadHtml FilePath
   | LoadDotSource FilePath
-  | EvalSection FilePath SectionType Format
+  | EvalSection FilePath (SectionType ext) Format
   deriving Show
 
-article :: FilePath -> Parser (Article [Text])
-article path = Article path <$> (section `sepBy` newline)
+type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 
-type Loader a = (LogMsg -> IO ()) -> FilePath -> IO (Sourced a)
-
-loadArticle :: Loader (Article [Text])
-loadArticle trace path = do
+loadArticle :: [ExtraSectionType ext] -> Loader ext (Article ext [Text])
+loadArticle extras trace path = do
   trace $ LoadArticle path
-  eart <- runParser (article path) path <$> Text.readFile path
+  eart <- runParser (article extras path) path <$> Text.readFile path
   case eart of
     Left err -> throwIO err
     Right art -> Sourced (FileSource path) <$> overSections (evalSection path trace) art
@@ -57,7 +53,7 @@ instance FromDhall DhallResult
 data EvalError = UnsupportedReturnFormat Text
   deriving (Show, Exception)
 
-evalSection :: FilePath -> (LogMsg -> IO ()) -> Section [Text] -> IO (Section [Text])
+evalSection :: FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> IO (Section ext [Text])
 evalSection path trace x@(Section t fmt body) = do
   trace $ EvalSection path t fmt
   case fmt of
@@ -77,43 +73,43 @@ evalSection path trace x@(Section t fmt body) = do
         newfmt -> throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> newfmt
     _ -> pure x
 
-loadImage :: Loader Image
+loadImage :: Loader a Image
 loadImage trace path = do
   trace $ LoadImage path
   pure $ (Sourced (FileSource path) Image)
 
-loadVideo :: Loader VideoFile
+loadVideo :: Loader a VideoFile
 loadVideo trace path = do
   trace $ LoadVideo path
   pure $ (Sourced (FileSource path) VideoFile)
 
-loadRaw :: Loader RawFile
+loadRaw :: Loader a RawFile
 loadRaw trace path = do
   trace $ LoadRaw path
   pure $ (Sourced (FileSource path) RawFile)
 
-loadCss :: Loader CssFile
+loadCss :: Loader a CssFile
 loadCss trace path = do
   trace $ LoadCss path
   pure $ (Sourced (FileSource path) CssFile)
 
-loadJs :: Loader JsFile
+loadJs :: Loader a JsFile
 loadJs trace path = do
   trace $ LoadJs path
   pure $ (Sourced (FileSource path) JsFile)
 
-loadHtml :: Loader HtmlFile
+loadHtml :: Loader a HtmlFile
 loadHtml trace path = do
   trace $ LoadHtml path
   pure $ (Sourced (FileSource path) HtmlFile)
 
-loadDotSource :: Loader DotSourceFile
+loadDotSource :: Loader a DotSourceFile
 loadDotSource trace path = do
   trace $ LoadDotSource path
   pure $ (Sourced (FileSource path) DotSourceFile)
 
-loadSite :: (LogMsg -> IO ()) -> FilePath -> IO Site
-loadSite trace dir = do
+loadSite :: [ExtraSectionType ext] -> (LogMsg ext -> IO ()) -> FilePath -> IO (Site ext)
+loadSite extras trace dir = do
   paths <- listDirectory dir
   Site
     <$> articlesM paths
@@ -125,7 +121,7 @@ loadSite trace dir = do
     <*> dotsM paths
     <*> rawsM paths
   where
-    articlesM paths = traverse (loadArticle trace)
+    articlesM paths = traverse (loadArticle extras trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark" ] ]
     imagesM paths = traverse (loadImage trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".jpg", ".jpeg", ".png" ] ]

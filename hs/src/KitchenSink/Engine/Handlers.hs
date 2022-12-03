@@ -11,6 +11,7 @@ import Data.IORef (newIORef, readIORef, atomicModifyIORef')
 import qualified Data.List as List
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
+import Data.Typeable (Typeable)
 import Data.Maybe (isJust)
 import Data.Text (Text)
 import GHC.Real (fromIntegral)
@@ -37,7 +38,7 @@ import KitchenSink.Engine.Counters (Counters(..), timeItWithLabel)
 import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..), RequestedPath(..), rootRequestPath, requestedPath, blogTargetTracer)
 import KitchenSink.Engine.Runtime
 
-handleDevWatch :: Engine -> Runtime -> Maybe Text -> Maybe TargetPathName -> Handler (Prod.Identification, WatchResult)
+handleDevWatch :: Engine ext -> Runtime ext -> Maybe Text -> Maybe TargetPathName -> Handler (Prod.Identification, WatchResult)
 handleDevWatch _ rt srvId pathname
   | srvId /= Just (coerce Prod.this) = liftIO $ do
     Prometheus.withLabel (cnt_watches $ counters rt) "outdated" Prometheus.incCounter
@@ -55,14 +56,14 @@ handleDevWatch engine rt _ pathname = liftIO $ do
   runTracer (traceDev rt) (WatchLeft pathname res)
   pure (Prod.this, res)
 
-handleDevListTargets :: Engine -> Runtime -> Handler [Text]
+handleDevListTargets :: Engine ext -> Runtime ext -> Handler [Text]
 handleDevListTargets engine rt = liftIO $ do
   site <- readBackgroundVal (liveSite rt)
   meta <- execLoadMetaExtradata engine
   let tgts = evalTargets engine meta site
   pure $ [ destinationUrl $ destination tgt | tgt <- tgts ]
 
-handleDevProduce :: Engine -> Runtime -> Handler DevTextOutput
+handleDevProduce :: (Show ext, Typeable ext) => Engine ext -> Runtime ext -> Handler DevTextOutput
 handleDevProduce engine rt = liftIO $ do
   site <- readBackgroundVal (liveSite rt)
   extra <- execLoadMetaExtradata engine
@@ -81,7 +82,7 @@ handleDevProduce engine rt = liftIO $ do
   let collateLogs = Text.pack . unlines . fmap show :: [Build.Trace] -> Text
   DevTextOutput . collateLogs <$> readIORef log
 
-handleDevPublish :: Config -> Runtime -> Handler DevTextOutput
+handleDevPublish :: Config -> Runtime ext -> Handler DevTextOutput
 handleDevPublish config rt =
     case publishScript config of
       Just path -> runPublishScript path
@@ -95,7 +96,7 @@ handleDevPublish config rt =
       runTracer (traceDev rt) (PublishedBuild out)
       pure (DevTextOutput $ Text.pack out)
 
-handleExecCommand :: Config -> Runtime -> Text -> Handler DevTextOutput
+handleExecCommand :: Config -> Runtime ext -> Text -> Handler DevTextOutput
 handleExecCommand config rt commandName =
     case List.find (\c -> handle c == commandName) $ commands config of
       Just cmd -> runCommand cmd
@@ -110,11 +111,11 @@ handleExecCommand config rt commandName =
       runTracer (traceDev rt) (CommandRan cmd out)
       pure (DevTextOutput $ Text.pack out)
 
-handleDevListCommands :: Config -> Runtime -> Handler [Command]
+handleDevListCommands :: Config -> Runtime ext -> Handler [Command]
 handleDevListCommands config _ =
   pure $ commands config
 
-handleDevForceReload :: Runtime -> Handler (Maybe ForceReloadStatus)
+handleDevForceReload :: Runtime ext -> Handler (Maybe ForceReloadStatus)
 handleDevForceReload rt = do
     (_, worked) <- liftIO $ do
       Prometheus.incCounter $ cnt_forceReloads $ counters rt
@@ -122,7 +123,7 @@ handleDevForceReload rt = do
     let status = if worked then Just ForceReloaded else Nothing
     pure status
 
-handleOnTheFlyProduction :: Runtime -> FetchTarget -> Application
+handleOnTheFlyProduction :: forall ext. (Show ext, Typeable ext) => Runtime ext -> FetchTarget ext -> Application
 handleOnTheFlyProduction rt fetchTarget = go
   where
     cntrs = counters rt
@@ -143,7 +144,7 @@ handleOnTheFlyProduction rt fetchTarget = go
       runTracer track (TargetMissing $ coerce path)
       resp $ Wai.responseLBS status404 [] "not found"
 
-    handleFound :: TargetPath -> (Response -> IO a) -> Target () -> IO a
+    handleFound :: TargetPath -> (Response -> IO a) -> Target ext () -> IO a
     handleFound path resp tgt = do
       Prometheus.withLabel (cnt_targetRequests cntrs) ("found", Text.decodeUtf8 path) Prometheus.incCounter
       let produce :: IO x -> IO x
@@ -162,7 +163,7 @@ handleOnTheFlyProduction rt fetchTarget = go
       | ".html" `ByteString.isSuffixOf` path = "text/html"
       | True = ""
 
-handleProxyApi :: Config -> Runtime -> Application
+handleProxyApi :: Config -> Runtime ext -> Application
 handleProxyApi cfg rt = case api cfg of
   Nothing ->
       \_ resp -> resp $ Wai.responseLBS status404 [] "not found"
@@ -170,7 +171,7 @@ handleProxyApi cfg rt = case api cfg of
     waiProxyTo (const $ pure $ WPRProxyDest $ ProxyDest (Text.encodeUtf8 host) port) defaultOnExc (httpManager rt)
 
 -- works with two configured engines: one for all of dev stuff and one in serve mode (for producing files)
-serveDevApi :: Config -> Engine -> Engine -> Runtime -> Server DevApi
+serveDevApi :: forall ext. (Show ext, Typeable ext) => Config -> Engine ext -> Engine ext -> Runtime ext -> Server DevApi
 serveDevApi config devengine prodengine rt =
   handleDevWatch devengine rt
   :<|> handleDevListTargets devengine rt
@@ -182,16 +183,16 @@ serveDevApi config devengine prodengine rt =
   :<|> coerce (handleProxyApi config rt)
   :<|> coerce (handleOnTheFlyProduction rt (findTarget devengine rt))
 
-serveApi :: Config -> Engine -> Runtime -> Server ServeApi
+serveApi :: forall ext. (Show ext, Typeable ext) => Config -> Engine ext -> Runtime ext -> Server ServeApi
 serveApi config engine rt =
   coerce (handleProxyApi config rt)
   :<|> coerce (handleOnTheFlyProduction rt (findTarget engine rt))
 
 type TargetPath = ByteString
 
-type FetchTarget = RequestedPath -> IO (TargetPath, Maybe (Target ()))
+type FetchTarget ext = RequestedPath -> IO (TargetPath, Maybe (Target ext ()))
 
-findTarget :: Engine -> Runtime -> FetchTarget
+findTarget :: Engine ext -> Runtime ext -> FetchTarget ext
 findTarget engine rt = \origpath -> do
   runTracer (traceDev rt) (TargetRequested origpath)
   let path = if origpath == rootRequestPath then "/index.html" else coerce origpath

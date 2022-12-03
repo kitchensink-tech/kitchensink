@@ -18,7 +18,7 @@ import KitchenSink.Core.Assembler.Sections.Json
 import KitchenSink.Core.Assembler.Sections.PreRendered
 import KitchenSink.Core.Assembler.Sections.Primitives
 
-renderSection :: Section [Text] -> Assembler (Section PreRenderedHtml)
+renderSection :: Section ext [Text] -> Assembler ext (Section ext PreRenderedHtml)
 renderSection s@(Section _ encoding _) =
   case encoding of
     Cmark -> renderCMark s

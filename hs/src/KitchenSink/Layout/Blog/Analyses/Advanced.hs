@@ -28,8 +28,9 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Prelude (succ, (-))
 
-import KitchenSink.Core.Build.Site
-import KitchenSink.Core.Build.Target
+import KitchenSink.Layout.Blog.Extensions (Target, Assembler, Article, Site)
+import KitchenSink.Core.Build.Site (articles, images, videoFiles, rawFiles, cssFiles, jsFiles, dotSourceFiles)
+import KitchenSink.Core.Build.Target (Sourced(..), runAssembler, destination, destinationUrl)
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
@@ -76,7 +77,7 @@ buildTopicStats arts mkTarget =
     getTags art = either (const []) tags . runAssembler $ (f art)
 
     f :: Article [Text] -> Assembler TopicData
-    f art = extract <$> json @TopicData art Topic
+    f art = extract <$> json @() @TopicData art Topic
 
 type NodeKey = Text
 type URL = Text

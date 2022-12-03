@@ -1,17 +1,22 @@
 module KitchenSink.Core.Build.Site where
 
 import Data.Text (Text)
+import Text.Megaparsec
+import Text.Megaparsec.Char (newline)
 
 import KitchenSink.Prelude
 import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 
-data Article a
-  = Article FilePath [Section a]
+data Article ext a
+  = Article FilePath [Section ext a]
   deriving (Show, Eq, Ord, Functor)
 
+article :: [ExtraSectionType ext] -> FilePath -> Parser (Article ext [Text])
+article extras path = Article path <$> (section extras `sepBy` newline)
+
 -- A lens-like over-function that effectfully alters sections of an article.
-overSections :: (Applicative t) => (Section a -> t (Section b)) -> Article a -> t (Article b)
+overSections :: (Applicative t) => (Section ext a -> t (Section ext b)) -> Article ext a -> t (Article ext b)
 overSections f (Article p xs) =
   Article p <$> traverse f xs
 
@@ -36,8 +41,8 @@ data Image = Image
 data DotSourceFile = DotSourceFile
   deriving (Show, Eq, Ord)
 
-data Site = Site
-  { articles :: [ Sourced (Article [Text]) ]
+data Site ext = Site
+  { articles :: [ Sourced (Article ext [Text]) ]
   , images :: [ Sourced Image ]
   , videoFiles :: [ Sourced VideoFile ]
   , cssFiles :: [ Sourced CssFile ]

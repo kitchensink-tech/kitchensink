@@ -4,8 +4,9 @@ import qualified Commonmark
 import Data.Text (Text)
 import qualified Data.Text as Text
 
-import KitchenSink.Core.Build.Target
-import KitchenSink.Core.Section
+import KitchenSink.Layout.Blog.Extensions (Section)
+import KitchenSink.Core.Build.Target (runAssembler)
+import KitchenSink.Core.Section (extract)
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
 

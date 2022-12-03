@@ -15,7 +15,7 @@ import KitchenSink.Commonmark.BlogHTML
 
 import KitchenSink.Core.Assembler.Sections.PreRendered (PreRenderedHtml(..))
 
-dumpCMark :: Section [Text] -> Assembler (Section (FreeCommonmark.Block ()))
+dumpCMark :: Section ext [Text] -> Assembler ext (Section ext (FreeCommonmark.Block ()))
 dumpCMark (Section ty Cmark lines) = do
    let customSyntax = Commonmark.defaultSyntaxSpec
    res <- Commonmark.commonmarkWith customSyntax "inline" (Text.unlines lines)
@@ -24,7 +24,7 @@ dumpCMark (Section ty Cmark lines) = do
      Right (blk :: FreeCommonmark.Block ()) -> Assembler $ Right $ Section ty InMemory  blk
 dumpCMark (Section _ fmt _) = Assembler $ Left (UnsupportedConversionFormat fmt)
 
-parseCMark :: Section [Text] -> Assembler (Section Html)
+parseCMark :: Section ext [Text] -> Assembler ext (Section ext Html)
 parseCMark (Section ty Cmark lines) = do
    let customSyntax =
            mconcat
@@ -42,7 +42,7 @@ parseCMark (Section ty Cmark lines) = do
      Right (html :: Html) -> Assembler $ Right $ Section ty InMemory html
 parseCMark (Section _ fmt _) = Assembler $ Left (UnsupportedConversionFormat fmt)
 
-renderCMark :: Section [Text] -> Assembler (Section PreRenderedHtml)
+renderCMark :: Section ext [Text] -> Assembler ext (Section ext PreRenderedHtml)
 renderCMark sec =
     fmap (fmap r) $ parseCMark sec
   where

@@ -11,7 +11,7 @@ import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 
-getSection :: Article a -> SectionType -> Assembler (Section a)
+getSection :: (Eq ext) => Article ext a -> SectionType ext -> Assembler ext (Section ext a)
 getSection (Article _ xs) tyA =
     Assembler
     $ maybe (Left $ SectionNotFound tyA) Right
@@ -19,14 +19,14 @@ getSection (Article _ xs) tyA =
   where
     f (Section tyB  _ _) = tyB == tyA
 
-getSections :: Article a -> SectionType -> Assembler [Section a]
+getSections :: (Eq ext) => Article ext a -> SectionType ext -> Assembler ext [Section ext a]
 getSections (Article _ xs) tyA =
     pure
     $ List.filter f xs
   where
     f (Section tyB  _ _) = tyB == tyA
 
-lookupSection :: Article a -> SectionType -> Assembler (Maybe (Section a))
+lookupSection :: (Eq ext) => Article ext a -> SectionType ext -> Assembler ext (Maybe (Section ext a))
 lookupSection (Article _ xs) tyA =
     pure $ List.find f xs
   where

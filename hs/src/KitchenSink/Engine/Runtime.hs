@@ -29,24 +29,24 @@ import KitchenSink.Engine.Track (DevServerTrack(..))
 
 -- | Part of the Engine that is shared between one-off production script and
 -- longstanding dev-servers.
-data Engine = Engine {
-    execLoadSite :: IO Site
+data Engine ext = Engine {
+    execLoadSite :: IO (Site ext)
   , execLoadMetaExtradata :: IO MetaData
-  , evalTargets :: MetaData -> Site -> [Target ()]
-  , execProduceTarget :: Target () -> IO ()
+  , evalTargets :: MetaData -> (Site ext) -> [Target ext ()]
+  , execProduceTarget :: Target ext () -> IO ()
   }
 
 -- | Runtime concerned with auto-reloading, logging and other concernts.
-data Runtime = Runtime
+data Runtime ext = Runtime
   { waitReload :: IO ()
-  , reloadSite :: IO (Site, Bool)
-  , traceDev :: Tracer IO DevServerTrack
-  , liveSite :: BackgroundVal Site
+  , reloadSite :: IO (Site ext, Bool)
+  , traceDev :: Tracer IO (DevServerTrack ext)
+  , liveSite :: BackgroundVal (Site ext)
   , counters :: Counters
   , httpManager :: HTTP.Manager
   }
 
-initDevServerRuntime :: Engine -> FilePath -> Tracer IO DevServerTrack -> IO Runtime
+initDevServerRuntime :: forall ext. Engine ext -> FilePath -> Tracer IO (DevServerTrack ext) -> IO (Runtime ext)
 initDevServerRuntime engine path devtracer = do
   rtCounters <- initCounters
   initialSite <- load rtCounters
@@ -67,7 +67,7 @@ initDevServerRuntime engine path devtracer = do
     <*> pure rtCounters
     <*> newManager defaultManagerSettings
   where
-    load :: Counters -> IO Site
+    load :: Counters -> IO (Site ext)
     load cntrs = do
       site <- execLoadSite engine
       Prometheus.setGauge (cnt_sources cntrs) (int2Double $ countSources $ site)
@@ -81,7 +81,7 @@ initDevServerRuntime engine path devtracer = do
         runTracer devtracer $ FileWatch ev
         void $ atomically $ tryPutTMVar x ()
 
-    loadDebouncedFsEvents :: Counters -> TMVar () -> TMVar Site -> IO ()
+    loadDebouncedFsEvents :: Counters -> TMVar () -> TMVar (Site ext) -> IO ()
     loadDebouncedFsEvents cntrs x y = forever $ do
         atomically $ takeTMVar x
         -- give some time in case FileSystem is still synching
@@ -95,7 +95,7 @@ initDevServerRuntime engine path devtracer = do
           Left e -> do
             runTracer devtracer $ SiteReloadException e
 
-    pushNewSite :: Counters -> TMVar Site -> IO (Site, Bool)
+    pushNewSite :: Counters -> TMVar (Site ext) -> IO (Site ext, Bool)
     pushNewSite cntrs siteTMVar = do
       site <- load cntrs
       res <- seq site $ atomically $ tryPutTMVar siteTMVar site
@@ -107,7 +107,7 @@ type WatchQueue = [TMVar ()]
 --
 -- The action flushes the pending watches so that waiters do not have to remove
 -- themselves from the queue.
-waitSiteAndNotify :: Counters -> TMVar Site -> TVar WatchQueue -> Int -> IO (Site, Int)
+waitSiteAndNotify :: Counters -> TMVar (Site ext) -> TVar WatchQueue -> Int -> IO ((Site ext), Int)
 waitSiteAndNotify cntrs siteTMVar watches v = do
   Prometheus.incCounter $ cnt_reloads cntrs
   -- wait for siteTMVar and fan-out to all watches
@@ -151,11 +151,11 @@ ignoreFileReload p = takeExtension p == ".swp"
 
 -- | Adapt the background-value tracks with a site by dropping the Site content
 -- (which doesn't implement Show).
-adaptTracer :: Background.Track Site -> DevServerTrack
+adaptTracer :: Background.Track (Site ext) -> DevServerTrack ext
 adaptTracer trk = SiteReloaded $ fmap (const ()) trk
 
 
-countSources :: Site -> Int
+countSources :: Site ext -> Int
 countSources s = sum
   [ length $ articles s
   , length $ images s
