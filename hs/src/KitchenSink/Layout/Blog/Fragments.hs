@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Fragments where
+module KitchenSink.Layout.Blog.Fragments where
 
 import Prelude ((+))
 import Control.Monad (when)
@@ -26,9 +26,9 @@ import KitchenSink.Core.Section
 import KitchenSink.Prelude
 
 import KitchenSink.Core.Assembler.Sections
-import KitchenSink.Blog.Analyses
-import KitchenSink.Blog.Destinations
-import KitchenSink.Blog.Metadata
+import KitchenSink.Layout.Blog.Analyses
+import KitchenSink.Layout.Blog.Destinations
+import KitchenSink.Layout.Blog.Metadata
 
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 assembleHeader prefix stats currentDestination art =

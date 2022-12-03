@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-module KitchenSink.Blog.Summary (
+module KitchenSink.Layout.Blog.Summary (
     PathList(..)
   , TargetType(..)
   , PreambleSummary(..)
@@ -20,7 +20,7 @@ import Data.Text (Text)
 import KitchenSink.Core.Section hiding (target)
 import qualified KitchenSink.Core.Section.Payloads as SectionBasics
 import KitchenSink.Prelude
-import KitchenSink.Blog.Fragments
+import KitchenSink.Layout.Blog.Fragments
 
 data TargetType
   = CssTarget

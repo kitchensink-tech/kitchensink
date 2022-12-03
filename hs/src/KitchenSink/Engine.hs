@@ -17,12 +17,11 @@ import Prod.Status
 import Servant
 import System.FilePath.Posix ((</>))
 
-import KitchenSink.Blog
+import KitchenSink.Layout.Blog
 import KitchenSink.Prelude
 import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Assembler (Assembler)
 import KitchenSink.Engine.SiteBuilder (produceTarget)
-import KitchenSink.Blog.Metadata
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.SiteConfig

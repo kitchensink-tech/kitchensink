@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-module KitchenSink.Blog (
+module KitchenSink.Layout.Blog.Targets (
     siteTargets
   , PathList
   , TargetType
@@ -37,11 +37,11 @@ import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
-import KitchenSink.Blog.Destinations
-import KitchenSink.Blog.Fragments
-import KitchenSink.Blog.Analyses
-import KitchenSink.Blog.Metadata
-import KitchenSink.Blog.Summary
+import KitchenSink.Layout.Blog.Destinations
+import KitchenSink.Layout.Blog.Fragments
+import KitchenSink.Layout.Blog.Analyses
+import KitchenSink.Layout.Blog.Metadata
+import KitchenSink.Layout.Blog.Summary
 
 type Target = BlogTarget.Target TargetSummary
 

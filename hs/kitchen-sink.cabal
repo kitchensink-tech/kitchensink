@@ -22,14 +22,15 @@ maintainer:         lucas@dicioccio.fr
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules: KitchenSink.Blog
-                 , KitchenSink.Blog.Summary
-                 , KitchenSink.Blog.Analyses
-                 , KitchenSink.Blog.Analyses.Advanced
-                 , KitchenSink.Blog.Analyses.Wordcount
-                 , KitchenSink.Blog.Fragments
-                 , KitchenSink.Blog.Destinations
-                 , KitchenSink.Blog.Metadata
+    exposed-modules: KitchenSink.Layout.Blog
+                 , KitchenSink.Layout.Blog.Targets
+                 , KitchenSink.Layout.Blog.Summary
+                 , KitchenSink.Layout.Blog.Analyses
+                 , KitchenSink.Layout.Blog.Analyses.Advanced
+                 , KitchenSink.Layout.Blog.Analyses.Wordcount
+                 , KitchenSink.Layout.Blog.Fragments
+                 , KitchenSink.Layout.Blog.Destinations
+                 , KitchenSink.Layout.Blog.Metadata
                  , KitchenSink.Core.Assembler
                  , KitchenSink.Core.Assembler.Base
                  , KitchenSink.Core.Assembler.Sections

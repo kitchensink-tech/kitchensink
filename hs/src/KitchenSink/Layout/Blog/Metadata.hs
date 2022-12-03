@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Metadata
+module KitchenSink.Layout.Blog.Metadata
   ( MetaData(..)
   , epochUTCTime
   ) where

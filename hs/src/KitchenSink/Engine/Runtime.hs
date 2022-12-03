@@ -23,7 +23,7 @@ import System.FilePath.Posix (takeExtension)
 import KitchenSink.Prelude
 import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Build.Target (Target)
-import KitchenSink.Blog.Metadata
+import KitchenSink.Layout.Blog
 import KitchenSink.Engine.Counters (Counters(..), initCounters)
 import KitchenSink.Engine.Track (DevServerTrack(..))
 

@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Analyses.Wordcount where
+module KitchenSink.Layout.Blog.Analyses.Wordcount where
 
 import qualified Commonmark
 import Data.Text (Text)

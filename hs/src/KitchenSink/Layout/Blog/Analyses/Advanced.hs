@@ -1,6 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
-module KitchenSink.Blog.Analyses.Advanced
+module KitchenSink.Layout.Blog.Analyses.Advanced
   ( filecounts
   , TopicGraph(..)
   , topicsgraph
@@ -34,7 +34,7 @@ import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Commonmark.Free as CMark
-import KitchenSink.Blog.Destinations
+import KitchenSink.Layout.Blog.Destinations
 
 data FileCount = FileCount {
     srctype :: Text
