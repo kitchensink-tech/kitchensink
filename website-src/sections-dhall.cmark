@@ -1,0 +1,66 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Upcoming"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Dhall support in depth"
+,"faviconUrl": "/images/favicon.png"
+}
+
+=base:topic.json
+{"tags":["wip", "sections"]
+,"keywords":["static-site generators", "design"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+=base:summary.cmark
+
+Documenting the special features of Dhall-sections.
+
+=base:main-content.cmark
+
+__present__
+- evaluation time: for now a site-loading time
+- starting context: empty
+- substitution: a `kitchensink object`
+
+__future work__
+- carry-over more context from previous sections
+- move evaluation a bit more lazily
+
+## kitchensink object
+
+```dhall
+{ file : Text -- contains the source file for the cmark
+}
+```
+
+=base:main-content.cmark
+
+# this section is in cmark
+
+=base:main-content.dhall
+
+{ contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "cmark" }
+
+=base:main-content.cmark
+
+# this section is in html
+
+=base:main-content.dhall
+
+{ contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "html" }
+

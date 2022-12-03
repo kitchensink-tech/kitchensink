@@ -2,17 +2,18 @@
 module KitchenSink.Blog.SiteLoader (module KitchenSink.Blog.Build.Site, loadSite, LogMsg(..))where
 
 import Control.Exception (throwIO)
-import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Data.List as List
-import GHC.Generics (Generic)
 import Text.Megaparsec
 import Text.Megaparsec.Char (newline)
 import System.Directory (listDirectory)
 import System.FilePath.Posix ((</>), takeExtension)
-import Dhall (input, Vector)
-import Dhall.Marshal.Decode (FromDhall, auto)
+import Dhall
+import qualified Dhall.Map as Dhall
+import qualified Dhall.Core as Core
+import qualified Dhall.Context as Context
+import Lens.Family
 
 import KitchenSink.Blog.Prelude
 import KitchenSink.Blog.Build.Site
@@ -61,7 +62,15 @@ evalSection path trace x@(Section t fmt body) = do
   trace $ EvalSection path t fmt
   case fmt of
     Dhall -> do
-      dr <- input auto (Text.unlines body) :: IO DhallResult
+      let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack path)) (Core.Text)
+      let ksExpr = Core.RecordLit $ Dhall.fromList [("file", Core.makeRecordField pathExpr)]
+      let ctx0 = Context.empty
+      let sub0 = Dhall.fromList [ ("kitchensink", ksExpr) ]
+      let setts = defaultInputSettings
+                  & Dhall.sourceName .~ (path <> " (section)")
+                  & Dhall.evaluateSettings . substitutions .~ sub0
+                  & Dhall.evaluateSettings . startingContext .~ ctx0
+      dr <- inputWithSettings setts auto (Text.unlines body) :: IO DhallResult
       case format dr of
         "cmark" -> pure $ Section t Cmark (toList $ contents dr)
         "html" -> pure $ Section t TextHtml (toList $ contents dr)

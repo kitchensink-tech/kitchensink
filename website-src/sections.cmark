@@ -357,7 +357,7 @@ __example__
 There is one difficult design point when statically-generating website is when
 we have datasets of repeated structure (e.g., an image list with title, date,
 sizes, filepath, preferred corner thickness etc.) and you want to generate some
-content on a page in an otherwise. I touch on this difficult use-case in a [past article on my blog](https://lucasdicioccio.github.io/dhall-section-demo.html).
+content on a page in a static form. I touch on this difficult use-case in a [past article on my blog](https://lucasdicioccio.github.io/dhall-section-demo.html).
 
 In this specific case, the section consists of a
 [Dhall](https://dhall-lang.org/) expression typed so that it returns a page
@@ -373,7 +373,8 @@ The returned object must be of `Type`
 
 Where `format` is either `cmark` or `html` and `contents` is formatted in the
 appropriate format. The return type is currently rather primitive and will
-likely change in the future.
+likely change in the future. Changes and specifications are tracked in a
+[WIP-page](/sections-dhall.html).
 
 __example__
 
