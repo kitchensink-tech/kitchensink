@@ -21,8 +21,8 @@ import KitchenSink.Blog
 import KitchenSink.Prelude
 import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Assembler (Assembler)
-import KitchenSink.Core.Build.IO (produceTarget)
-import KitchenSink.Blog.Layout.Metadata
+import KitchenSink.Engine.SiteBuilder (produceTarget)
+import KitchenSink.Blog.Metadata
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.SiteConfig
@@ -106,10 +106,10 @@ defaultMain = do
            (serveApi ksconfig engine rt)
            (Proxy @ServeApi)
 
-loadServeModeExtraData :: FilePath -> IO MetaExtraData
+loadServeModeExtraData :: FilePath -> IO MetaData
 loadServeModeExtraData path = do
   config <- fromMaybe defaultGlobalSite <$> loadJSONFile path
-  MetaExtraData
+  MetaData
     <$> getCurrentTime
     <*> pure (title config)
     <*> pure (publishURL config)
@@ -119,10 +119,10 @@ loadServeModeExtraData path = do
   where
     noExtraHeaders _ = pure mempty
 
-loadDevModeExtraData :: FilePath -> IO MetaExtraData
+loadDevModeExtraData :: FilePath -> IO MetaData
 loadDevModeExtraData path = do
   config <- fromMaybe defaultGlobalSite <$> loadJSONFile path
-  MetaExtraData
+  MetaData
     <$> getCurrentTime
     <*> pure (title config)
     <*> pure (publishURL config)

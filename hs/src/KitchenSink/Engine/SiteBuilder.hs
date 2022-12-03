@@ -1,4 +1,4 @@
-module KitchenSink.Core.Build.IO (produceTarget, outputTarget)
+module KitchenSink.Engine.SiteBuilder (produceTarget, outputTarget)
   where
 
 import Control.Exception (throwIO)

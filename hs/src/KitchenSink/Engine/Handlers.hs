@@ -30,7 +30,7 @@ import System.Process (readCreateProcess, proc)
 import KitchenSink.Prelude
 import KitchenSink.Core.Build.Target (Target, destinationUrl, destination)
 import KitchenSink.Core.Build.Trace as Build
-import KitchenSink.Core.Build.IO
+import KitchenSink.Engine.SiteBuilder
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Counters (Counters(..), timeItWithLabel)

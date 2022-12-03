@@ -34,15 +34,15 @@ import qualified Text.Feed.Export as Export (textFeedWith)
 import KitchenSink.Core.Build.Site
 import KitchenSink.Core.Build.Target hiding (Target)
 import qualified KitchenSink.Core.Build.Target as BlogTarget
-import KitchenSink.Blog.Layout.Destinations
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)
 import qualified KitchenSink.Core.Section.Payloads as SectionBasics
 import KitchenSink.Prelude
-import KitchenSink.Blog.Layout
-import KitchenSink.Blog.Layout.Metadata
 import KitchenSink.Core.Assembler.Sections
+import KitchenSink.Blog.Destinations
+import KitchenSink.Blog.Fragments
 import KitchenSink.Blog.Analyses
+import KitchenSink.Blog.Metadata
 
 data TargetType
   = CssTarget
@@ -174,7 +174,7 @@ rootDataTarget prefix v loc =
   where
     f _ = Generator $ pure $ Right $ Text.encodeUtf8 v
 
-siteTargets :: OutputPrefix -> MetaExtraData -> Site -> [Target]
+siteTargets :: OutputPrefix -> MetaData -> Site -> [Target]
 siteTargets prefix extra site = allTargets
   where
     allTargets = mconcat

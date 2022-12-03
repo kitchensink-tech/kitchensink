@@ -34,7 +34,7 @@ import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Commonmark.Free as CMark
-import KitchenSink.Blog.Layout.Destinations
+import KitchenSink.Blog.Destinations
 
 data FileCount = FileCount {
     srctype :: Text

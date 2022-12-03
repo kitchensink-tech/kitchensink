@@ -1,5 +1,5 @@
-module KitchenSink.Blog.Layout.Metadata
-  ( MetaExtraData(..)
+module KitchenSink.Blog.Metadata
+  ( MetaData(..)
   , epochUTCTime
   ) where
 
@@ -12,7 +12,7 @@ import KitchenSink.Core.Build.Site (Article)
 import KitchenSink.Core.Build.Target (Assembler)
 import KitchenSink.Prelude
 
-data MetaExtraData = MetaExtraData
+data MetaData = MetaData
   { now :: UTCTime
   , baseTitle :: Text
   , publishBaseURL :: Text

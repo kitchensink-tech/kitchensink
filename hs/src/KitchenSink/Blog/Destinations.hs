@@ -1,5 +1,5 @@
 
-module KitchenSink.Blog.Layout.Destinations
+module KitchenSink.Blog.Destinations
 where
 
 import Data.Text (Text)

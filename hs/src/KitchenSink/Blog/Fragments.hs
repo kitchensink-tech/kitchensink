@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Layout where
+module KitchenSink.Blog.Fragments where
 
 import Prelude ((+))
 import Control.Monad (when)
@@ -27,8 +27,8 @@ import KitchenSink.Prelude
 
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Blog.Analyses
-import KitchenSink.Blog.Layout.Destinations
-import KitchenSink.Blog.Layout.Metadata
+import KitchenSink.Blog.Destinations
+import KitchenSink.Blog.Metadata
 
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 assembleHeader prefix stats currentDestination art =
@@ -189,7 +189,7 @@ htmlbody
 htmlbody = wrap body_
 
 htmlhead
-  :: MetaExtraData
+  :: MetaData
   -> DestinationLocation
   -> DestinationLocation
   -> (Article [Text] -> Assembler (Lucid.Html ()))
@@ -204,7 +204,7 @@ htmlhead extra dloc jsondloc f = \art -> do
 -- see https://webcode.tools/generators/open-graph/article
 -- see https://developer.twitter.com/en/docs/twitter-for-websites/cards/guides/getting-started
 -- see https://www.linkedin.com/post-inspector/inspect/
-metaheaders :: MetaExtraData -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
+metaheaders :: MetaData -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 metaheaders extra dloc jsondloc art = do
   topic <- fmap extract <$> jsonm @TopicData art Topic
   social <- fmap extract <$> jsonm @SocialData art Social
@@ -532,7 +532,7 @@ articleImage art = do
     f :: Maybe (Section TopicData) -> Maybe Text
     f sec = imageLink . extract =<< sec
 
-assembleAtomEntry :: MetaExtraData -> DestinationLocation -> Article [Text] -> Assembler (Atom.Entry)
+assembleAtomEntry :: MetaData -> DestinationLocation -> Article [Text] -> Assembler (Atom.Entry)
 assembleAtomEntry extra dloc art = do
     summary <- fmap (compactSummary . extract) <$> lookupSection art Summary
     r <$> (extract <$> json @PreambleData art Preamble)

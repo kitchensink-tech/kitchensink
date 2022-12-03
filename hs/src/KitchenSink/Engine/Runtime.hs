@@ -23,7 +23,7 @@ import System.FilePath.Posix (takeExtension)
 import KitchenSink.Prelude
 import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Build.Target (Target)
-import KitchenSink.Blog.Layout.Metadata
+import KitchenSink.Blog.Metadata
 import KitchenSink.Engine.Counters (Counters(..), initCounters)
 import KitchenSink.Engine.Track (DevServerTrack(..))
 
@@ -31,8 +31,8 @@ import KitchenSink.Engine.Track (DevServerTrack(..))
 -- longstanding dev-servers.
 data Engine = Engine {
     execLoadSite :: IO Site
-  , execLoadMetaExtradata :: IO MetaExtraData
-  , evalTargets :: MetaExtraData -> Site -> [Target ()]
+  , execLoadMetaExtradata :: IO MetaData
+  , evalTargets :: MetaData -> Site -> [Target ()]
   , execProduceTarget :: Target () -> IO ()
   }
 
