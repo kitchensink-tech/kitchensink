@@ -1,14 +1,21 @@
 {-# LANGUAGE DeriveAnyClass #-}
 module KitchenSink.Engine.SiteLoader (module KitchenSink.Core.Build.Site, loadSite, LogMsg(..))where
 
+import qualified Data.Aeson as Aeson
+import Data.Aeson (FromJSON(..), withObject, (.:))
 import Control.Exception (throwIO)
+import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 import qualified Data.Text.IO as Text
 import qualified Data.List as List
 import Text.Megaparsec (runParser)
 import System.Directory (listDirectory)
 import System.FilePath.Posix ((</>), takeExtension)
 import Dhall
+import Dhall.Src (Src)
+import Data.Void (Void)
+import Dhall.JSON (dhallToJSON, CompileError)
 import qualified Dhall.Map as Dhall
 import qualified Dhall.Core as Core
 import qualified Dhall.Context as Context
@@ -42,15 +49,21 @@ loadArticle extras trace path = do
     Right art -> Sourced (FileSource path) <$> overSections (evalSection path trace) art
 
 data DhallResult
-  = DhallResult
-  { contents :: Vector Text
-  , format :: Text
-  }
-  deriving (Generic,Show)
+  = DhallTextContents Text [Text]
+  | DhallJsonContents Aeson.Value
+  deriving (Show)
 
-instance FromDhall DhallResult
+instance FromJSON DhallResult where
+  parseJSON = withObject "DhallResult" $ \obj -> do
+                format <- obj .: "format"
+                case format of
+                  "json" -> DhallJsonContents <$> obj .: "contents"
+                  _ -> DhallTextContents format <$> obj .: "contents"
 
-data EvalError = UnsupportedReturnFormat Text
+data EvalError
+  = UnsupportedReturnFormat Text
+  | DhallRuntimeError CompileError
+  | DhallResultJsonDecodeError String
   deriving (Show, Exception)
 
 evalSection :: FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> IO (Section ext [Text])
@@ -66,11 +79,19 @@ evalSection path trace x@(Section t fmt body) = do
                   & Dhall.sourceName .~ (path <> " (section)")
                   & Dhall.evaluateSettings . substitutions .~ sub0
                   & Dhall.evaluateSettings . startingContext .~ ctx0
-      dr <- inputWithSettings setts auto (Text.unlines body) :: IO DhallResult
-      case format dr of
-        "cmark" -> pure $ Section t Cmark (toList $ contents dr)
-        "html" -> pure $ Section t TextHtml (toList $ contents dr)
-        newfmt -> throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> newfmt
+      de <- inputExprWithSettings setts (Text.unlines body) :: IO (Core.Expr Src Void)
+      dj <- case dhallToJSON de of
+        Left err -> throwIO $ DhallRuntimeError err
+        Right jvalue -> pure $ jvalue
+
+      case Aeson.fromJSON dj of
+        Aeson.Error err -> throwIO $ DhallResultJsonDecodeError err
+        Aeson.Success (DhallJsonContents obj) -> pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
+        Aeson.Success (DhallTextContents format contents) ->
+          case format of
+            "cmark" -> pure $ Section t Cmark contents
+            "html" -> pure $ Section t TextHtml contents
+            newfmt -> throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> newfmt
     _ -> pure x
 
 loadImage :: Loader a Image

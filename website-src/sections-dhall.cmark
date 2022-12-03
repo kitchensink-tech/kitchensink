@@ -33,6 +33,7 @@ Documenting the special features of Dhall-sections.
 =base:main-content.cmark
 
 __present__
+- mechanism: find `.dhall` extensions and evaluate the dhall expression to substitute the content
 - evaluation time: for now a site-loading time
 - starting context: empty
 - substitution: a `kitchensink object`
@@ -40,6 +41,7 @@ __present__
 __future work__
 - carry-over more context from previous sections
 - move evaluation a bit more lazily
+- some non-load-time evaluation (e.g., in layouts to generate new targets -- but needs IO for this)
 
 ## kitchensink object
 
@@ -50,17 +52,81 @@ __future work__
 
 =base:main-content.cmark
 
-# this section is in cmark
+# a section in CommonMark
 
-=base:main-content.dhall
+__example__
 
-{ contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "cmark" }
+    =base:main-content.dhall
+    
+    { contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "cmark" }
+
+
 
 =base:main-content.cmark
 
-# this section is in html
+# a section in html
 
-=base:main-content.dhall
+You can return HTML directly-formatted.
 
-{ contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "html" }
+__example__
 
+    =base:main-content.dhall
+    
+    { contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "html" }
+
+
+=base:main-content.cmark
+
+# a generated-generator command
+
+Dhall can substitute itself to JSON objects as well.
+Jut replace a `.json` with `.dhall` and KitchenSink will interpret a Dhall expression to fill-in the JSON.
+
+A few use cases are envisioned:
+- generating a _commands_ from Dhall expressions
+- generating a command requiring the filename
+- avoiding redundant information like social infos using Dhall's support for remote includes
+
+__example 1__
+
+    =generator:cmd.dhall
+    let
+      ping = { cmd = "ping"
+             , args = ["-c", "3", "8.8.4.4"]
+             , target = "latency"
+             }
+    in
+    { contents = ping
+    , format = "json"
+    }
+
+__example 2__
+
+    =generator:cmd.dhall
+    let
+      cmd = { cmd = "cat"
+            , args = [kitchensink.file]
+            , target = "cat-this-file"
+            }
+    in
+    { contents = cmd
+    , format = "json"
+    }
+
+__example 3__
+
+    =base:social.dhall
+    { contents = ./social.dhall
+    , format = "json"
+    }
+
+=generator:cmd.dhall
+let
+  cmd = { cmd = "cat"
+        , args = [kitchensink.file]
+        , target = "cat-this-file"
+        }
+in
+{ contents = cmd
+, format = "json"
+}
