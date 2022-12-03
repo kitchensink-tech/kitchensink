@@ -32,4 +32,21 @@ This article answers questions like: how do you change the layout of the blog?
 
 =base:main-content.cmark
 
-# layouts are implemented in Haskell
+Layouts in KitchenSink are implemented in Haskell and require some firm understanding of Haskell if you want to build one from scratch.
+
+Currently, a Layout has
+- a set of extension sections (on top of the base one) for main articles
+- a function to turn Sites (including artilces) into Targets
+
+Today Site/SiteLoader and Layouts are bit coupled yet distinct. I'm not sure
+the distance between the two is really useful.
+
+So if you want to modify KitchenSink:
+- support a new filetype
+  - modify the Site loader
+  - modify the Layout function with whatever you need to turn the filetype into a set of targets
+- support a new section
+  - modify the layout to be able to parse the new data type
+  - modify the evalTarget function to
+- change the html shape
+  - modify an existing layout, either a singular target (fragment) or multiple targets
