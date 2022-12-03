@@ -10,8 +10,8 @@ import qualified Data.Text.Lazy.IO as LText
 import System.Directory (copyFile)
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Assembler
-import KitchenSink.Blog.Generator
+import KitchenSink.Core.Assembler
+import KitchenSink.Core.Generator
 import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Build.Trace
 

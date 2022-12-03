@@ -30,9 +30,9 @@ import Prelude (succ, (-))
 
 import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 import KitchenSink.Prelude
-import KitchenSink.Blog.Assembler.Sections
+import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Commonmark.Free as CMark
 import KitchenSink.Blog.Layout.Destinations
 

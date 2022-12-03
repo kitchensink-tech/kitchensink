@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Assembler.Sections.CommonMark
+module KitchenSink.Core.Assembler.Sections.CommonMark
  where
 
 import qualified Commonmark
@@ -8,12 +8,12 @@ import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LText
 
 import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import qualified KitchenSink.Commonmark.Free as FreeCommonmark
 import KitchenSink.Commonmark.BlogHTML
 
-import KitchenSink.Blog.Assembler.Sections.PreRendered (PreRenderedHtml(..))
+import KitchenSink.Core.Assembler.Sections.PreRendered (PreRenderedHtml(..))
 
 dumpCMark :: Section [Text] -> Assembler (Section (FreeCommonmark.Block ()))
 dumpCMark (Section ty Cmark lines) = do

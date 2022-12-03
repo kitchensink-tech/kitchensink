@@ -5,9 +5,9 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 
 import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 import KitchenSink.Prelude
-import KitchenSink.Blog.Assembler.Sections
+import KitchenSink.Core.Assembler.Sections
 
 wordcount :: Text -> Int
 wordcount = length . Text.words

@@ -35,13 +35,13 @@ import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target hiding (Target)
 import qualified KitchenSink.Blog.Build.Target as BlogTarget
 import KitchenSink.Blog.Layout.Destinations
-import KitchenSink.Blog.Generator
-import KitchenSink.Blog.Section hiding (target)
-import qualified KitchenSink.Blog.Section.Payloads as SectionBasics
+import KitchenSink.Core.Generator
+import KitchenSink.Core.Section hiding (target)
+import qualified KitchenSink.Core.Section.Payloads as SectionBasics
 import KitchenSink.Prelude
 import KitchenSink.Blog.Layout
 import KitchenSink.Blog.Layout.Metadata
-import KitchenSink.Blog.Assembler.Sections
+import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Blog.Analyses
 
 data TargetType

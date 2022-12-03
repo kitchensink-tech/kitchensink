@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Section.Base (SectionType(..), Format(..), Section(..))
+module KitchenSink.Core.Section.Base (SectionType(..), Format(..), Section(..))
 where
 
 import KitchenSink.Prelude

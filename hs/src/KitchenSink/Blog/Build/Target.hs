@@ -9,8 +9,8 @@ import System.Exit (ExitCode(..))
 import System.Process.ByteString(readProcessWithExitCode)
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Assembler
-import KitchenSink.Blog.Generator
+import KitchenSink.Core.Assembler
+import KitchenSink.Core.Generator
 import KitchenSink.Blog.Build.Trace
 
 data ProductionRule

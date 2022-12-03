@@ -26,22 +26,26 @@ library
                  , KitchenSink.Blog.Analyses
                  , KitchenSink.Blog.Analyses.Advanced
                  , KitchenSink.Blog.Analyses.Wordcount
-                 , KitchenSink.Blog.Assembler
-                 , KitchenSink.Blog.Assembler.Base
-                 , KitchenSink.Blog.Assembler.Sections
-                 , KitchenSink.Blog.Assembler.Sections.CommonMark
-                 , KitchenSink.Blog.Assembler.Sections.PreRendered
-                 , KitchenSink.Blog.Assembler.Sections.Json
-                 , KitchenSink.Blog.Assembler.Sections.Primitives
                  , KitchenSink.Blog.Build.IO
                  , KitchenSink.Blog.Build.Site
                  , KitchenSink.Blog.Build.Target
                  , KitchenSink.Blog.Build.Trace
-                 , KitchenSink.Blog.Generator
-                 , KitchenSink.Blog.Section
-                 , KitchenSink.Blog.Section.Base
-                 , KitchenSink.Blog.Section.Parser
-                 , KitchenSink.Blog.Section.Payloads
+                 , KitchenSink.Blog.Layout
+                 , KitchenSink.Blog.Layout.Destinations
+                 , KitchenSink.Blog.Layout.Metadata
+                 , KitchenSink.Blog.SiteLoader
+                 , KitchenSink.Core.Assembler
+                 , KitchenSink.Core.Assembler.Base
+                 , KitchenSink.Core.Assembler.Sections
+                 , KitchenSink.Core.Assembler.Sections.CommonMark
+                 , KitchenSink.Core.Assembler.Sections.PreRendered
+                 , KitchenSink.Core.Assembler.Sections.Json
+                 , KitchenSink.Core.Assembler.Sections.Primitives
+                 , KitchenSink.Core.Generator
+                 , KitchenSink.Core.Section
+                 , KitchenSink.Core.Section.Base
+                 , KitchenSink.Core.Section.Parser
+                 , KitchenSink.Core.Section.Payloads
                  , KitchenSink.Commonmark.BlogHTML
                  , KitchenSink.Commonmark.Highlighting
                  , KitchenSink.Commonmark.Free
@@ -53,10 +57,6 @@ library
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
                  , KitchenSink.Engine.Track
-                 , KitchenSink.Blog.Layout
-                 , KitchenSink.Blog.Layout.Destinations
-                 , KitchenSink.Blog.Layout.Metadata
-                 , KitchenSink.Blog.SiteLoader
                  , KitchenSink.Prelude
 
     -- LANGUAGE extensions used by modules in this package.

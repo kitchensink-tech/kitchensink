@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Assembler.Sections.Primitives
+module KitchenSink.Core.Assembler.Sections.Primitives
  ( getSection
  , getSections
  , lookupSection
@@ -8,7 +8,7 @@ import qualified Data.List as List
 
 import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 import KitchenSink.Prelude
 
 getSection :: Article a -> SectionType -> Assembler (Section a)

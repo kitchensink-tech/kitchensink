@@ -1,9 +1,9 @@
-module KitchenSink.Blog.Assembler.Base (Assembler(..), AssemblerError(..)) where
+module KitchenSink.Core.Assembler.Base (Assembler(..), AssemblerError(..)) where
 
 import qualified Commonmark
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 
 data AssemblerError
   = SectionNotFound SectionType

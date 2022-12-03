@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Assembler.Sections.PreRendered
+module KitchenSink.Core.Assembler.Sections.PreRendered
  ( PreRenderedHtml(..)
  )
  where

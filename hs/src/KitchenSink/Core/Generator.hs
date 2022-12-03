@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Generator (Generator(..), GeneratorError(..)) where
+module KitchenSink.Core.Generator (Generator(..), GeneratorError(..)) where
 
 import Data.ByteString (ByteString)
 

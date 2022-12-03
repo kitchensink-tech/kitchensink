@@ -1,5 +1,5 @@
-module KitchenSink.Blog.Section.Parser
-  ( module KitchenSink.Blog.Section.Base
+module KitchenSink.Core.Section.Parser
+  ( module KitchenSink.Core.Section.Base
   , extract
   , extract'
   , section
@@ -14,7 +14,7 @@ import Text.Megaparsec.Char (string, newline)
 import Data.Void (Void)
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Section.Base
+import KitchenSink.Core.Section.Base
 
 extract' :: Coercible a b => Section a -> b
 extract' (Section _ _ a) = coerce a

@@ -1,5 +1,5 @@
 
-module KitchenSink.Blog.Section.Payloads
+module KitchenSink.Core.Section.Payloads
   where
 
 import GHC.Generics (Generic)

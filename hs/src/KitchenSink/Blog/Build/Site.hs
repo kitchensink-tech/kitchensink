@@ -4,7 +4,7 @@ import Data.Text (Text)
 
 import KitchenSink.Prelude
 import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 
 data Article a
   = Article FilePath [Section a]

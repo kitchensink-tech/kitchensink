@@ -20,7 +20,7 @@ import System.FilePath.Posix ((</>))
 import KitchenSink.Blog
 import KitchenSink.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
-import KitchenSink.Blog.Assembler (Assembler)
+import KitchenSink.Core.Assembler (Assembler)
 import KitchenSink.Blog.Build.IO (produceTarget)
 import KitchenSink.Blog.Layout.Metadata
 import KitchenSink.Engine.Api

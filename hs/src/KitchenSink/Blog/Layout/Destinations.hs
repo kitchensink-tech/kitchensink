@@ -7,7 +7,7 @@ import qualified Data.Text as Text
 import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Section (GeneratorInstructionsData(..))
+import KitchenSink.Core.Section (GeneratorInstructionsData(..))
 import KitchenSink.Blog.Build.Target (SourceLocation(..),DestinationLocation(..))
 
 type OutputPrefix = FilePath

@@ -18,7 +18,7 @@ import Lens.Family
 import KitchenSink.Prelude
 import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Section
+import KitchenSink.Core.Section
 
 data LogMsg
   = LoadArticle FilePath
