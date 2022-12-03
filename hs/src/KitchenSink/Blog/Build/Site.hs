@@ -2,7 +2,7 @@ module KitchenSink.Blog.Build.Site where
 
 import Data.Text (Text)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
 

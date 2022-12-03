@@ -27,7 +27,7 @@ import qualified Prometheus as Prometheus
 import Servant
 import System.Process (readCreateProcess, proc)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Build.Target (Target, destinationUrl, destination)
 import KitchenSink.Blog.Build.Trace as Build
 import KitchenSink.Blog.Build.IO

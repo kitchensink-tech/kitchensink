@@ -9,7 +9,7 @@ import qualified Data.List as List
 import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 getSection :: Article a -> SectionType -> Assembler (Section a)
 getSection (Article _ xs) tyA =

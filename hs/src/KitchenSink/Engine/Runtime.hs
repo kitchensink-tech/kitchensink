@@ -20,7 +20,7 @@ import qualified Prometheus as Prometheus
 import qualified System.FSNotify as FSNotify
 import System.FilePath.Posix (takeExtension)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
 import KitchenSink.Blog.Build.Target (Target)
 import KitchenSink.Blog.Layout.Metadata

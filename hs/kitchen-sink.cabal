@@ -38,7 +38,6 @@ library
                  , KitchenSink.Blog.Build.Target
                  , KitchenSink.Blog.Build.Trace
                  , KitchenSink.Blog.Generator
-                 , KitchenSink.Blog.Prelude
                  , KitchenSink.Blog.Section
                  , KitchenSink.Blog.Section.Base
                  , KitchenSink.Blog.Section.Parser
@@ -58,6 +57,7 @@ library
                  , KitchenSink.Blog.Layout.Destinations
                  , KitchenSink.Blog.Layout.Metadata
                  , KitchenSink.Blog.SiteLoader
+                 , KitchenSink.Prelude
 
     -- LANGUAGE extensions used by modules in this package.
     default-extensions: OverloadedStrings

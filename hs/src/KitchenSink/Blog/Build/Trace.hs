@@ -1,7 +1,7 @@
 module KitchenSink.Blog.Build.Trace (Tracer, Trace(..))
   where
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data Trace
   = Executing FilePath [String]

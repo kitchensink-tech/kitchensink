@@ -12,7 +12,7 @@ import Text.Blaze.Renderer.Utf8 (renderMarkup)
 import qualified Data.ByteString.Lazy as LByteString
 
 import Data.Text (Text)
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 newtype CodeLanguage = CodeLanguage Text
 newtype Code = Code Text

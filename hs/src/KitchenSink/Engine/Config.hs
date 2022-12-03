@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy as LByteString
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data Command = Command {
     exe  :: FilePath

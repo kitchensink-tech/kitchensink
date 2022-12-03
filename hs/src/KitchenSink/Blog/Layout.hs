@@ -23,7 +23,7 @@ import qualified Text.Atom.Feed as Atom
 import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 import KitchenSink.Blog.Assembler.Sections
 import KitchenSink.Blog.Analyses

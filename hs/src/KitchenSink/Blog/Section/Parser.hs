@@ -13,7 +13,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char (string, newline)
 import Data.Void (Void)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Section.Base
 
 extract' :: Coercible a b => Section a -> b

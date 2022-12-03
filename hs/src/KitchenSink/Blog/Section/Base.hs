@@ -1,7 +1,7 @@
 module KitchenSink.Blog.Section.Base (SectionType(..), Format(..), Section(..))
 where
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data SectionType
   = BuildInfo

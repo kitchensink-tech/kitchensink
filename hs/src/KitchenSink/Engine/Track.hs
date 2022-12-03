@@ -13,7 +13,7 @@ import Prod.Background as Background
 import Prod.Tracer (Tracer(..))
 import qualified System.FSNotify as FSNotify
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
 import qualified KitchenSink.Blog.Build.Trace as Build
 import KitchenSink.Engine.Config (Command)

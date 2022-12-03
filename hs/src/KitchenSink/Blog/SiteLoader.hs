@@ -15,7 +15,7 @@ import qualified Dhall.Core as Core
 import qualified Dhall.Context as Context
 import Lens.Family
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Build.Site
 import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section

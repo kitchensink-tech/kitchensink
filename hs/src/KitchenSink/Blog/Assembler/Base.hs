@@ -2,7 +2,7 @@ module KitchenSink.Blog.Assembler.Base (Assembler(..), AssemblerError(..)) where
 
 import qualified Commonmark
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Section
 
 data AssemblerError

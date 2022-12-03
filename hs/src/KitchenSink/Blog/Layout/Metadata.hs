@@ -10,7 +10,7 @@ import qualified Lucid.Base as Lucid
 
 import KitchenSink.Blog.Build.Site (Article)
 import KitchenSink.Blog.Build.Target (Assembler)
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data MetaExtraData = MetaExtraData
   { now :: UTCTime

@@ -8,7 +8,7 @@ import Data.Text (Text)
 import qualified Data.List as List
 import Data.Time.Clock (UTCTime)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data PublicationStatus
   = Public

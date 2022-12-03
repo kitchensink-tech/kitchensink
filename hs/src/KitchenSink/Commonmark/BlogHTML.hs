@@ -11,7 +11,7 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text.Lazy as TL
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Commonmark.Highlighting
 
 newtype Html = Html (Commonmark.Html ())

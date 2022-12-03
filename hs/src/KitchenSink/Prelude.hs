@@ -1,5 +1,5 @@
 
-module KitchenSink.Blog.Prelude (
+module KitchenSink.Prelude (
     FilePath
   , hush
   , module Control.Applicative

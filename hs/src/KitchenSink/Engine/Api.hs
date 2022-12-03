@@ -8,7 +8,7 @@ import GHC.Generics (Generic)
 import qualified Prod.Status as Prod
 import Servant
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Engine.Config (Command)
 import KitchenSink.Engine.Track (WatchResult)
 

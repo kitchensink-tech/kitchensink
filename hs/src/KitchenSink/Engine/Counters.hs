@@ -8,7 +8,7 @@ import Data.Text (Text)
 import GHC.Real (fromRational, toRational)
 import qualified Prometheus as Prometheus
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 
 data Counters

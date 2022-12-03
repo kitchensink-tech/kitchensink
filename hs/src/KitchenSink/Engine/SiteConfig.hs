@@ -6,7 +6,7 @@ import Data.Aeson (FromJSON)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data LinkedSite = LinkedSite {
     baseURL :: Text

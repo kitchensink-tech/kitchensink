@@ -38,7 +38,7 @@ import KitchenSink.Blog.Layout.Destinations
 import KitchenSink.Blog.Generator
 import KitchenSink.Blog.Section hiding (target)
 import qualified KitchenSink.Blog.Section.Payloads as SectionBasics
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Layout
 import KitchenSink.Blog.Layout.Metadata
 import KitchenSink.Blog.Assembler.Sections

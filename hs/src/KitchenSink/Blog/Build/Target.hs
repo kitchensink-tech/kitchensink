@@ -8,7 +8,7 @@ import qualified Data.Text.Lazy as LText
 import System.Exit (ExitCode(..))
 import System.Process.ByteString(readProcessWithExitCode)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Assembler
 import KitchenSink.Blog.Generator
 import KitchenSink.Blog.Build.Trace

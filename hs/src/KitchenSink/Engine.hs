@@ -18,7 +18,7 @@ import Servant
 import System.FilePath.Posix ((</>))
 
 import KitchenSink.Blog
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.SiteLoader as SiteLoader
 import KitchenSink.Blog.Assembler (Assembler)
 import KitchenSink.Blog.Build.IO (produceTarget)

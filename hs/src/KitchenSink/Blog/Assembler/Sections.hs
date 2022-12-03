@@ -11,7 +11,7 @@ import qualified Data.Text as Text
 
 import KitchenSink.Blog.Build.Target
 import KitchenSink.Blog.Section
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 import KitchenSink.Blog.Assembler.Sections.CommonMark
 import KitchenSink.Blog.Assembler.Sections.Json

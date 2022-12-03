@@ -9,7 +9,7 @@ import qualified Data.Text.Lazy.Encoding as LText
 import qualified Data.Text.Lazy.IO as LText
 import System.Directory (copyFile)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 import KitchenSink.Blog.Assembler
 import KitchenSink.Blog.Generator
 import KitchenSink.Blog.Build.Target

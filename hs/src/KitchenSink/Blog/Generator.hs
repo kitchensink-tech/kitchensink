@@ -2,7 +2,7 @@ module KitchenSink.Blog.Generator (Generator(..), GeneratorError(..)) where
 
 import Data.ByteString (ByteString)
 
-import KitchenSink.Blog.Prelude
+import KitchenSink.Prelude
 
 data GeneratorError
   = GeneratorError String ByteString
