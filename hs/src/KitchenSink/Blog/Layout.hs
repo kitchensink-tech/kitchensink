@@ -20,8 +20,8 @@ import Data.Time.Format.ISO8601 (iso8601Show)
 import qualified Text.Atom.Feed as Atom
 -- import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Blog.Build.Site
-import KitchenSink.Blog.Build.Target
+import KitchenSink.Core.Build.Site
+import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 

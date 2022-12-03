@@ -21,8 +21,8 @@ import qualified System.FSNotify as FSNotify
 import System.FilePath.Posix (takeExtension)
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.SiteLoader as SiteLoader
-import KitchenSink.Blog.Build.Target (Target)
+import KitchenSink.Engine.SiteLoader as SiteLoader
+import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Blog.Layout.Metadata
 import KitchenSink.Engine.Counters (Counters(..), initCounters)
 import KitchenSink.Engine.Track (DevServerTrack(..))

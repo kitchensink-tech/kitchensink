@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module KitchenSink.Blog.SiteLoader (module KitchenSink.Blog.Build.Site, loadSite, LogMsg(..))where
+module KitchenSink.Engine.SiteLoader (module KitchenSink.Core.Build.Site, loadSite, LogMsg(..))where
 
 import Control.Exception (throwIO)
 import qualified Data.Text as Text
@@ -16,8 +16,8 @@ import qualified Dhall.Context as Context
 import Lens.Family
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Build.Site
-import KitchenSink.Blog.Build.Target
+import KitchenSink.Core.Build.Site
+import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 
 data LogMsg

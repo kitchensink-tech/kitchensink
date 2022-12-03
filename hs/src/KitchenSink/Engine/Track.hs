@@ -14,8 +14,8 @@ import Prod.Tracer (Tracer(..))
 import qualified System.FSNotify as FSNotify
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.SiteLoader as SiteLoader
-import qualified KitchenSink.Blog.Build.Trace as Build
+import KitchenSink.Engine.SiteLoader as SiteLoader
+import qualified KitchenSink.Core.Build.Trace as Build
 import KitchenSink.Engine.Config (Command)
 
 -- we distinguish requested paths from effective target-path (for counters and other processing)

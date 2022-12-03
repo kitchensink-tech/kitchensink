@@ -8,8 +8,8 @@ import Data.Time.Clock (UTCTime(..), secondsToDiffTime)
 import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
 import qualified Lucid.Base as Lucid
 
-import KitchenSink.Blog.Build.Site (Article)
-import KitchenSink.Blog.Build.Target (Assembler)
+import KitchenSink.Core.Build.Site (Article)
+import KitchenSink.Core.Build.Target (Assembler)
 import KitchenSink.Prelude
 
 data MetaExtraData = MetaExtraData

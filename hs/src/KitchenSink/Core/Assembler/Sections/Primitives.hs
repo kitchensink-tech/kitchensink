@@ -6,8 +6,8 @@ module KitchenSink.Core.Assembler.Sections.Primitives
 
 import qualified Data.List as List
 
-import KitchenSink.Blog.Build.Site
-import KitchenSink.Blog.Build.Target
+import KitchenSink.Core.Build.Site
+import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 

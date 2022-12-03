@@ -9,7 +9,7 @@ module KitchenSink.Core.Assembler.Sections
 import Data.Text (Text)
 import qualified Data.Text as Text
 
-import KitchenSink.Blog.Build.Target
+import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 

@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Build.IO (produceTarget, outputTarget)
+module KitchenSink.Core.Build.IO (produceTarget, outputTarget)
   where
 
 import Control.Exception (throwIO)
@@ -12,8 +12,8 @@ import System.Directory (copyFile)
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler
 import KitchenSink.Core.Generator
-import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Build.Trace
+import KitchenSink.Core.Build.Target
+import KitchenSink.Core.Build.Trace
 
 outputTarget :: Tracer -> Target a -> IO ByteString
 outputTarget trace t = do

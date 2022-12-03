@@ -1,9 +1,9 @@
-module KitchenSink.Blog.Build.Site where
+module KitchenSink.Core.Build.Site where
 
 import Data.Text (Text)
 
 import KitchenSink.Prelude
-import KitchenSink.Blog.Build.Target
+import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 
 data Article a

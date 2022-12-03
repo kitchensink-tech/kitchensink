@@ -31,9 +31,9 @@ import Text.XML (def, rsPretty)
 import qualified Text.Atom.Feed as Atom
 import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Blog.Build.Site
-import KitchenSink.Blog.Build.Target hiding (Target)
-import qualified KitchenSink.Blog.Build.Target as BlogTarget
+import KitchenSink.Core.Build.Site
+import KitchenSink.Core.Build.Target hiding (Target)
+import qualified KitchenSink.Core.Build.Target as BlogTarget
 import KitchenSink.Blog.Layout.Destinations
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)

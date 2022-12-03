@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Build.Target (Target(..), ProductionRule(..), Url, DestinationLocation(..), destinationUrl, SourceLocation(..), Sourced(..), Assembler(..), AssemblerError(..), copyFrom, execCmd)
+module KitchenSink.Core.Build.Target (Target(..), ProductionRule(..), Url, DestinationLocation(..), destinationUrl, SourceLocation(..), Sourced(..), Assembler(..), AssemblerError(..), copyFrom, execCmd)
   where
 
 import Data.ByteString (ByteString)
@@ -11,7 +11,7 @@ import System.Process.ByteString(readProcessWithExitCode)
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler
 import KitchenSink.Core.Generator
-import KitchenSink.Blog.Build.Trace
+import KitchenSink.Core.Build.Trace
 
 data ProductionRule
   = ProduceAssembler (Assembler LText.Text)

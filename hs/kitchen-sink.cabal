@@ -26,14 +26,9 @@ library
                  , KitchenSink.Blog.Analyses
                  , KitchenSink.Blog.Analyses.Advanced
                  , KitchenSink.Blog.Analyses.Wordcount
-                 , KitchenSink.Blog.Build.IO
-                 , KitchenSink.Blog.Build.Site
-                 , KitchenSink.Blog.Build.Target
-                 , KitchenSink.Blog.Build.Trace
                  , KitchenSink.Blog.Layout
                  , KitchenSink.Blog.Layout.Destinations
                  , KitchenSink.Blog.Layout.Metadata
-                 , KitchenSink.Blog.SiteLoader
                  , KitchenSink.Core.Assembler
                  , KitchenSink.Core.Assembler.Base
                  , KitchenSink.Core.Assembler.Sections
@@ -41,6 +36,10 @@ library
                  , KitchenSink.Core.Assembler.Sections.PreRendered
                  , KitchenSink.Core.Assembler.Sections.Json
                  , KitchenSink.Core.Assembler.Sections.Primitives
+                 , KitchenSink.Core.Build.IO
+                 , KitchenSink.Core.Build.Site
+                 , KitchenSink.Core.Build.Target
+                 , KitchenSink.Core.Build.Trace
                  , KitchenSink.Core.Generator
                  , KitchenSink.Core.Section
                  , KitchenSink.Core.Section.Base
@@ -56,6 +55,7 @@ library
                  , KitchenSink.Engine.Handlers
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
+                 , KitchenSink.Engine.SiteLoader
                  , KitchenSink.Engine.Track
                  , KitchenSink.Prelude
 

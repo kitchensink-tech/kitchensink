@@ -28,8 +28,8 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Prelude (succ, (-))
 
-import KitchenSink.Blog.Build.Site
-import KitchenSink.Blog.Build.Target
+import KitchenSink.Core.Build.Site
+import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections

@@ -1,4 +1,4 @@
-module KitchenSink.Blog.Build.Trace (Tracer, Trace(..))
+module KitchenSink.Core.Build.Trace (Tracer, Trace(..))
   where
 
 import KitchenSink.Prelude

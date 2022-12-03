@@ -8,7 +8,7 @@ import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 
 import KitchenSink.Prelude
 import KitchenSink.Core.Section (GeneratorInstructionsData(..))
-import KitchenSink.Blog.Build.Target (SourceLocation(..),DestinationLocation(..))
+import KitchenSink.Core.Build.Target (SourceLocation(..),DestinationLocation(..))
 
 type OutputPrefix = FilePath
 

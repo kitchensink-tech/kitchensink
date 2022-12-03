@@ -7,8 +7,8 @@ import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LText
 import qualified Data.Text.Lazy.Encoding as LText
 
-import KitchenSink.Blog.Build.Target
-import KitchenSink.Blog.Build.Site
+import KitchenSink.Core.Build.Target
+import KitchenSink.Core.Build.Site
 import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections.Primitives
