@@ -23,6 +23,7 @@ extra-source-files: CHANGELOG.md
 
 library
     exposed-modules: KitchenSink.Blog
+                 , KitchenSink.Blog.Summary
                  , KitchenSink.Blog.Analyses
                  , KitchenSink.Blog.Analyses.Advanced
                  , KitchenSink.Blog.Analyses.Wordcount
