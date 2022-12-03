@@ -8,9 +8,7 @@ import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 
 import KitchenSink.Prelude
 import KitchenSink.Core.Section (GeneratorInstructionsData(..))
-import KitchenSink.Core.Build.Target (SourceLocation(..),DestinationLocation(..))
-
-type OutputPrefix = FilePath
+import KitchenSink.Core.Build.Target (OutputPrefix, SourceLocation(..),DestinationLocation(..))
 
 type Tag = Text
 

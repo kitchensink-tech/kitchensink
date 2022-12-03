@@ -17,7 +17,7 @@ import Prod.Status
 import Servant
 import System.FilePath.Posix ((</>))
 
-import KitchenSink.Layout.Blog
+import KitchenSink.Layout.Blog as Blog
 import KitchenSink.Prelude
 import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Assembler (Assembler)
@@ -61,7 +61,7 @@ defaultMain = do
   let prodengine = Engine
                   (loadSite (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (pure serveMetadata)
-                  (\med site -> fmap (fmap $ const ()) $ siteTargets (coerce $ outDir cmd) med site)
+                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
                   (produceTarget print)
   let devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath }
   case cmd of

@@ -22,7 +22,8 @@ maintainer:         lucas@dicioccio.fr
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules: KitchenSink.Layout.Blog
+    exposed-modules: KitchenSink.Layout.Base
+                 , KitchenSink.Layout.Blog
                  , KitchenSink.Layout.Blog.Targets
                  , KitchenSink.Layout.Blog.Summary
                  , KitchenSink.Layout.Blog.Analyses

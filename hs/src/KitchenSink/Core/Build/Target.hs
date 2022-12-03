@@ -1,4 +1,4 @@
-module KitchenSink.Core.Build.Target (Target(..), ProductionRule(..), Url, DestinationLocation(..), destinationUrl, SourceLocation(..), Sourced(..), Assembler(..), AssemblerError(..), copyFrom, execCmd)
+module KitchenSink.Core.Build.Target (Target(..), ProductionRule(..), Url, DestinationLocation(..), destinationUrl, SourceLocation(..), Sourced(..), Assembler(..), AssemblerError(..), copyFrom, execCmd, OutputPrefix)
   where
 
 import Data.ByteString (ByteString)
@@ -12,6 +12,8 @@ import KitchenSink.Prelude
 import KitchenSink.Core.Assembler
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Build.Trace
+
+type OutputPrefix = FilePath
 
 data ProductionRule
   = ProduceAssembler (Assembler LText.Text)
