@@ -14,16 +14,14 @@ to generate this file without the comments in this block.
 , dependencies =
   [ "aff"
   , "affjax-web"
-  , "argonaut-core"
   , "arrays"
   , "console"
   , "effect"
   , "either"
   , "foldable-traversable"
   , "foreign"
-  , "functions"
   , "halogen"
-  , "halogen-subscriptions"
+  , "halogen-echarts-simple"
   , "integers"
   , "kitchen-sink-compat"
   , "lists"
@@ -34,9 +32,7 @@ to generate this file without the comments in this block.
   , "transformers"
   , "tuples"
   , "web-dom"
-  , "web-events"
   , "web-html"
-  , "web-uievents"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

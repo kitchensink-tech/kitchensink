@@ -109,6 +109,31 @@ let upstream =
     , version =
         "master"
     }
+  with echarts-simple =
+    { dependencies =
+        [ "console", "effect", "functions", "prelude", "web-dom" ]
+    , repo =
+       "https://github.com/lucasdicioccio/purescript-echarts-simple"
+    , version =
+        "v0.0.1"
+    }
+  with halogen-echarts-simple =
+    { dependencies =
+      [ "aff"
+      , "console"
+      , "echarts-simple"
+      , "effect"
+      , "foldable-traversable"
+      , "halogen"
+      , "halogen-subscriptions"
+      , "maybe"
+      , "prelude"
+      ]
+    , repo =
+       "https://github.com/lucasdicioccio/purescript-halogen-echarts-simple"
+    , version =
+        "v0.0.2"
+    }
   with kitchen-sink-compat = ../kitchen-sink-compat/spago.dhall as Location
 
 in  upstream

@@ -24,7 +24,7 @@ import Web.DOM.ParentNode (QuerySelector(..))
 import Web.HTML (window)
 import Web.HTML.Window (Window, open)
 
-import EChart as EChart
+import Halogen.ECharts as ECharts
 import KSGraph as KSGraph
 import KitchenSink (fetchGraph)
 import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph, _TopicGraph)
@@ -52,13 +52,13 @@ main = HA.runHalogenAff do
   let tgt = fromMaybe body elem
   runUI component graph tgt
 
-type Slots = ( ksgraph :: forall query. H.Slot query (EChart.Output KSGraph.Event) Unit  )
+type Slots = ( ksgraph :: forall query. H.Slot query (ECharts.Output KSGraph.Event) Unit  )
 _ksgraph = Proxy :: Proxy "ksgraph"
 
 type Input = Maybe TopicGraph
 
 data Action
-  = HandleGraphEvent (EChart.Output KSGraph.Event)
+  = HandleGraphEvent (ECharts.Output KSGraph.Event)
 
 component
   :: forall query output m. MonadAff m
@@ -97,7 +97,7 @@ component =
 
   renderGraph graph focusedNode =
     HH.div_
-    [ HH.slot _ksgraph unit EChart.component (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
+    [ HH.slot _ksgraph unit ECharts.component (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
     ]
 
   handleAction = case _ of

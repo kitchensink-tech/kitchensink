@@ -30,7 +30,7 @@ import Data.Number as Number
 import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph, _TopicGraph)
 import KitchenSink.Layout.Blog.Analyses.Advanced as KS
 
-import EChart as EChart
+import Halogen.ECharts as ECharts
 
 type Legend = { data :: Array String }
 
@@ -102,7 +102,7 @@ type Options =
   , series :: Array Series
   )
 
-chartOptions :: TopicGraph -> Maybe Node -> EChart.Input Options
+chartOptions :: TopicGraph -> Maybe Node -> ECharts.Input Options
 chartOptions graph focusedNode =
   let
     isSelection :: String -> Boolean
