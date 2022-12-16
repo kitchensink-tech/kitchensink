@@ -13,6 +13,7 @@ import KitchenSink.Prelude
 data PublicationStatus
   = Public
   | Upcoming
+  | Archived
   deriving (Show, Eq, Generic)
 instance FromJSON PublicationStatus
 instance ToJSON PublicationStatus

@@ -208,6 +208,7 @@ siteTargets prefix extra site = allTargets
       [ (SinglePageApp, spaLayout)
       , (VariousListing, variousListingLayout)
       , (ImageGallery, imageGalleryLayout)
+      , (ArchivedArticle, archivedArticleLayout)
       , (UpcomingArticle, upcomingArticleLayout)
       , (PublishedArticle, articleLayout)
       , (IndexPage, indexLayout)
@@ -233,6 +234,27 @@ siteTargets prefix extra site = allTargets
                         , const $ pure $ siteGraphEchartZone
                         , const $ pure $ mainArticleLinks articleTargets
                         , const $ pure $ topicsListings stats
+                        ]
+                      ]
+                  ]
+
+    archivedArticleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
+    archivedArticleLayout dloc jsondloc =
+      htmldoc
+        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+                  , htmlbody 
+                    $ mconcat
+                      [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
+                      $ mconcat
+                        [ const $ pure $ homeLink
+                        , const $ pure $ searchBox
+                        ]
+                      , wrap (div_ [ class_ "main"])
+                      $ wrap article_ 
+                      $ mconcat
+                        [ assembleHeader prefix stats dloc
+                        , assembleArchivedMain
+                        , assembleFooter
                         ]
                       ]
                   ]

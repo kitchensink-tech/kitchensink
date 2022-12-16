@@ -143,10 +143,10 @@ and `listing` for various listings. Overall, except for index and tags, the
 layout of content does not change significantly besides the HTML-nesting (which
 then allows you to modify CSS or hijack DOM elements for single-page apps).
 
-The publicationStatus is either: `Public` or `Upcoming`. Upcoming articles are
-treated slightly differently from Public articles in listing or in the home
-page: they are ranked lower and they do not carry a summary. A warning is also
-inserted on Upcoming articles.
+The publicationStatus is either: `Public`, `Upcoming`, or `Archived`. Upcoming
+and Archived articles are treated slightly differently from Public articles in
+listing or in the home page: they are ranked lower and they do not carry a
+summary. A warning is also inserted on Upcoming and Archived articles.
 
 __example__
 

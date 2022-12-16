@@ -133,6 +133,22 @@ assembleUpcomingMain a = r <$> (getSections a MainContent >>= traverse renderSec
       section_ [ class_ "main-section" ] $ do
         toHtmlRaw @Text (extract' content)
 
+assembleArchivedMain :: Article [Text] -> Assembler (Lucid.Html ())
+assembleArchivedMain a = r <$> (getSections a MainContent >>= traverse renderSection)
+  where
+    r :: [Section PreRenderedHtml] -> Lucid.Html ()
+    r content = do
+      div_ [ class_ "archived-notice" ] $ do
+        p_ "This article is considered archived."
+      div_ [ id_ "histogram" ] mempty
+      div_ [ class_ "main-article" ] $ do
+        traverse_ f content
+
+    f :: Section PreRenderedHtml -> Lucid.Html ()
+    f content =
+      section_ [ class_ "main-section" ] $ do
+        toHtmlRaw @Text (extract' content)
+
 assembleMain :: Article [Text] -> Assembler (Lucid.Html ())
 assembleMain a = r <$> (getSections a MainContent >>= traverse renderSection)
   where
@@ -275,6 +291,7 @@ data ArticleLayout
  | ErrorLayout AssemblerError
  | PublishedArticle
  | UpcomingArticle
+ | ArchivedArticle
  | IndexPage
  | TopicListingPage
  | SinglePageApp
@@ -304,6 +321,8 @@ effectiveLayout Upcoming "application" = SinglePageApp
 effectiveLayout Upcoming "gallery" = ImageGallery
 effectiveLayout Upcoming "listing" = VariousListing
 effectiveLayout Upcoming t = UnknownLayout t
+effectiveLayout Archived "article" = ArchivedArticle
+effectiveLayout Archived t = UnknownLayout t
 
 isPublishedArticle :: Article [Text] -> Bool
 isPublishedArticle art = isPublic
@@ -311,6 +330,7 @@ isPublishedArticle art = isPublic
     isPublic :: Bool
     isPublic = case publicationStatus =<< buildinfo art of
       Just Upcoming -> False
+      Just Archived -> False
       Just Public -> True
       Nothing -> True
 
@@ -468,12 +488,14 @@ mainArticleLinkWithAnnotation t art =
         where
           f Public = "article-status-published"
           f Upcoming = "article-status-upcoming"
+          f Archived = "article-status-archived"
 
     statusIcon :: Lucid.Html ()
     statusIcon = case publicationStatus =<< buildinfo art of
       Nothing -> mempty
       Just Public -> mempty
       Just Upcoming -> span_ [ class_ "notice-upcoming" ] "(upcoming)"
+      Just Archived -> span_ [ class_ "notice-archived" ] "(archived)"
 
     preamble :: Maybe PreambleData
     preamble =
