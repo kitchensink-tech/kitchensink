@@ -28,7 +28,11 @@ library
                  , KitchenSink.Layout.Blog.Targets
                  , KitchenSink.Layout.Blog.Summary
                  , KitchenSink.Layout.Blog.Analyses
-                 , KitchenSink.Layout.Blog.Analyses.Advanced
+                 , KitchenSink.Layout.Blog.Analyses.ArticleInfos
+                 , KitchenSink.Layout.Blog.Analyses.FileCount
+                 , KitchenSink.Layout.Blog.Analyses.SkyLine
+                 , KitchenSink.Layout.Blog.Analyses.SiteGraph
+                 , KitchenSink.Layout.Blog.Analyses.TopicStats
                  , KitchenSink.Layout.Blog.Analyses.Wordcount
                  , KitchenSink.Layout.Blog.Fragments
                  , KitchenSink.Layout.Blog.Destinations

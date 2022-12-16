@@ -11,7 +11,8 @@ import Data.Aeson (ToJSON,FromJSON)
 import Language.PureScript.Bridge (writePSTypes, buildBridge, defaultBridge, mkSumType, SumType)
 import qualified Language.PureScript.Bridge as Bridge
 
-import KitchenSink.Layout.Blog.Analyses.Advanced (Node, TopicGraph, SkyLine, SkyLineItem, LinkInfo, ImageInfo, SnippetInfo)
+import KitchenSink.Layout.Blog.Analyses (Node, TopicGraph, LinkInfo, ImageInfo, SnippetInfo)
+import KitchenSink.Layout.Blog.Analyses.SkyLine (SkyLine, SkyLineItem)
 import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, TargetType, PreambleSummary, TopicSummary, GlossarySummary, GlossaryItem)
 import Bridge (ArticleInfos)
 

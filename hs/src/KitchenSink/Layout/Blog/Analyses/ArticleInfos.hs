@@ -1,0 +1,104 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
+module KitchenSink.Layout.Blog.Analyses.ArticleInfos
+  ( analyzeArticle
+  , ArticleInfos(..)
+  , LinkInfo(..)
+  , ImageInfo(..)
+  , SnippetInfo(..)
+  ) where
+
+import qualified Data.List as List
+import GHC.Generics (Generic)
+import Data.Aeson (ToJSON,FromJSON)
+import Data.Text (Text)
+import qualified Data.Text as Text
+
+import KitchenSink.Layout.Blog.Extensions (Article)
+import KitchenSink.Core.Build.Target (runAssembler)
+import KitchenSink.Core.Section
+import KitchenSink.Prelude
+import KitchenSink.Core.Assembler.Sections
+import KitchenSink.Commonmark.Free as CMark
+
+import KitchenSink.Layout.Blog.Analyses.SkyLine
+
+data ArticleInfos = ArticleInfos {
+    ast :: [CMark.Block ()]
+  , linkInfos :: [LinkInfo]
+  , imageInfos :: [ImageInfo]
+  , snippetInfos :: [SnippetInfo]
+  , histogram :: [Int]
+  , skyline :: SkyLine
+  } deriving (Show, Generic)
+instance ToJSON ArticleInfos
+
+data LinkInfo = LinkInfo { linkURL :: Text, linkText :: Text }
+  deriving (Show, Generic)
+instance ToJSON LinkInfo
+instance FromJSON LinkInfo
+
+data SnippetInfo = SnippetInfo { snippetContents :: Text, snippetType :: Text }
+  deriving (Show, Generic)
+instance ToJSON SnippetInfo
+instance FromJSON SnippetInfo
+
+data ImageInfo = ImageInfo { imageURL :: Text, imageText :: Text }
+  deriving (Show, Generic)
+instance ToJSON ImageInfo
+instance FromJSON ImageInfo
+
+articleCMarks :: Article [Text] -> [CMark.Block ()]
+articleCMarks art =
+  case runAssembler (getSections art MainContent >>= traverse dumpCMark . List.filter isCmark) of
+    Left _ -> []
+    Right xs -> fmap extract xs
+
+  where
+    isCmark (Section _ Cmark _) = True
+    isCmark _ = False
+
+analyzeArticle :: Article [Text] -> ArticleInfos
+analyzeArticle art =
+  let xs = articleCMarks art
+  in ArticleInfos
+        (xs)
+        (mconcat [findLinksInSection x | x <- xs])
+        (mconcat [findImagesInSection x | x <- xs])
+        (mconcat [findSnippetsInSection x | x <- xs])
+        (mconcat [sectionHistogram x | x <- xs])
+        (mconcat [sectionSkyLine x | x <- xs])
+
+findLinksInSection :: (CMark.Block a) -> [LinkInfo]
+findLinksInSection s = do
+  -- list monad!
+  il <- blockInlines (s)
+  Link dst ttl _ <- inlineChunks il
+  pure $ LinkInfo dst ttl
+
+findSnippetsInSection :: (CMark.Block a) -> [SnippetInfo]
+findSnippetsInSection s = do
+  -- list monad!
+  b <- blockUniverse (s)
+  CodeBlock typ_ raw <- blockChunks b
+  pure $ SnippetInfo typ_ raw
+
+findImagesInSection :: (CMark.Block a) -> [ImageInfo]
+findImagesInSection s = do
+  -- list monad!
+  il <- blockInlines (s)
+  CMark.Image dst ttl _ <- inlineChunks il
+  pure $ ImageInfo dst ttl
+
+sectionHistogram :: (CMark.Block a) -> [Int]
+sectionHistogram s =
+  fmap go $ blockInlines (s) >>= inlineUniverse
+  where
+    go il = List.sum [ f c | c <- inlineChunks il ]
+    f x = case x of
+            Str t -> Text.length t
+            Link _ t _ -> Text.length t
+            Code t -> Text.length t
+            Entity _ -> 1
+            EscapedChar _ -> 1
+            _ -> 0
