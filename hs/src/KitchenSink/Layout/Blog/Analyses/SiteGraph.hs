@@ -21,6 +21,7 @@ import KitchenSink.Layout.Blog.Destinations
 
 import KitchenSink.Layout.Blog.Analyses.TopicStats
 import KitchenSink.Layout.Blog.Analyses.ArticleInfos
+import KitchenSink.Layout.Blog.Analyses.SkyLine
 
 type NodeKey = Text
 
@@ -103,7 +104,19 @@ topicsgraph external stats =
     uniqueTargetArticles :: [(Target (),Int)]
     uniqueTargetArticles = do
       ((from, _), infos) <- List.zip (knownTargets stats) analyses
-      pure (from, length $ histogram infos)
+      pure (from, articleWeight infos)
+
+    articleWeight :: ArticleInfos -> Int
+    articleWeight info = sum
+      $ fmap skylineItemWeight
+      $ skylineItems
+      $ skyline info
+
+    skylineItemWeight :: SkyLineItem -> Int
+    skylineItemWeight x = case x of
+      HeaderMark _ _ -> 30
+      ImageMark _ _ -> 10
+      TextualMark w _ -> w
 
     analyses :: [ArticleInfos]
     analyses = fmap (analyzeArticle . snd) $ knownTargets stats

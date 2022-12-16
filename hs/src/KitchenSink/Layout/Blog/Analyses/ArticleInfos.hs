@@ -12,7 +12,6 @@ import qualified Data.List as List
 import GHC.Generics (Generic)
 import Data.Aeson (ToJSON,FromJSON)
 import Data.Text (Text)
-import qualified Data.Text as Text
 
 import KitchenSink.Layout.Blog.Extensions (Article)
 import KitchenSink.Core.Build.Target (runAssembler)
@@ -28,7 +27,6 @@ data ArticleInfos = ArticleInfos {
   , linkInfos :: [LinkInfo]
   , imageInfos :: [ImageInfo]
   , snippetInfos :: [SnippetInfo]
-  , histogram :: [Int]
   , skyline :: SkyLine
   } deriving (Show, Generic)
 instance ToJSON ArticleInfos
@@ -66,7 +64,6 @@ analyzeArticle art =
         (mconcat [findLinksInSection x | x <- xs])
         (mconcat [findImagesInSection x | x <- xs])
         (mconcat [findSnippetsInSection x | x <- xs])
-        (mconcat [sectionHistogram x | x <- xs])
         (mconcat [sectionSkyLine x | x <- xs])
 
 findLinksInSection :: (CMark.Block a) -> [LinkInfo]
@@ -89,16 +86,3 @@ findImagesInSection s = do
   il <- blockInlines (s)
   CMark.Image dst ttl _ <- inlineChunks il
   pure $ ImageInfo dst ttl
-
-sectionHistogram :: (CMark.Block a) -> [Int]
-sectionHistogram s =
-  fmap go $ blockInlines (s) >>= inlineUniverse
-  where
-    go il = List.sum [ f c | c <- inlineChunks il ]
-    f x = case x of
-            Str t -> Text.length t
-            Link _ t _ -> Text.length t
-            Code t -> Text.length t
-            Entity _ -> 1
-            EscapedChar _ -> 1
-            _ -> 0

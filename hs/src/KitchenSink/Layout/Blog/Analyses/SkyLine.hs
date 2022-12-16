@@ -1,8 +1,8 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
 module KitchenSink.Layout.Blog.Analyses.SkyLine
-  ( SkyLine
-  , SkyLineItem
+  ( SkyLine(..)
+  , SkyLineItem(..)
   , sectionSkyLine
   ) where
 
