@@ -58,9 +58,9 @@ Other usages could be to support things like webmaster-verification tools on Goo
 
 KitchenSink copies `.js` files under `/js`.
 
-## Raw text files
+## So-called raw files
 
-KitchenSink copies `.txt` files under `/raw` __excepts for robots.txt__. I use it for when showing a long
+KitchenSink copies `.txt`, `.json`, `.csv`, and `.dhall` files under `/raw` __excepts for robots.txt and kitchen-sink.json__. I use this feature for attaching datasets or showing a long
 text result (e.g., a long output of a command that is too slow to generate).
 
 __exception__. The file `robots.txt` stays at the root of the output dir to meet the [robots exclusion standard](https://en.wikipedia.org/wiki/Robots_exclusion_standard).

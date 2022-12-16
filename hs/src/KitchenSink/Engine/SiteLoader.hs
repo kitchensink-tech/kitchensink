@@ -11,7 +11,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.List as List
 import Text.Megaparsec (runParser)
 import System.Directory (listDirectory)
-import System.FilePath.Posix ((</>), takeExtension)
+import System.FilePath.Posix ((</>), takeExtension, takeFileName)
 import Dhall
 import Dhall.Src (Src)
 import Data.Void (Void)
@@ -157,4 +157,4 @@ loadSite extras trace dir = do
     videosM paths = traverse (loadVideo trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".webm", ".mp4"] ]
     rawsM paths = traverse (loadRaw trace)
-                     $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".txt"] ]
+                     $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".txt", ".csv", ".json", ".dhall"] , takeFileName p /= "kitchen-sink.json"]
