@@ -81,6 +81,7 @@ data TargetType =
   | GraphVizImageTarget
   | VideoTarget
   | RawTarget
+  | DatasetTarget
   | JavaScriptSourceTarget
   | HtmlSourceTarget
   | JSONTarget
@@ -124,6 +125,12 @@ _RawTarget :: Prism' TargetType Unit
 _RawTarget = prism' (\_ -> RawTarget) f
   where
     f RawTarget = Just unit
+    f _ = Nothing
+
+_DatasetTarget :: Prism' TargetType Unit
+_DatasetTarget = prism' (\_ -> DatasetTarget) f
+  where
+    f DatasetTarget = Just unit
     f _ = Nothing
 
 _JavaScriptSourceTarget :: Prism' TargetType Unit

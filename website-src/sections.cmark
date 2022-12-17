@@ -425,3 +425,46 @@ __example__
     }
 
 :::
+
+## embedded datasets [experimental]
+
+::: {.section-details}
+
+Sometimes you want to ship a dataset. An option is to create one file in the
+Kitchen-Sink directory. However naming may conflict, and for very small
+examples, sometimes you just want to inline some dataset.
+
+The `dataset` section addresses such needs, by generating.
+:warning: The ordering of the insertion determines the resulting filename,
+for instance `/raw/data/sections.cmark__1.csv` for the first dataset in the `sections.cmark` file.
+
+In the future we will likely create extra metadata information:
+- finding a way to give names to datasets
+- computing sha256 signatures of datasets
+- inserting some `<meta>` tags in the HTML `head` section
+
+__example__
+
+    =base:dataset.csv
+    foo;bar
+    a;42
+    b;51
+    
+    =base:dataset.json
+    [{"foo":"a", "bar": 42}
+    ,{"foo":"b", "bar": 51}
+    ]
+
+:::
+
+
+=base:dataset.csv
+foo;bar
+a;42
+b;51
+
+=base:dataset.json
+[{"foo":"a", "bar": 42}
+,{"foo":"b", "bar": 51}
+]
+

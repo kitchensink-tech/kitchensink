@@ -51,6 +51,7 @@ sectionType extras =
       , base "taken-off" TakenOff
       , base "social" Social
       , base "glossary" Glossary
+      , base "dataset" Dataset
       ]
 
     dangerous =
@@ -61,11 +62,12 @@ sectionType extras =
       [ ext k (Extension v) | ExtraSectionType k v <- extras ]
 
 format :: Parser Format
-format = cmark <|> json <|> css <|> dhall
+format = cmark <|> json <|> css <|> csv <|> dhall
   where
     cmark = string "cmark" *> pure Cmark
     json = string "json" *> pure Json
     css = string "css" *> pure Css
+    csv = string "csv" *> pure Csv
     dhall = string "dhall" *> pure Dhall
 
 section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])

@@ -29,6 +29,7 @@ data TargetType
   | GraphVizImageTarget
   | VideoTarget
   | RawTarget
+  | DatasetTarget
   | JavaScriptSourceTarget
   | HtmlSourceTarget
   | JSONTarget

@@ -14,6 +14,7 @@ data SectionType ext
   | Social
   | GeneratorInstructions
   | Glossary
+  | Dataset
   | Extension ext
   deriving (Show, Eq, Ord)
 
@@ -23,6 +24,7 @@ data Format
   | Json
   | TextHtml
   | Css
+  | Csv
   | InMemory
   deriving (Show, Eq, Ord)
 

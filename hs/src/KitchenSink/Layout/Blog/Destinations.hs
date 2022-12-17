@@ -7,6 +7,7 @@ import qualified Data.Text as Text
 import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 
 import KitchenSink.Prelude
+import KitchenSink.Core.Section.Base as Core
 import KitchenSink.Core.Section (GeneratorInstructionsData(..))
 import KitchenSink.Core.Build.Target (OutputPrefix, SourceLocation(..),DestinationLocation(..))
 
@@ -37,6 +38,24 @@ destGenArbitrary prefix (FileSource path) g =
   StaticFileDestination
     (Text.pack $ "/gen/out/" <> takeFileName path <> "__" <> target g)
     (prefix </> "gen/out" </> takeFileName path <> "__" <> target g)
+
+newtype FileExtension = FileExtension String
+
+destinationExtension :: Format -> FileExtension
+destinationExtension fmt = FileExtension $ case fmt of
+  Core.Json -> "json"
+  Core.Cmark -> "cmark"
+  Core.Dhall -> "dhall"
+  Core.TextHtml -> "html"
+  Core.Css -> "css"
+  Core.Csv -> "csv"
+  Core.InMemory -> "mem"
+
+destEmbeddedData :: OutputPrefix -> SourceLocation -> FileExtension -> Int -> DestinationLocation
+destEmbeddedData prefix (FileSource path) (FileExtension ext) index =
+  StaticFileDestination
+    (Text.pack $ "/raw/data/" <> takeFileName path <> "__" <> show index <> "." <> ext)
+    (prefix </> "raw/data" </> takeFileName path <> "__" <> show index <> "." <> ext)
 
 destVideoFile :: OutputPrefix -> SourceLocation -> DestinationLocation
 destVideoFile prefix (FileSource path) =

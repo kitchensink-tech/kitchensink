@@ -98,6 +98,7 @@ siteTargets prefix extra site = allTargets
   where
     allTargets = mconcat
       [ embeddedGeneratorTargets
+      , embeddedDataTargets
       , fmap fst articleTargets
       , imageTargets prefix site
       , dotimageTargets prefix site
@@ -182,15 +183,46 @@ siteTargets prefix extra site = allTargets
       ]
       where
         getTargets :: SourceLocation -> Article [Text] -> [Target]
-        getTargets loc art = either (error . show) (fmap (genTarget loc)) . runAssembler $ (f art)
+        getTargets loc art =
+          either (error . show) (fmap (generatorTarget loc))
+          $ runAssembler
+          $ generatorInstructions art
 
-        genTarget :: SourceLocation -> GeneratorInstructionsData -> Target
-        genTarget loc g = let rule = execCmd (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
-                      in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
+        generatorTarget :: SourceLocation -> GeneratorInstructionsData -> Target
+        generatorTarget loc g =
+          let rule = execCmd (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
+          in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
 
-        f :: Article [Text] -> Assembler [GeneratorInstructionsData]
-        f art = getSections art GeneratorInstructions
+        generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]
+        generatorInstructions art =
+          getSections art GeneratorInstructions
             >>= traverse (fmap extract . jsonSection)
+
+    embeddedDataTargets :: [Target]
+    embeddedDataTargets =
+      [ tgt
+      | Sourced loc art <- articles site
+      , tgt <- getTargets loc art
+      ]
+      where
+        getTargets :: SourceLocation -> Article [Text] -> [Target]
+        getTargets loc art =
+          either (error . show) (fmap (dataTarget loc))
+          $ runAssembler
+          $ datasets art
+
+        dataTarget :: SourceLocation -> (Int, Section () [Text]) -> Target
+        dataTarget loc (index, (Section _ format contents)) =
+          let 
+            dataDestination = destEmbeddedData prefix loc (destinationExtension format) index
+            rule = Core.ProduceAssembler (pure $ LText.fromStrict $ Text.unlines contents)
+          in
+          simpleTarget DatasetTarget dataDestination rule
+
+        datasets :: Article [Text] -> Assembler [(Int,Section () [Text])]
+        datasets art = do
+          sections <- getSections art Dataset
+          pure $ List.zip [1..] sections
 
     tagIndexesTargets :: Maybe (Article [Text]) -> [ Target ]
     tagIndexesTargets Nothing = []
@@ -215,7 +247,7 @@ siteTargets prefix extra site = allTargets
       ]
 
     stats :: TopicStats
-    stats = buildTopicStats (articles site) (fmap (const ()) . articleTarget )
+    stats = buildTopicStats (articles site) (fmap (const ()) . articleTarget)
 
     indexLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     indexLayout dloc jsondloc =

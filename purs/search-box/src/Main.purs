@@ -142,6 +142,7 @@ showTargetType = case _ of
   HtmlSourceTarget -> "Some raw HTML file."
   JSONTarget -> "Some JSON data"
   RawTarget -> "Some arbitrary data"
+  DatasetTarget -> "An article dataset"
   RootFileTarget -> "Some unspecified data."
   ArticleTarget -> "An article."
   GeneratedTarget -> "The output of a command."
