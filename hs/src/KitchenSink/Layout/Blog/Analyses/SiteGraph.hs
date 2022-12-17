@@ -55,7 +55,7 @@ topicsgraph external stats =
       (topicArticleEdges <> articleArticleEdges <> articleImageEdges <> articleExternalSiteEdges)
   where
     topicNodes,articleNodes,externalKSSitesNodes :: [(NodeKey, Node)]
-    topicNodes = [ (topicKey t, TopicNode (destinationUrl $ destTag "" t) (length xs)) | (t,xs) <- Map.toList (byTopic stats) ]
+    topicNodes = [ (topicKey t, TopicNode (destinationUrl $ destTopic "" t) (length xs)) | (t,xs) <- Map.toList (byTopic stats) ]
     articleNodes = [ (articleKey t, ArticleNode (targetUrl t) histsize) | (t,histsize) <- uniqueTargetArticles ]
     imagesNodes = [ (imageKey url, ImageNode url) | url <- uniqueImages ]
     externalKSSitesNodes = [ (externalSiteKey url, ExternalKitchenSinkSiteNode url) | url <- externalKitchenSinks external]

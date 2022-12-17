@@ -460,12 +460,13 @@ understand if sections are well-balanced or not.
 
 All of these reasons were decisive factors when deciding to write and while [designing](/design-points.html) Kitchen-Sink. I've merely scratched the surface of the analyses I want to make on my own writing and I hope you'll find some of these helpful too.
 
-### Atom feed
+### Atom feeds
 
-KitchenSink now generates a
+KitchenSink generates a
 [Atom](https://validator.w3.org/feed/docs/atom.html) feed for the whole site at
-the [/atom.xml](/atom.xml) path.  For now only summaries in raw text format are
-provided.
+the [/atom.xml](/atom.xml) path as well as one Atom feed for each of the topics
+listing. In short: every topic is its own Atom feed. For now only summaries in
+raw text format are provided.
 
 ### sitemap
 
@@ -477,12 +478,12 @@ Remember to "ping" Google afterwards by visiting
 
 Static sites lack a good user-driven search as there are no servers to answer
 search queries. Topics listing alleviate some of these need. Topics merely are
-pre-computed indexes. Thus, KitchenSink also want to pre-compute search
-indexes. At the moment, the search-box is primitive and only allows to search
-into filenames (and I use it all the time when authoring articles to find
-[links to images and generated outputs](/json/paths.json)).  However we could
-definitely go a step further by also searching, or displaying summaries in the
-search box. As people say: watch this space!
+pre-computed indexes (and Atom feeds). Thus, KitchenSink also want to
+pre-compute search indexes. At the moment, the search-box is primitive and only
+allows to search into filenames (and I use it all the time when authoring
+articles to find [links to images and generated outputs](/json/paths.json)).
+However we could definitely go a step further by also searching, or displaying
+summaries in the search box. As people say: watch this space!
 
 ### wordcounts and article staircases
 

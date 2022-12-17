@@ -16,16 +16,24 @@ type Tag = Text
 tagFileName :: Tag -> FilePath
 tagFileName t = Text.unpack (Text.replace " " "-" t) <> ".html"
 
+tagAtomName :: Tag -> FilePath
+tagAtomName t = Text.unpack (Text.replace " " "-" t) <> ".atom"
+
 data GenFileExtension
   = GenPngFile
 
 extensionString :: GenFileExtension -> String
 extensionString GenPngFile = ".png"
 
-destTag :: OutputPrefix -> Tag -> DestinationLocation
-destTag prefix tag = VirtualFileDestination
+destTopic :: OutputPrefix -> Tag -> DestinationLocation
+destTopic prefix tag = VirtualFileDestination
     (Text.pack $ "/topics/" <> tagFileName tag)
     (prefix </> "topics" </> tagFileName tag)
+
+destTopicAtom :: OutputPrefix -> Tag -> DestinationLocation
+destTopicAtom prefix tag = VirtualFileDestination
+    (Text.pack $ "/topics/" <> tagAtomName tag)
+    (prefix </> "topics" </> tagAtomName tag)
 
 destGenImage :: OutputPrefix -> SourceLocation -> GenFileExtension -> DestinationLocation
 destGenImage prefix (FileSource path) ext =

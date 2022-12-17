@@ -168,13 +168,10 @@ assembleStyle a = r <$> (fmap Text.concat <$> getSection a MainCss)
     r :: Section Text -> Lucid.Html ()
     r content = style_ (extract content)
 
-assembleTopicListing :: OutputPrefix -> TopicStats -> Tag -> Assembler (Lucid.Html ())
-assembleTopicListing prefix stats tag =
+assembleTopicListing :: OutputPrefix -> TopicStats -> Tag -> [ (Target a, Article [Text]) ] -> Assembler (Lucid.Html ())
+assembleTopicListing prefix stats tag articles =
     pure r
   where
-    articles :: [ (Target (), Article [Text]) ]
-    articles = fromMaybe [] $ Map.lookup tag (byTopic stats)
-
     r :: Lucid.Html ()
     r = do
       header_ [ class_ "heading" ] $ do
@@ -198,7 +195,7 @@ topicListingTag prefix stats tag =
       span_ [ class_ "tag-count" ] $ do
         toHtml $ show $ length articles
   where
-    url = destinationUrl $ destTag prefix tag
+    url = destinationUrl $ destTopic prefix tag
     articles = fromMaybe [] $ Map.lookup tag $ byTopic stats
 
 
@@ -207,24 +204,29 @@ htmlbody
   -> (Article [Text] -> Assembler (Lucid.Html ()))
 htmlbody = wrap body_
 
+data MetaHeaders = MetaHeaders
+  { extra :: MetaData
+  , destinationHTML :: DestinationLocation
+  , destinationJSON :: DestinationLocation
+  , destinationAtom :: DestinationLocation
+  } 
+
 htmlhead
-  :: MetaData
-  -> DestinationLocation
-  -> DestinationLocation
+  :: MetaHeaders
   -> (Article [Text] -> Assembler (Lucid.Html ()))
   -> (Article [Text] -> Assembler (Lucid.Html ()))
-htmlhead extra@MetaData{extraHeaders} dloc jsondloc f = \art -> do
-  hdrs1 <- metaheaders extra dloc jsondloc art
+htmlhead mh f = \art -> do
+  hdrs1 <- metaheaders mh art
   hdrs2 <- f art
-  hdrs3 <- extraHeaders  art
+  hdrs3 <- (extraHeaders $ extra $ mh) art
   pure $ head_ (hdrs1 >> hdrs2 >> hdrs3)
 
 -- see https://ogp.me/#types
 -- see https://webcode.tools/generators/open-graph/article
 -- see https://developer.twitter.com/en/docs/twitter-for-websites/cards/guides/getting-started
 -- see https://www.linkedin.com/post-inspector/inspect/
-metaheaders :: MetaData -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
-metaheaders extra dloc jsondloc art = do
+metaheaders :: MetaHeaders -> Article [Text] -> Assembler (Lucid.Html ())
+metaheaders (MetaHeaders extra dloc jsondloc atomLoc) art = do
   topic <- fmap extract <$> jsonm @() @TopicData art Topic
   social <- fmap extract <$> jsonm @() @SocialData art Social
   summary <- fmap extract <$> lookupSection art Summary
@@ -238,7 +240,7 @@ metaheaders extra dloc jsondloc art = do
     , Just $ meta_ [ name_ "viewport" , content_ "with=device-width, initial-scale=1.0" ]
     , Just $ title_ $ toHtml titleTxt
     , Just $ link_ [ rel_ "icon" , type_ "image/x-icon", href_ faviconHref ]
-    , Just $ link_ [ rel_ "alternate" , type_ "application/atom+xml", title_ "Atom Feed", href_ "/atom.xml" ]
+    , Just $ link_ [ rel_ "alternate" , type_ "application/atom+xml", title_ "Atom Feed", href_ urlForAtom ]
     , fmap (\x -> meta_ [ name_ "author" , content_ $ author x]) preamble
     , fmap (\x -> meta_ [ name_ "keywords" , content_ $ Text.intercalate ", " $ topicKeywords x ]) topic
     , fmap (\x -> meta_ [ name_ "description" , content_ $ compactSummary x ]) summary
@@ -262,6 +264,7 @@ metaheaders extra dloc jsondloc art = do
     fmtUTC = Text.pack . iso8601Show
     property_ = Lucid.makeAttribute "property"
     urlForPage = publishBaseURL extra <> destinationUrl dloc
+    urlForAtom = publishBaseURL extra <> destinationUrl atomLoc
     urlForJSONPage = destinationUrl jsondloc
     urlForImage imgpath = publishBaseURL extra <> imgpath
 
@@ -416,7 +419,7 @@ topicTag prefix stats currentDestination tag =
       span_ [ class_ "tag-next-link" ] $ do
         fromMaybe (pure ()) nextLink
   where
-    url = destinationUrl $ destTag prefix tag
+    url = destinationUrl $ destTopic prefix tag
     articles = fromMaybe [] $ Map.lookup tag $ byTopic stats
     -- todo: extract the following into separate functions
     isOtherTarget (target2, _) = destination target2 /= currentDestination

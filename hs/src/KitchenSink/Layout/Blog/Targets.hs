@@ -108,6 +108,7 @@ siteTargets prefix extra site = allTargets
       , jsTargets prefix site
       , htmlTargets prefix site
       , tagIndexesTargets (lookupSpecialArticle "tags.cmark" site)
+      , tagAtomTargets (lookupSpecialArticle "tags.cmark" site)
       , jsonDataTargets
       , seoTargets
       ]
@@ -126,20 +127,20 @@ siteTargets prefix extra site = allTargets
     seoTargets :: [Target]
     seoTargets =
       [ rootDataTarget prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) articleTargets) "sitemap.txt"
-      , rootDataTarget prefix atomRootFeedContent "atom.xml"
+      , rootDataTarget prefix (atomFeedContent articleTargets) "atom.xml"
       ]
  
-    atomRootFeedContent :: Text
-    atomRootFeedContent =
+    atomFeedContent :: [(Ext.Target z, Article [Text])] -> Text
+    atomFeedContent targets =
       let render = LText.toStrict . fromJust . Export.textFeedWith def{rsPretty=True} . AtomFeed
           uri = publishBaseURL extra <> (destinationUrl $ destRootDataFile prefix "atom.xml")
       in render
          $ feedForArticles uri
          $ List.filter (isPublishedArticle . snd)
          $ List.filter (isListableArticle . snd)
-         $ articleTargets
+         $ targets
 
-    feedForArticles :: Atom.URI -> [(Target, Article [Text])] -> Atom.Feed
+    feedForArticles :: Atom.URI -> [(Ext.Target z, Article [Text])] -> Atom.Feed
     feedForArticles uri arts =
       let baseFeed = Atom.nullFeed uri (Atom.TextString $ baseTitle extra) updatedAt
           fmtUTC = Text.pack . iso8601Show
@@ -157,7 +158,7 @@ siteTargets prefix extra site = allTargets
             Left err -> error (show err)
             Right x -> x
 
-    toEntry :: (Target, Article [Text]) -> Assembler Atom.Entry
+    toEntry :: (Ext.Target z, Article [Text]) -> Assembler Atom.Entry
     toEntry (tgt, art) = assembleAtomEntry extra (destination tgt) art
 
     articleTarget :: Sourced (Article [Text]) -> Target
@@ -226,7 +227,20 @@ siteTargets prefix extra site = allTargets
 
     tagIndexesTargets :: Maybe (Article [Text]) -> [ Target ]
     tagIndexesTargets Nothing = []
-    tagIndexesTargets (Just art) = [ let u = destTag prefix tag in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ tagsLayout tag u u art) | tag <- Map.keys $ byTopic stats ]
+    tagIndexesTargets (Just art) =
+      [ let u = destTopic prefix tag
+        in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ tagsLayout tag articles u u art)
+      | (tag, articles) <- Map.toList (byTopic stats)
+      ]
+
+    tagAtomTargets :: Maybe (Article [Text]) -> [ Target ]
+    tagAtomTargets Nothing = []
+    tagAtomTargets (Just _) =
+      [ let u = destTopicAtom prefix tag
+            rule = Core.ProduceAssembler $ pure $ LText.fromStrict $ atomFeedContent articles
+        in simpleTarget TopicsIndexTarget u rule
+      | (tag, articles) <- Map.toList (byTopic stats)
+      ]
 
     layoutFor :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     layoutFor dloc jsondloc art =
@@ -249,13 +263,13 @@ siteTargets prefix extra site = allTargets
     stats :: TopicStats
     stats = buildTopicStats (articles site) (fmap (const ()) . articleTarget)
 
+    rootAtomDLoc :: DestinationLocation
+    rootAtomDLoc = destRootDataFile prefix "atom.xml"
+
     indexLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     indexLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc
-                    $ mconcat
-                      [ assembleStyle
-                      ]
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (div_ [ class_ "main"])
@@ -273,7 +287,7 @@ siteTargets prefix extra site = allTargets
     archivedArticleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     archivedArticleLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
@@ -294,7 +308,7 @@ siteTargets prefix extra site = allTargets
     upcomingArticleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     upcomingArticleLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
@@ -315,7 +329,7 @@ siteTargets prefix extra site = allTargets
     articleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     articleLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
@@ -337,7 +351,7 @@ siteTargets prefix extra site = allTargets
     spaLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     spaLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (div_ [ id_ "spa", class_ "application"]) mempty
@@ -352,7 +366,7 @@ siteTargets prefix extra site = allTargets
     imageGalleryLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     imageGalleryLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (div_ [ id_ "gallery", class_ "photos"])
@@ -365,7 +379,7 @@ siteTargets prefix extra site = allTargets
     variousListingLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     variousListingLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (div_ [ id_ "listing" ])
@@ -376,10 +390,11 @@ siteTargets prefix extra site = allTargets
                   ]
 
 
-    tagsLayout :: Tag -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    tagsLayout tag dloc jsondloc =
+    tagsLayout :: Tag -> [ (Ext.Target a, Article [Text]) ] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
+    tagsLayout tag articles dloc jsondloc =
+      let atomDLoc = destTopic prefix tag in
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc atomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
@@ -390,7 +405,7 @@ siteTargets prefix extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ const (assembleTopicListing prefix stats tag)
+                        [ const (assembleTopicListing prefix stats tag articles)
                         ]
                       ]
                   ]
@@ -399,7 +414,7 @@ siteTargets prefix extra site = allTargets
     defaultLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     defaultLayout dloc jsondloc =
       htmldoc
-        $ mconcat [ htmlhead extra dloc jsondloc assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
