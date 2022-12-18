@@ -9,7 +9,7 @@
 }
 
 =base:topic.json
-{"tags":["philosophy"]
+{"topics":["philosophy"]
 ,"keywords":["static-site generators", "design", "position paper"]
 }
 

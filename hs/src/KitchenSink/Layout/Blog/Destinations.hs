@@ -2,22 +2,20 @@
 module KitchenSink.Layout.Blog.Destinations
 where
 
-import Data.Text (Text)
 import qualified Data.Text as Text
 import System.FilePath.Posix ((</>), takeFileName, takeBaseName)
 
 import KitchenSink.Prelude
 import KitchenSink.Core.Section.Base as Core
+import KitchenSink.Core.Section.Payloads (TopicName)
 import KitchenSink.Core.Section (GeneratorInstructionsData(..))
 import KitchenSink.Core.Build.Target (OutputPrefix, SourceLocation(..),DestinationLocation(..))
 
-type Tag = Text
+topicFileName :: TopicName -> FilePath
+topicFileName t = Text.unpack (Text.replace " " "-" t) <> ".html"
 
-tagFileName :: Tag -> FilePath
-tagFileName t = Text.unpack (Text.replace " " "-" t) <> ".html"
-
-tagAtomName :: Tag -> FilePath
-tagAtomName t = Text.unpack (Text.replace " " "-" t) <> ".atom"
+topicAtomName :: TopicName -> FilePath
+topicAtomName t = Text.unpack (Text.replace " " "-" t) <> ".atom"
 
 data GenFileExtension
   = GenPngFile
@@ -25,15 +23,15 @@ data GenFileExtension
 extensionString :: GenFileExtension -> String
 extensionString GenPngFile = ".png"
 
-destTopic :: OutputPrefix -> Tag -> DestinationLocation
-destTopic prefix tag = VirtualFileDestination
-    (Text.pack $ "/topics/" <> tagFileName tag)
-    (prefix </> "topics" </> tagFileName tag)
+destTopic :: OutputPrefix -> TopicName -> DestinationLocation
+destTopic prefix topic = VirtualFileDestination
+    (Text.pack $ "/topics/" <> topicFileName topic)
+    (prefix </> "topics" </> topicFileName topic)
 
-destTopicAtom :: OutputPrefix -> Tag -> DestinationLocation
-destTopicAtom prefix tag = VirtualFileDestination
-    (Text.pack $ "/topics/" <> tagAtomName tag)
-    (prefix </> "topics" </> tagAtomName tag)
+destTopicAtom :: OutputPrefix -> TopicName -> DestinationLocation
+destTopicAtom prefix topic = VirtualFileDestination
+    (Text.pack $ "/topics/" <> topicAtomName topic)
+    (prefix </> "topics" </> topicAtomName topic)
 
 destGenImage :: OutputPrefix -> SourceLocation -> GenFileExtension -> DestinationLocation
 destGenImage prefix (FileSource path) ext =

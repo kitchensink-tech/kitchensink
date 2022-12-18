@@ -25,8 +25,10 @@ data BuildInfoData = BuildInfoData {
 instance FromJSON BuildInfoData
 instance ToJSON BuildInfoData
 
+type TopicName = Text
+
 data TopicData = TopicData {
-    tags :: [Text]
+    topics :: [TopicName]
   , keywords :: [Text]
   , imageLink :: Maybe Text
   } deriving (Show, Eq, Generic)
@@ -34,7 +36,7 @@ instance FromJSON TopicData
 instance ToJSON TopicData
 
 topicKeywords :: TopicData -> [Text]
-topicKeywords d = List.nub $ tags d <> keywords d
+topicKeywords d = List.nub $ topics d <> keywords d
 
 data PreambleData = PreambleData {
     author  :: Text

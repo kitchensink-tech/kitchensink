@@ -9,7 +9,7 @@
 }
 
 =base:topic.json
-{"tags":["internals"]
+{"topics":["internals"]
 ,"keywords":["static-site generators", "design"]
 ,"imageLink": "/gen/images/architecture-02-engine-pipeline.dot.png"
 }

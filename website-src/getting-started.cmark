@@ -9,7 +9,7 @@
 }
 
 =base:topic.json
-{"tags":["authoring articles", "how-to"]
+{"topics":["authoring articles", "how-to"]
 ,"keywords":["static-site generators", "design"]
 ,"imageLink":"/gen/images/architecture-01-pipeline.dot.png"
 }

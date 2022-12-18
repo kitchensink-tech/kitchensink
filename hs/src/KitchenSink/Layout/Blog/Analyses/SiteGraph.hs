@@ -63,7 +63,7 @@ topicsgraph external stats =
     topicArticleEdges :: [(NodeKey, NodeKey)]
     topicArticleEdges =
         mconcat
-        $ fmap (\(tag, xs) -> [ (topicKey tag, articleKey tgt) | (tgt,_) <- xs])
+        $ fmap (\(topic, xs) -> [ (topicKey topic, articleKey tgt) | (tgt,_) <- xs])
         $ Map.toList (byTopic stats)
 
     allLinks :: [(Target (), LinkInfo)]

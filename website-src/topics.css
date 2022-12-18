@@ -20,14 +20,14 @@ p,ul,ol {
   font-family: sans-serif;
 }
 
-/*~~ taglist ~~~~~~~~~~~~~~~~~~~~*/
+/*~~ topiclist ~~~~~~~~~~~~~~~~~~~~*/
 
-div.taglist {
+div.topiclist {
   display: flex;
   flex-wrap: wrap;
 }
 
-div.tag {
+div.topic {
   width: 12em;
   display: table-cell;
   text-align: center;
@@ -38,22 +38,22 @@ div.tag {
   border-radius: 6px;
 }
 
-a.tag-link {
+a.topic-link {
   text-decoration: none;
   font-size: 0.75em;
   font-weight: bold;
 }
 
-a.tag-link:hover {
+a.topic-link:hover {
   text-decoration: none;
   font-size: 0.75em;
 }
 
-span.tag-name {
+span.topic-name {
    text-transform: uppercase;
 }
 
-span.tag-count {
+span.topic-count {
   margin-left: 0.75em;
 }
 

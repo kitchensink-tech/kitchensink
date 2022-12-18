@@ -51,7 +51,7 @@ instance FromJSON PreambleSummary
 instance ToJSON PreambleSummary
 
 data TopicSummary = TopicSummary {
-    tags :: [Text]
+    topics :: [Text]
   , keywords :: [Text]
   , imageLink :: Maybe Text
   } deriving (Show, Eq, Generic)

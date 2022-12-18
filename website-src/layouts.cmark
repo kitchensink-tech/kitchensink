@@ -9,7 +9,7 @@
 }
 
 =base:topic.json
-{"tags":["haskell", "modding"]
+{"topics":["haskell", "modding"]
 ,"keywords":["static-site generators", "design"]
 }
 

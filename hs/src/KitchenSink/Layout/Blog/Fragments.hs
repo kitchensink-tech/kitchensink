@@ -45,13 +45,13 @@ assembleHeader prefix stats currentDestination art =
                       Nothing -> span_ (toHtml . author $ content)
                       Just handle -> a_ [ href_ $ "https://twitter.com/" <> handle ] (mconcat ["@", toHtml handle])
 
-      let taglist_ =
+      let topiclist_ =
             case topic of
               Nothing -> mempty
               Just d -> do
-                div_ [ class_ "taglist" ]
+                div_ [ class_ "topiclist" ]
                 $ mconcat
-                  [ topicTag prefix stats currentDestination tag | tag <- tags d
+                  [ topicTag prefix stats currentDestination t | t <- topics d
                   ]
    
       let wc = toHtml
@@ -73,7 +73,7 @@ assembleHeader prefix stats currentDestination art =
       header_ [ class_ "heading" ] $ do
         h1_ (toHtml $ title $ content)
         p_ (headersentence content)
-        taglist_
+        topiclist_
 
 
 assembleGlossary :: Article [Text] -> Assembler (Lucid.Html ())
@@ -168,35 +168,35 @@ assembleStyle a = r <$> (fmap Text.concat <$> getSection a MainCss)
     r :: Section Text -> Lucid.Html ()
     r content = style_ (extract content)
 
-assembleTopicListing :: OutputPrefix -> TopicStats -> Tag -> [ (Target a, Article [Text]) ] -> Assembler (Lucid.Html ())
-assembleTopicListing prefix stats tag articles =
+assembleTopicListing :: OutputPrefix -> TopicStats -> TopicName -> [ (Target a, Article [Text]) ] -> Assembler (Lucid.Html ())
+assembleTopicListing prefix stats topic articles =
     pure r
   where
     r :: Lucid.Html ()
     r = do
       header_ [ class_ "heading" ] $ do
-        h1_ $ toHtml tag
+        h1_ $ toHtml topic
       section_ [ class_ "main" ] $ do
         mainArticleLinks articles
       section_ [ class_ "others" ]
         $ mconcat
           [ h2_ [ class_ "listing-callout" ] "other topics"
-          , div_ [ class_ "taglist" ]
+          , div_ [ class_ "topiclist" ]
             $ mconcat
-              [ topicListingTag prefix stats otherTag | otherTag <- Map.keys $ byTopic stats , otherTag /= tag
+              [ topicListingTag prefix stats otherTopic | otherTopic <- Map.keys $ byTopic stats , otherTopic /= topic
               ]
           ]
 
-topicListingTag :: OutputPrefix -> TopicStats -> Tag -> Lucid.Html ()
-topicListingTag prefix stats tag =
-  div_ [ class_ "tag" ] $ do
-    a_ [ class_ "tag-link", href_ url ] $ do
-      span_ [ class_ "tag-name" ] (toHtml tag)
-      span_ [ class_ "tag-count" ] $ do
+topicListingTag :: OutputPrefix -> TopicStats -> TopicName -> Lucid.Html ()
+topicListingTag prefix stats topic =
+  div_ [ class_ "topic" ] $ do
+    a_ [ class_ "topic-link", href_ url ] $ do
+      span_ [ class_ "topic-name" ] (toHtml topic)
+      span_ [ class_ "topic-count" ] $ do
         toHtml $ show $ length articles
   where
-    url = destinationUrl $ destTopic prefix tag
-    articles = fromMaybe [] $ Map.lookup tag $ byTopic stats
+    url = destinationUrl $ destTopic prefix topic
+    articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
 
 
 htmlbody
@@ -314,7 +314,7 @@ layoutNameFor art =
 effectiveLayout :: PublicationStatus -> Text -> ArticleLayout
 effectiveLayout Public "article" = PublishedArticle
 effectiveLayout Public "index" = IndexPage
-effectiveLayout Public "tags" = TopicListingPage
+effectiveLayout Public "topics" = TopicListingPage
 effectiveLayout Public "application" = SinglePageApp
 effectiveLayout Public "gallery" = ImageGallery
 effectiveLayout Public "listing" = VariousListing
@@ -392,10 +392,10 @@ topicsListings stats =
         | p <- Map.toList $ byTopic stats
         ]
 
-topicListing :: (Tag, [(Target a,Article [Text])]) -> Lucid.Html ()
-topicListing (tag,tgts) =
+topicListing :: (TopicName, [(Target a,Article [Text])]) -> Lucid.Html ()
+topicListing (topic,tgts) =
   div_ [ class_ "topics-listing-list-topic" ] $ do
-    strong_ [ class_ "tag-name" ] (toHtml tag)
+    strong_ [ class_ "topic-name" ] (toHtml topic)
     smallArticleLinks tgts
 
 smallArticleLinks :: [(Target a,Article [Text])] -> Lucid.Html ()
@@ -404,23 +404,23 @@ smallArticleLinks tgts =
   $ mconcat
   [ li_ [ class_ "article-links-list-item" ] $ uncurry articleLink t | t <- tgts ]
 
-topicTag :: OutputPrefix ->  TopicStats -> DestinationLocation -> Tag -> Lucid.Html ()
-topicTag prefix stats currentDestination tag =
-  div_ [ class_ "tag" ] $ do
-    a_ [ class_ "tag-link", href_ url ] $ do
-      span_ [ class_ "tag-name" ] (toHtml tag)
-      span_ [ class_ "tag-count" ] $ do
+topicTag :: OutputPrefix ->  TopicStats -> DestinationLocation -> TopicName -> Lucid.Html ()
+topicTag prefix stats currentDestination topic =
+  div_ [ class_ "topic" ] $ do
+    a_ [ class_ "topic-link", href_ url ] $ do
+      span_ [ class_ "topic-name" ] (toHtml topic)
+      span_ [ class_ "topic-count" ] $ do
         toHtml $ show $ 1 + length prevArticles
         toHtml ("/" :: Text)
         toHtml $ show $ length articles
-    div_ [ class_ "tag-prevnext" ] $ do
-      span_ [ class_ "tag-prev-link" ] $ do
+    div_ [ class_ "topic-prevnext" ] $ do
+      span_ [ class_ "topic-prev-link" ] $ do
         fromMaybe (pure ()) prevLink
-      span_ [ class_ "tag-next-link" ] $ do
+      span_ [ class_ "topic-next-link" ] $ do
         fromMaybe (pure ()) nextLink
   where
-    url = destinationUrl $ destTopic prefix tag
-    articles = fromMaybe [] $ Map.lookup tag $ byTopic stats
+    url = destinationUrl $ destTopic prefix topic
+    articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
     -- todo: extract the following into separate functions
     isOtherTarget (target2, _) = destination target2 /= currentDestination
     prevArticles = List.takeWhile isOtherTarget articles

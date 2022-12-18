@@ -107,8 +107,8 @@ siteTargets prefix extra site = allTargets
       , cssTargets prefix site
       , jsTargets prefix site
       , htmlTargets prefix site
-      , tagIndexesTargets (lookupSpecialArticle "tags.cmark" site)
-      , tagAtomTargets (lookupSpecialArticle "tags.cmark" site)
+      , topicIndexesTargets (lookupSpecialArticle "topics.cmark" site)
+      , topicAtomTargets (lookupSpecialArticle "topics.cmark" site)
       , jsonDataTargets
       , seoTargets
       ]
@@ -225,21 +225,21 @@ siteTargets prefix extra site = allTargets
           sections <- getSections art Dataset
           pure $ List.zip [1..] sections
 
-    tagIndexesTargets :: Maybe (Article [Text]) -> [ Target ]
-    tagIndexesTargets Nothing = []
-    tagIndexesTargets (Just art) =
-      [ let u = destTopic prefix tag
-        in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ tagsLayout tag articles u u art)
-      | (tag, articles) <- Map.toList (byTopic stats)
+    topicIndexesTargets :: Maybe (Article [Text]) -> [ Target ]
+    topicIndexesTargets Nothing = []
+    topicIndexesTargets (Just art) =
+      [ let u = destTopic prefix topic
+        in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ topicsLayout topic articles u u art)
+      | (topic, articles) <- Map.toList (byTopic stats)
       ]
 
-    tagAtomTargets :: Maybe (Article [Text]) -> [ Target ]
-    tagAtomTargets Nothing = []
-    tagAtomTargets (Just _) =
-      [ let u = destTopicAtom prefix tag
+    topicAtomTargets :: Maybe (Article [Text]) -> [ Target ]
+    topicAtomTargets Nothing = []
+    topicAtomTargets (Just _) =
+      [ let u = destTopicAtom prefix topic
             rule = Core.ProduceAssembler $ pure $ LText.fromStrict $ atomFeedContent articles
         in simpleTarget TopicsIndexTarget u rule
-      | (tag, articles) <- Map.toList (byTopic stats)
+      | (topic, articles) <- Map.toList (byTopic stats)
       ]
 
     layoutFor :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
@@ -390,9 +390,9 @@ siteTargets prefix extra site = allTargets
                   ]
 
 
-    tagsLayout :: Tag -> [ (Ext.Target a, Article [Text]) ] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    tagsLayout tag articles dloc jsondloc =
-      let atomDLoc = destTopic prefix tag in
+    topicsLayout :: TopicName -> [ (Ext.Target a, Article [Text]) ] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
+    topicsLayout topic articles dloc jsondloc =
+      let atomDLoc = destTopic prefix topic in
       htmldoc
         $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc atomDLoc) assembleStyle
                   , htmlbody 
@@ -405,7 +405,7 @@ siteTargets prefix extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ const (assembleTopicListing prefix stats tag articles)
+                        [ const (assembleTopicListing prefix stats topic articles)
                         ]
                       ]
                   ]

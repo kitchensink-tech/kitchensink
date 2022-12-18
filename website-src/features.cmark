@@ -10,7 +10,7 @@
 }
 
 =base:topic.json
-{"tags":["haskell", "authoring articles"]
+{"topics":["haskell", "authoring articles"]
 ,"keywords":["static-site generators", "design"]
 }
 
@@ -240,7 +240,7 @@ built](https://lucasdicioccio.github.io/prometheus-monitor.html))
 Writing articles is the most important thing of a static-site generator.  The
 [Kitchen-Sink Philosophy](/philosophy.html) here is to throw everything in one
 file. The key, and probably somewhat unique aspect of Kitchen-Sink is to
-propose writing articles, tune their CSS, provide tags, add generators and so
+propose writing articles, tune their CSS, provide topics, add generators and so
 on directly in the same source file.
 
 ### the section-based format
@@ -411,10 +411,10 @@ features to answer such questions. Most if not all of these features are
 controlled by specific [sections](/sections.html) in the section-based-format.
 Here we merely give an overview of what is feasible.
 
-### categories and series using tags
+### categories and series using topics
 
-Article can be labelled with a set of tags. Kitchen-Sink then collects all
-articles for a given tag under special categories and under the `/topics`
+Article can be labelled with a set of topics. Kitchen-Sink then collects all
+articles for a given topic under special categories and under the `/topics`
 route. This is not especially innovative but I believe it's a must have even if
 I suppose most readers do not really use these topics listing a lot, they are
 used to connect articles in the [site map](#sitemap graph).
@@ -428,7 +428,7 @@ Article have summaries. The use case for summaries is to entice readers into
 committing more time to read an article in full.
 
 Technically, summaries are inserted in article listings. The main listing is
-the home-page of a blog.  [Categories listings](#categories-using-tags) also
+the home-page of a blog.  [Categories listings](#categories-using-topics) also
 repeat the listings. The summary also is used in some `<meta>` headers, in
 particular to provide neat summaries when people share your articles (cf. [open-graph](#open-graph-and-twitter-card-metas)).
 

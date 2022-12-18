@@ -9,7 +9,7 @@
 }
 
 =base:topic.json
-{"tags":["authoring articles", "how-to", "sections"]
+{"topics":["authoring articles", "how-to", "sections"]
 ,"keywords":["static-site generators", "design"]
 }
 
@@ -137,9 +137,9 @@ end up reading this piece of documentation).
 ::: {.section-details}
 
 An important section to let Kitchen-Sink know which __layout__ to apply.  Known
-layouts are `article`, `index` (for `index.cmark`), `tags` (for `tags.cmark`),
+layouts are `article`, `index` (for `index.cmark`), `topics` (for `topics.cmark`),
 `application` for JavaScript single-page apps, `gallery` for content galleries,
-and `listing` for various listings. Overall, except for index and tags, the
+and `listing` for various listings. Overall, except for index and topics, the
 layout of content does not change significantly besides the HTML-nesting (which
 then allows you to modify CSS or hijack DOM elements for single-page apps).
 
@@ -212,13 +212,13 @@ Meta-information for contextualizing the article content.
 The representative image is displayed in article listings but also in OpenGraph
 and Twitter summaries when people share links on various media.
 
-- tags: for internally-generated topics labels (for visitors, and for creating series)
+- topics: for internally-generated topics labels (for visitors, and for creating series)
 - keywords: for HTML meta headers (for search engines)
 
 __example__
 
     =base:topic.json
-    {"tags":["authoring articles", "how-to", "sections"]
+    {"topics":["authoring articles", "how-to", "sections"]
     ,"keywords":["static-site generators", "design"]
     ,"imageLink": "/images/some-image.jpeg"
     }
@@ -413,7 +413,7 @@ the end of the article.
 
 In the future we may modify the  generated HTML to include some glossary-links
 directly in the render body of articles or collecting the whole glossary terms
-like article tags.
+like article topics.
 
 __example__
 
