@@ -42,39 +42,39 @@ footer {
   border-top: 1px solid black;
 }
 
-/*~~ taglist ~~~~~~~~~~~~~~~~~~~~*/
+/*~~ topiclist ~~~~~~~~~~~~~~~~~~~~*/
 
-div.taglist {
+div.topiclist {
   display: flex;
 }
 
-div.tag {
+div.topic {
   margin-right: 1em;
   padding: 0.25em 0.7em 0.25em 0.7em;
   background-color: #e3e3e3;
   border-radius: 6px;
 }
 
-a.tag-link {
+a.topic-link {
   text-decoration: none;
   font-size: 0.75em;
   font-weight: bold;
 }
 
-a.tag-link:hover {
+a.topic-link:hover {
   text-decoration: none;
   font-size: 0.75em;
 }
 
-span.tag-name {
+span.topic-name {
    text-transform: uppercase;
 }
 
-span.tag-count {
+span.topic-count {
   margin-left: 0.75em;
 }
 
-div.tag-prevnext {
+div.topic-prevnext {
   margin-top: 1em;
   font-size: 0.5em;
   width: 100%;
