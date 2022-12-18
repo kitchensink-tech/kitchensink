@@ -32,21 +32,17 @@ A whishlist, which actually is a todolist.
 
 =base:main-content.cmark
 
-- test and fix commonmark module
-- rationalize analyses and cie
-  - there likely are outdated items (wordcount is subpar)
-  - add listing/index of all code snippets,images,etc.
-  - port all .js to PureScript, deprecate histogram
-  - constellation mode/app to search/graph multiple kitchen-sinks
-  - add count of videos (harder has it's not markdown)
+- test and fix what we find on commonmark module
+- port all .js to a single PureScript lib, deprecate histogram
+- constellation mode/app to search/graph multiple kitchen-sinks
 - load from elsewhere than disk
-- add loaders for .json and .csv data files
 - support some chaining in section-loader to carry-over information
-- collect glossary
-- references
+- collect glossary items
+- support citation references
+- consider listing/index of all code snippets,images,etc.
+- hide zero-counts of links etc.
 
 =base:taken-off.cmark
-- understand other "remote" kitchen-sinks (e.g., in the site map)
 - diffing lib
-- glossary-word section + listing + analysis: DAG
+- analysis: DAG
 - more routes to serve analytics query on the site
