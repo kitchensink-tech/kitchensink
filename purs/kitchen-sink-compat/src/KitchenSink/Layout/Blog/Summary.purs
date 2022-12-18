@@ -215,7 +215,7 @@ _PreambleSummary = _Newtype
 --------------------------------------------------------------------------------
 newtype TopicSummary =
     TopicSummary {
-      tags :: Array String
+      topics :: Array String
     , keywords :: Array String
     , imageLink :: Maybe String
     }
@@ -228,7 +228,7 @@ derive instance genericTopicSummary :: Generic TopicSummary _
 derive instance newtypeTopicSummary :: Newtype TopicSummary _
 
 --------------------------------------------------------------------------------
-_TopicSummary :: Iso' TopicSummary { tags :: Array String, keywords :: Array String, imageLink :: Maybe String}
+_TopicSummary :: Iso' TopicSummary { topics :: Array String, keywords :: Array String, imageLink :: Maybe String}
 _TopicSummary = _Newtype
 
 --------------------------------------------------------------------------------
