@@ -55,8 +55,8 @@ _ImageInfo = _Newtype
 --------------------------------------------------------------------------------
 newtype SnippetInfo =
     SnippetInfo {
-      snippetContents :: String
-    , snippetType :: String
+      snippetType :: String
+    , snippetContents :: String
     }
 
 instance encodeJsonSnippetInfo :: EncodeJson SnippetInfo where
@@ -67,7 +67,7 @@ derive instance genericSnippetInfo :: Generic SnippetInfo _
 derive instance newtypeSnippetInfo :: Newtype SnippetInfo _
 
 --------------------------------------------------------------------------------
-_SnippetInfo :: Iso' SnippetInfo { snippetContents :: String, snippetType :: String}
+_SnippetInfo :: Iso' SnippetInfo { snippetType :: String, snippetContents :: String}
 _SnippetInfo = _Newtype
 
 --------------------------------------------------------------------------------
