@@ -47,12 +47,30 @@ someone who took all the time to setup a static-site generator.
 
 Besides convenience, having a large kitchen sink means:
 - we prevents the annoyance of conflicts in names, prefixing by year and so on can go in filenames
-- we reduce the URL churn because we often move and shake hierarchies around but leaves not so much (I've no data for this but it's a feeling)
+- we reduce the URL churn because we often move and shake hierarchies around but the content of leaves remains unchanged (I've no data for this but it's a feeling)
 - when you look for some file you know where it is
 - when you need to add some file you know where to put it
 - if someones grows out of the limitation of the single-directory approach, they met success and will be ready to allocate some time to either adapt KitchenSink to load the site from different place or to switch to another static-site generator
 
-# lack of overloading (repeating many things across articles)
+# Layouts are hard to change
+
+- Wordpress, Blogspot online services are a testimonial that tuning layouts may not be that much important for people; tuning layouts for people who really want to do it is feasible because the code is open-source, and corporations or professionals should afford to pay something more "hand-tuned" (they may even consider KitchenSink is not a good solution to their needs)
+- nowadays we can significantly alter the look and even some UX-interactivity with CSS only
+- you can even do JavaScript in KitchenSink pages to add even more "interactivity
+- you can even provide control of all the page to a single-page application if you want
+- I believe people should focus more time on the content rather than on the wrapping, thus having fewer knobs makes it a liberating constraint
+
+:point_right: note that some re-engineering is going on in KitchenSink to separate the layout engine more cleanly from the rest of the engine. We could soon support some form of templates, however it is clearly not a direction I need personally at this point.
+
+# Generator sections don't take input data
+
+- design is still unclear to me (static-website with dynamic envy)
+- sequence of steps may be better handled outside the generator
+- definitely a security risk that prevent some 'hosting scenarios'
+
+# Lack of overloading (repeating many things across articles)
+
+:bulb: Much of this concerned is now addressable using [Dhall-sections](/sections-dhall.html) sections because Dhall has local (and even remote) imports. However we keep the discussion below for archival reasons.
 
 Oftentimes you would like one parameter to take effect on multiple pages (e.g., the social links).
 KitchenSink edges on the side of caution where we prefer to repeat the same small bit of information many times rather than forcing an overloading hierarchy:
@@ -79,16 +97,3 @@ article](/getting-started.html)). In the eventual case where one needs to
 change values (e.g., they changed their Twitter handle), it is still possible
 to modify articles in batch with some shell scripting and `sed -i`.
 
-# Layouts are hard to change
-
-- Wordpress, Blogspot online services are a testimonial that tuning layouts may not be that much important for people; tuning layouts for people who really want to do it is feasible because the code is open-source, and corporations or professionals should afford to pay something more "hand-tuned" (they may even consider KitchenSink is not a good solution to their needs)
-- nowadays we can significantly alter the look and even some UX-interactivity with CSS only
-- you can even do JavaScript in KitchenSink pages to add even more "interactivity
-- you can even provide control of all the page to a single-page application if you want
-- I believe people should focus more time on the content rather than on the wrapping, thus having fewer knobs makes it a liberating constraint
-
-# Generator sections don't take input data
-
-- design is still unclear to me (static-website with dynamic envy)
-- sequence of steps may be better handled outside the generator
-- definitely a security risk that prevent some 'hosting scenarios'
