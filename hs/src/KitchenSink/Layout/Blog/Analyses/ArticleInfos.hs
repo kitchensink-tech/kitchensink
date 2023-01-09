@@ -36,7 +36,7 @@ data LinkInfo = LinkInfo { linkURL :: Text, linkText :: Text }
 instance ToJSON LinkInfo
 instance FromJSON LinkInfo
 
-data SnippetInfo = SnippetInfo { snippetContents :: Text, snippetType :: Text }
+data SnippetInfo = SnippetInfo { snippetType :: Text, snippetContents :: Text }
   deriving (Show, Generic)
 instance ToJSON SnippetInfo
 instance FromJSON SnippetInfo
