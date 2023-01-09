@@ -22,7 +22,6 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Lazy as LText
 import qualified Data.List as List
-import System.FilePath.Posix (takeFileName)
 import qualified Data.ByteString.Lazy as LByteString
 
 import Text.Feed.Types (Feed(AtomFeed))
@@ -44,6 +43,8 @@ import KitchenSink.Layout.Blog.Fragments
 import KitchenSink.Layout.Blog.Analyses
 import KitchenSink.Layout.Blog.Metadata
 import KitchenSink.Layout.Blog.Summary
+import KitchenSink.Layout.Blog.ArticleTypes
+import KitchenSink.Layout.Blog.SpecialArticles as SpecialArticles
 
 type Target = Ext.Target TargetSummary
 
@@ -107,8 +108,8 @@ siteTargets prefix extra site = allTargets
       , cssTargets prefix site
       , jsTargets prefix site
       , htmlTargets prefix site
-      , topicIndexesTargets (lookupSpecialArticle "topics.cmark" site)
-      , topicAtomTargets (lookupSpecialArticle "topics.cmark" site)
+      , topicIndexesTargets (lookupSpecialArticle SpecialArticles.Topics site)
+      , topicAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
       , jsonDataTargets
       , seoTargets
       ]
@@ -433,9 +434,3 @@ siteTargets prefix extra site = allTargets
                         ]
                       ]
                   ]
-
-lookupSpecialArticle :: Text -> Site -> Maybe (Article [Text])
-lookupSpecialArticle name site = obj <$> List.find f (articles site)
-  where
-    f :: Sourced a -> Bool
-    f (Sourced (FileSource path) _) = takeFileName path == Text.unpack name

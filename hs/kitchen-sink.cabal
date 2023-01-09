@@ -37,6 +37,8 @@ library
                  , KitchenSink.Layout.Blog.Fragments
                  , KitchenSink.Layout.Blog.Destinations
                  , KitchenSink.Layout.Blog.Metadata
+                 , KitchenSink.Layout.Blog.SpecialArticles
+                 , KitchenSink.Layout.Blog.ArticleTypes
                  , KitchenSink.Core.Assembler
                  , KitchenSink.Core.Assembler.Base
                  , KitchenSink.Core.Assembler.Sections
@@ -114,7 +116,7 @@ library
     hs-source-dirs:   src
     default-language: GHC2021
 
-    ghc-options: -Wall -Werror -threaded
+    ghc-options: -Wall -Werror
 
 executable kitchen-sink
     main-is:          Main.hs

@@ -28,10 +28,11 @@ import KitchenSink.Core.Section hiding (Section)
 import KitchenSink.Prelude
 
 import KitchenSink.Core.Assembler.Sections
-import KitchenSink.Layout.Blog.Extensions (Article, Assembler, AssemblerError, Target, Section)
+import KitchenSink.Layout.Blog.Extensions (Article, Assembler, Target, Section)
 import KitchenSink.Layout.Blog.Analyses
 import KitchenSink.Layout.Blog.Destinations
 import KitchenSink.Layout.Blog.Metadata
+import KitchenSink.Layout.Blog.ArticleTypes
 
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 assembleHeader prefix stats currentDestination art =
@@ -289,43 +290,12 @@ htmldoc :: Functor t => (a -> t (Lucid.Html ())) -> a -> t LText.Text
 htmldoc mkContent a =
      Lucid.renderText . doctypehtml_<$> mkContent a
 
-data ArticleLayout
- = UnknownLayout Text
- | ErrorLayout AssemblerError
- | PublishedArticle
- | UpcomingArticle
- | ArchivedArticle
- | IndexPage
- | TopicListingPage
- | SinglePageApp
- | ImageGallery
- | VariousListing
- deriving (Show, Eq)
-
-layoutNameFor :: Article [Text] -> ArticleLayout
-layoutNameFor art = 
-  case runAssembler (json @() @BuildInfoData art BuildInfo) of
-     Left err -> ErrorLayout err 
-     Right s -> let binfo = extract s
-                in case publicationStatus binfo of
-                     Nothing     -> effectiveLayout Public (layout binfo)
-                     Just status -> effectiveLayout status (layout binfo)
-
-effectiveLayout :: PublicationStatus -> Text -> ArticleLayout
-effectiveLayout Public "article" = PublishedArticle
-effectiveLayout Public "index" = IndexPage
-effectiveLayout Public "topics" = TopicListingPage
-effectiveLayout Public "application" = SinglePageApp
-effectiveLayout Public "gallery" = ImageGallery
-effectiveLayout Public "listing" = VariousListing
-effectiveLayout Public t = UnknownLayout t
-effectiveLayout Upcoming "article" = UpcomingArticle
-effectiveLayout Upcoming "application" = SinglePageApp
-effectiveLayout Upcoming "gallery" = ImageGallery
-effectiveLayout Upcoming "listing" = VariousListing
-effectiveLayout Upcoming t = UnknownLayout t
-effectiveLayout Archived "article" = ArchivedArticle
-effectiveLayout Archived t = UnknownLayout t
+buildinfo :: Article [Text] -> Maybe BuildInfoData
+buildinfo art =
+  either (const Nothing) Just
+  $ fmap extract
+  $ runAssembler
+  $ json @() @BuildInfoData art BuildInfo
 
 isPublishedArticle :: Article [Text] -> Bool
 isPublishedArticle art = isPublic
@@ -336,13 +306,6 @@ isPublishedArticle art = isPublic
       Just Archived -> False
       Just Public -> True
       Nothing -> True
-
-buildinfo :: Article [Text] -> Maybe BuildInfoData
-buildinfo art =
-  either (const Nothing) Just
-  $ fmap extract
-  $ runAssembler
-  $ json @() @BuildInfoData art BuildInfo
 
 isListableArticle :: Article [Text] -> Bool
 isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingPage])
