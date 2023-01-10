@@ -11,6 +11,10 @@ import KitchenSink.Layout.Blog.Extensions (Article, Site)
 import KitchenSink.Core.Build.Site (articles)
 import KitchenSink.Core.Build.Target (Sourced(..), SourceLocation(..))
 
+-- | List of special articles that warrant a specific handling such as:
+-- * not being an articleTarget in the list of targets
+-- * consolidated analysses (such as a list of topics/glossary terms)
+-- TODO: dilute this special handling within layoutNameFor in ArticleTypes and isConcreteTarget in Fragments
 data SpecialArticle
   = Topics
   | Glossary

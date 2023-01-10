@@ -273,6 +273,9 @@ siteTargets prefix extra site = allTargets
     stats :: TopicStats
     stats = buildTopicStats (articles site) (fmap (const ()) . articleTarget)
 
+    wholeGlossary :: WholeGlossary
+    wholeGlossary = buildWholeGlossary (articles site) (fmap (const ()) . articleTarget)
+
     rootAtomDLoc :: DestinationLocation
     rootAtomDLoc = destRootDataFile prefix "atom.xml"
 
@@ -434,7 +437,7 @@ siteTargets prefix extra site = allTargets
                       , wrap (div_ [ class_ "main"])
                       $ wrap article_ 
                       $ mconcat
-                        [ const (assembleGlossaryListing prefix stats articles)
+                        [ const (assembleGlossaryListing prefix wholeGlossary articles)
                         ]
                       ]
                   ]

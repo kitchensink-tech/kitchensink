@@ -199,18 +199,16 @@ topicListingTag prefix stats topic =
     url = destinationUrl $ destTopic prefix topic
     articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
 
-assembleGlossaryListing :: OutputPrefix -> TopicStats -> [ (Target a, Article [Text]) ] -> Assembler (Lucid.Html ())
-assembleGlossaryListing _ _ _ =
+assembleGlossaryListing :: OutputPrefix -> WholeGlossary -> [ (Target a, Article [Text]) ] -> Assembler (Lucid.Html ())
+assembleGlossaryListing _ g _ =
     pure r
   where
     r :: Lucid.Html ()
     r = do
       header_ [ class_ "heading" ] $ do
         h1_ $ toHtml ("Glossary" :: Text)
-{-
       section_ [ class_ "main" ] $ do
-        mainArticleLinks articles
--}
+        mconcat [ h2_ $ toHtml t | t <- allGlossaryTerms g ]
 
 htmlbody
   :: (Article [Text] -> Assembler (Lucid.Html ()))
@@ -320,14 +318,14 @@ isPublishedArticle art = isPublic
       Nothing -> True
 
 isListableArticle :: Article [Text] -> Bool
-isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingPage])
+isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingTemplate])
 
 shouldShowStatsForArticle :: Article [Text] -> Bool
 shouldShowStatsForArticle art =
-  not (layoutNameFor art `List.elem` [IndexPage, TopicListingPage, ImageGallery, VariousListing, SinglePageApp])
+  not (layoutNameFor art `List.elem` [IndexPage, TopicListingTemplate, ImageGallery, VariousListing, SinglePageApp])
 
 isConcreteTarget :: Article [Text] -> Bool
-isConcreteTarget art = not (layoutNameFor art `List.elem` [TopicListingPage])
+isConcreteTarget art = not (layoutNameFor art `List.elem` [TopicListingTemplate, GlossaryPage])
 
 compactTitle :: PreambleData -> Text
 compactTitle p = mconcat [ title p ]

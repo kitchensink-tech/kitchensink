@@ -29,6 +29,7 @@ library
                  , KitchenSink.Layout.Blog.Summary
                  , KitchenSink.Layout.Blog.Analyses
                  , KitchenSink.Layout.Blog.Analyses.ArticleInfos
+                 , KitchenSink.Layout.Blog.Analyses.GlossaryGrouping
                  , KitchenSink.Layout.Blog.Analyses.FileCount
                  , KitchenSink.Layout.Blog.Analyses.SkyLine
                  , KitchenSink.Layout.Blog.Analyses.SiteGraph

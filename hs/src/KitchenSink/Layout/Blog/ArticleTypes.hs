@@ -10,6 +10,7 @@ import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Layout.Blog.Extensions (Article,AssemblerError)
 
+-- | Internal relay type for picking a given rendering function.
 data ArticleLayout
  = UnknownLayout Text
  | ErrorLayout AssemblerError
@@ -17,8 +18,8 @@ data ArticleLayout
  | UpcomingArticle
  | ArchivedArticle
  | IndexPage
- | TopicListingPage
- | GlossaryListingPage
+ | TopicListingTemplate
+ | GlossaryPage
  | SinglePageApp
  | ImageGallery
  | VariousListing
@@ -33,10 +34,12 @@ layoutNameFor art =
                      Nothing     -> effectiveLayout Public (layout binfo)
                      Just status -> effectiveLayout status (layout binfo)
 
+-- | TODO: find a proper name for the user-input layout-type that we find in the BuildInfo section.
 effectiveLayout :: PublicationStatus -> Text -> ArticleLayout
 effectiveLayout Public "article" = PublishedArticle
 effectiveLayout Public "index" = IndexPage
-effectiveLayout Public "topics" = TopicListingPage
+effectiveLayout Public "topics" = TopicListingTemplate
+effectiveLayout Public "glossary" = GlossaryPage
 effectiveLayout Public "application" = SinglePageApp
 effectiveLayout Public "gallery" = ImageGallery
 effectiveLayout Public "listing" = VariousListing
