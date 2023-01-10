@@ -208,7 +208,27 @@ assembleGlossaryListing _ g _ =
       header_ [ class_ "heading" ] $ do
         h1_ $ toHtml ("Glossary" :: Text)
       section_ [ class_ "main" ] $ do
-        mconcat [ h2_ $ toHtml t | t <- allGlossaryTerms g ]
+        mconcat [ entry t arts | (t,arts) <- glossaryEntries g ]
+
+    entry :: Text -> [(Target (), Article [Text], Text)] -> Lucid.Html ()
+    entry t defs = do
+      div_ [ class_ "entry" ] $ do
+        p_ $ toHtml t
+        defWithLinks defs
+
+    defWithLinks :: [(Target (), Article [Text], Text)] -> Lucid.Html ()
+    defWithLinks defs = do
+      ul_ [ class_ "entry-details-list" ]
+      $ mconcat
+      [ li_ [ class_ "article-details-list-item" ] $ defWithLink t art def
+      | (t,art,def) <- defs 
+      ]
+
+    defWithLink :: Target () -> Article [Text] -> Text -> Lucid.Html ()
+    defWithLink t art def =
+      div_ [ class_ "deflink" ] $ do
+        p_ $ toHtml def
+        articleLink t art
 
 htmlbody
   :: (Article [Text] -> Assembler (Lucid.Html ()))

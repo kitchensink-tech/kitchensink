@@ -2,7 +2,8 @@
 module KitchenSink.Layout.Blog.Analyses.GlossaryGrouping
   ( WholeGlossary(..)
   , buildWholeGlossary
-  , allGlossaryTerms
+  , glossaryEntries
+  , glossaryTerms
   ) where
 
 import Data.Map.Strict (Map)
@@ -15,20 +16,34 @@ import KitchenSink.Core.Section
 import KitchenSink.Prelude
 import KitchenSink.Core.Assembler.Sections
 
+type TargetArticle k = (Target (), Article [Text], k)
+
+type Term = Text
+type Definition = Text
+
 data WholeGlossary = WholeGlossary {
-    byTerm   :: Map Text [(Target (), Article [Text])]
+    byTerm   :: Map Term [TargetArticle Definition]
   }
 
-allGlossaryTerms :: WholeGlossary -> [Text]
-allGlossaryTerms = Map.keys . byTerm
+-- | Glossary terms in ascending order.
+--
+-- Implementation relies on Map.keys to return values in ascending order.
+glossaryTerms :: WholeGlossary -> [Text]
+glossaryTerms = Map.keys . byTerm
+
+-- | Glossary entries in ascending order.
+--
+-- Implementation relies on Map.toAscList to return values in ascending order.
+glossaryEntries :: WholeGlossary -> [(Text, [TargetArticle Definition])]
+glossaryEntries = Map.toAscList . byTerm
 
 buildWholeGlossary :: [Sourced (Article [Text])] -> (Sourced (Article [Text]) -> Target ()) -> WholeGlossary
 buildWholeGlossary arts mkTarget =
     WholeGlossary indexByTerm
   where
-    indexByTerm :: Map Text [(Target (), Article [Text])]
+    indexByTerm :: Map Text [TargetArticle Definition]
     indexByTerm = Map.fromListWith (<>)
-      $ [ (term t, [(mkTarget s, art)])
+      $ [ (term t, [(mkTarget s, art, definition t)])
       | s@(Sourced _ art) <- arts
       , t <- getGlossaryTerms art
       ]
