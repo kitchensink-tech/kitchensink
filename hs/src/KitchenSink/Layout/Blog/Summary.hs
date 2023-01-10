@@ -37,6 +37,7 @@ data TargetType
   | ArticleTarget
   | GeneratedTarget
   | TopicsIndexTarget
+  | GlossaryTarget
   deriving (Show, Generic)
 instance ToJSON TargetType
 instance FromJSON TargetType

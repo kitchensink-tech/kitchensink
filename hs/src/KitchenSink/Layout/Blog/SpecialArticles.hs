@@ -1,5 +1,5 @@
 
-module KitchenSink.Layout.Blog.SpecialArticles (SpecialArticle(..), lookupSpecialArticle) where
+module KitchenSink.Layout.Blog.SpecialArticles (SpecialArticle(..), lookupSpecialArticle, lookupSpecialArticleSource) where
 
 import qualified Data.List as List
 import Data.Text (Text)
@@ -13,16 +13,21 @@ import KitchenSink.Core.Build.Target (Sourced(..), SourceLocation(..))
 
 data SpecialArticle
   = Topics
+  | Glossary
 
 articleName :: SpecialArticle -> Text
 articleName a = case a of
   Topics -> "topics.cmark"
+  Glossary -> "glossary.cmark"
 
-lookupSpecialArticle :: SpecialArticle -> Site -> Maybe (Article [Text])
-lookupSpecialArticle a site = obj <$> List.find f (articles site)
+lookupSpecialArticleSource :: SpecialArticle -> Site -> Maybe (Sourced (Article [Text]))
+lookupSpecialArticleSource a site = List.find f (articles site)
   where
     name :: Text
     name = articleName a
 
     f :: Sourced a -> Bool
     f (Sourced (FileSource path) _) = takeFileName path == Text.unpack name
+
+lookupSpecialArticle :: SpecialArticle -> Site -> Maybe (Article [Text])
+lookupSpecialArticle a site = obj <$> lookupSpecialArticleSource a site

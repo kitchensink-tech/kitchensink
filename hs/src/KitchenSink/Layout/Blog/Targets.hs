@@ -110,6 +110,7 @@ siteTargets prefix extra site = allTargets
       , htmlTargets prefix site
       , topicIndexesTargets (lookupSpecialArticle SpecialArticles.Topics site)
       , topicAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
+      , glossaryTargets (lookupSpecialArticleSource SpecialArticles.Glossary site)
       , jsonDataTargets
       , seoTargets
       ]
@@ -241,6 +242,14 @@ siteTargets prefix extra site = allTargets
             rule = Core.ProduceAssembler $ pure $ LText.fromStrict $ atomFeedContent articles
         in simpleTarget TopicsIndexTarget u rule
       | (topic, articles) <- Map.toList (byTopic stats)
+      ]
+
+    glossaryTargets :: Maybe (Sourced (Article [Text])) -> [ Target ]
+    glossaryTargets Nothing = []
+    glossaryTargets (Just (Sourced loc art)) =
+      let u = destHtml prefix loc
+      in
+      [ simpleTarget GlossaryTarget u (Core.ProduceAssembler $ glossaryListingLayout articleTargets u u art)
       ]
 
     layoutFor :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
@@ -410,6 +419,26 @@ siteTargets prefix extra site = allTargets
                         ]
                       ]
                   ]
+
+    glossaryListingLayout :: [ (Ext.Target a, Article [Text]) ] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
+    glossaryListingLayout articles dloc jsondloc =
+      htmldoc
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                  , htmlbody 
+                    $ mconcat
+                      [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
+                      $ mconcat
+                        [ const $ pure $ homeLink
+                        , const $ pure $ searchBox
+                        ]
+                      , wrap (div_ [ class_ "main"])
+                      $ wrap article_ 
+                      $ mconcat
+                        [ const (assembleGlossaryListing prefix stats articles)
+                        ]
+                      ]
+                  ]
+
 
     -- TODO: add warning on default layout
     defaultLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text

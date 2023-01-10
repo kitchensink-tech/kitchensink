@@ -147,4 +147,5 @@ showTargetType = case _ of
   ArticleTarget -> "An article."
   GeneratedTarget -> "The output of a command."
   TopicsIndexTarget -> "An index."
+  GlossaryTarget -> "The glossary."
 

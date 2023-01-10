@@ -199,6 +199,18 @@ topicListingTag prefix stats topic =
     url = destinationUrl $ destTopic prefix topic
     articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
 
+assembleGlossaryListing :: OutputPrefix -> TopicStats -> [ (Target a, Article [Text]) ] -> Assembler (Lucid.Html ())
+assembleGlossaryListing _ _ _ =
+    pure r
+  where
+    r :: Lucid.Html ()
+    r = do
+      header_ [ class_ "heading" ] $ do
+        h1_ $ toHtml ("Glossary" :: Text)
+{-
+      section_ [ class_ "main" ] $ do
+        mainArticleLinks articles
+-}
 
 htmlbody
   :: (Article [Text] -> Assembler (Lucid.Html ()))

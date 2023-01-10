@@ -18,6 +18,7 @@ data ArticleLayout
  | ArchivedArticle
  | IndexPage
  | TopicListingPage
+ | GlossaryListingPage
  | SinglePageApp
  | ImageGallery
  | VariousListing
