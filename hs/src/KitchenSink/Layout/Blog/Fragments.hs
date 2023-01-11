@@ -228,7 +228,10 @@ assembleGlossaryListing _ g _ =
     defWithLink t art def =
       div_ [ class_ "deflink" ] $ do
         p_ $ toHtml def
-        articleLink t art
+        span_ $ do
+          toHtml ("In: " :: Text)
+          articleLink t art
+          toHtml ("." :: Text)
 
 htmlbody
   :: (Article [Text] -> Assembler (Lucid.Html ()))
