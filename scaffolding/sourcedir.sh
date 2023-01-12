@@ -5,6 +5,7 @@ path=$1
 mkdir -p -v "${path}"
 cp -v "scaffolding/kitchen-sink.json" "${path}/kitchen-sink.json"
 cp -v "scaffolding/index.cmark.tmpl" "${path}/index.cmark"
+cp -v "scaffolding/glossary.cmark.tmpl" "${path}/glossary.cmark"
 cp -v "scaffolding/topics.cmark.tmpl" "${path}/topics.cmark"
 cp -v "scaffolding/newpage.cmark.tmpl" "${path}/first-article.cmark"
 

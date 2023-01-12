@@ -449,6 +449,10 @@ Kitchen-Sink generates `<meta>` HTML headers for [OpenGraph](https://ogp.me/)
 and [Twitter
 cards](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/abouts-cards).
 
+### consolidated glossary
+
+KitchenSink allows you to add glossary items to individual articles as well as
+[a consolidated glossary](/glossary.html) where multiple definitions may coexist.
 
 =base:main-content.cmark
 ## content-analysis

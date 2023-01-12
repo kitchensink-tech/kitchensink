@@ -137,11 +137,12 @@ end up reading this piece of documentation).
 ::: {.section-details}
 
 An important section to let Kitchen-Sink know which __layout__ to apply.  Known
-layouts are `article`, `index` (for `index.cmark`), `topics` (for `topics.cmark`),
-`application` for JavaScript single-page apps, `gallery` for content galleries,
-and `listing` for various listings. Overall, except for index and topics, the
-layout of content does not change significantly besides the HTML-nesting (which
-then allows you to modify CSS or hijack DOM elements for single-page apps).
+layouts are `article`, `index` (for `index.cmark`), `glossary` (for
+`glossary.cmark`), `topics` (for `topics.cmark`), `application` for JavaScript
+single-page apps, `gallery` for content galleries, and `listing` for various
+listings. Overall, except for index and topics, the layout of content does not
+change significantly besides the HTML-nesting (which then allows you to modify
+CSS or hijack DOM elements for single-page apps).
 
 The publicationStatus is either: `Public`, `Upcoming`, or `Archived`. Upcoming
 and Archived articles are treated slightly differently from Public articles in
@@ -411,9 +412,14 @@ terms. KitchenSink has some support for glossary in the form of parsing a
 special section and turning that in a series of `dl/dt/dd` HTML tags towards
 the end of the article.
 
+Glossary terms should be repeated across articles and can have diverging
+definitions across articles. A consolidated view of glossary terms is built
+when the special article `glossary.cmark` with layout type `glossary` is
+present.
+
 In the future we may modify the  generated HTML to include some glossary-links
-directly in the render body of articles or collecting the whole glossary terms
-like article topics.
+directly in the render body of articles or add glossary terms as nodes into the
+sitemap.
 
 __example__
 
