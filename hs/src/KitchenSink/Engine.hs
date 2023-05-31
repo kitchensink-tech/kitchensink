@@ -2,11 +2,13 @@
 {-# LANGUAGE DataKinds #-}
 module KitchenSink.Engine where
 
+import Control.Concurrent.Async (Concurrently(..))
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock (getCurrentTime)
 import Lucid as Lucid
 import qualified Lucid.Base as Lucid
 import Network.Wai.Handler.Warp as Warp
+import qualified Network.Wai.Handler.WarpTLS as WarpTLS
 import qualified Network.Wai.Middleware.RequestLogger as RequestLogger
 import Options.Generic
 import qualified Paths_prodapi
@@ -45,7 +47,10 @@ data Action
     { srcDir :: FilePath <?> "source directory" 
     , outDir :: FilePath <?> "output directory" 
     , servMode :: ServMode <?> "SERVE|DEV" 
-    , port   :: Int <?> "port-num"
+    , httpPort   :: Maybe Int <?> "port-num"
+    , httpsPort   :: Maybe Int <?> "port-num"
+    , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
+    , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
     }
   deriving (Generic, Show)
 
@@ -56,7 +61,6 @@ defaultMain = do
   cmd <- getRecord "kitchen-sink"
   let srcPath = coerce $ srcDir cmd
   let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
-  let portnum = coerce $ port cmd
   serveMetadata <- loadServeModeExtraData kitchensinkFilePath
   let prodengine = Engine
                   (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
@@ -70,40 +74,59 @@ defaultMain = do
       meta <- execLoadMetaExtradata prodengine
       let tgts = evalTargets prodengine meta site
       traverse_ (execProduceTarget prodengine) tgts
-    Serve _ _ mode _ -> do
-      case (coerce mode) of
-        DEV   -> runDev kitchensinkFilePath devengine prodengine srcPath portnum
-        SERVE -> runServe kitchensinkFilePath prodengine srcPath portnum
+    Serve _ _ mode _ _ _ _ -> do
+      kswebapp <- case (coerce mode) of
+        DEV   -> runDev kitchensinkFilePath devengine prodengine srcPath
+        SERVE -> runServe kitchensinkFilePath prodengine srcPath
+
+      let webapp = RequestLogger.logStdoutDev kswebapp
+      let httpWarp = Warp.run <$> coerce httpPort cmd <*> pure webapp
+      let httpsWarp = WarpTLS.runTLS <$> tlsSettings cmd <*> tlsWarpSettings cmd <*> pure webapp
+
+      let program = (,) <$> Concurrently (mio httpWarp) <*> Concurrently (mio httpsWarp)
+      void $ runConcurrently program
   where
-    runDev kspath devengine prodengine path portnum = do
+    mio :: Maybe (IO ()) -> IO ()
+    mio = fromMaybe (pure ())
+
+    tlsSettings :: Action -> Maybe WarpTLS.TLSSettings
+    tlsSettings cmd = do
+       cert <- coerce tlsCertFile cmd
+       key <- coerce tlsKeyFile cmd
+       pure $ WarpTLS.tlsSettings cert key
+
+    tlsWarpSettings :: Action -> Maybe Warp.Settings
+    tlsWarpSettings cmd = do
+       port <- coerce httpsPort cmd
+       pure $ Warp.setPort port Warp.defaultSettings
+
+    runDev kspath devengine prodengine path = do
       ksconfig <- loadJSONFile kspath >>= maybe (error "couldn't load kitchensink.json") pure
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
       rt <- initDevServerRuntime devengine path tracePrint
       init <- initialize healthRt
-      Warp.run portnum
-        $ RequestLogger.logStdoutDev
-        $ app
+      let webapp = app
            init
            apiStatus
            (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
            (serveDevApi ksconfig devengine prodengine rt)
            (Proxy @DevApi)
+      pure webapp
 
-    runServe kspath engine path portnum = do
+    runServe kspath engine path = do
       ksconfig <- loadJSONFile kspath >>= maybe (error "couldn't load kitchensink.json") pure
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
       rt <- initDevServerRuntime engine path tracePrint
       init <- initialize healthRt
-      Warp.run portnum
-        $ RequestLogger.logStdoutDev
-        $ app
+      let webapp = app
            init
            apiStatus
            (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
            (serveApi ksconfig engine rt)
            (Proxy @ServeApi)
+      pure webapp
 
 loadServeModeExtraData :: FilePath -> IO MetaData
 loadServeModeExtraData path = do

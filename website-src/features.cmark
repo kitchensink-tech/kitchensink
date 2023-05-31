@@ -142,7 +142,7 @@ route is shown to the browser. This is not especially useful but can come handy.
 
 Example usage with the default executable:
 
-`$ kitchen-sink serve --srcDir website-src --outDir website-www --servMode SERVE --port 7654`
+`$ kitchen-sink serve --srcDir website-src --outDir website-www --servMode SERVE --httpPort 7654`
 
 ```console
 [...]
@@ -160,6 +160,15 @@ GET /js/search-box.js
   Accept: */*
   Status: 200 OK 0.000694164s
 ```
+
+Kitchen-Sink also supports HTTPS via TLS .pem key and certificate files.
+
+`$ kitchen-sink serve --srcDir website-src --outDir website-www --servMode SERVE --httpsPort 443 --tlsCertFile <mycert.pem> --tlsKeyFile <key.pem>`
+
+Note that if you run both HTTP and HTTPS the listening ports should differ.
+Plain-text (a.k.a., insecure connections) are disabled on the TLS server.
+
+If you specify neither HTTP nor HTTPS the binary will load and exit immediately.
 
 ### auto-reload
 

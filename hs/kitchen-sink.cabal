@@ -110,6 +110,7 @@ library
                     , http-types
                     , wai
                     , warp
+                    , warp-tls
                     , wai-extra
                     , xml-conduit
                     , fsnotify >= 0.4.0.0
