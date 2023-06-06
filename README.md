@@ -38,7 +38,7 @@ cabal install
 ```
 bash scaffolding/outputdir.sh www
 bash scaffolding/sourcedir.sh site-source
-kitchen-sink serve --srcDir site-source/ --outDir www/ --servMode DEV --port 7654
+kitchen-sink serve --srcDir site-source/ --outDir www/ --servMode DEV --httpPort 7654
 ```
 
 Then navigate to http://localhost:7654/ you'll notice there are a few things to tune.
