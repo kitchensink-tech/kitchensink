@@ -16,7 +16,6 @@ import Data.Maybe (isJust)
 import Data.Text (Text)
 import GHC.Real (fromIntegral)
 import Network.HTTP.Types (status200, status404)
-import Network.HTTP.ReverseProxy
 import Network.Wai as Wai
 import Prelude (id,unlines)
 import Prod.Tracer
@@ -24,6 +23,7 @@ import Prod.Status
 import Prod.Prometheus (timeIt)
 import Prod.Background as Background
 import qualified Prod.Status as Prod
+import qualified Prod.Proxy as ProdProxy
 import qualified Prometheus as Prometheus
 import Servant
 import System.Process (readCreateProcess, proc)
@@ -163,12 +163,12 @@ handleOnTheFlyProduction rt fetchTarget = go
       | ".html" `ByteString.isSuffixOf` path = "text/html"
       | True = ""
 
-handleProxyApi :: Config -> Runtime ext -> Application
-handleProxyApi cfg rt = case api cfg of
+handleProxyApi :: Runtime ext -> Application
+handleProxyApi rt = case prodproxyRuntime rt of
   Nothing ->
-      \_ resp -> resp $ Wai.responseLBS status404 [] "not found"
-  Just (host, port) ->
-    waiProxyTo (const $ pure $ WPRProxyDest $ ProxyDest (Text.encodeUtf8 host) port) defaultOnExc (httpManager rt)
+      \_ resp -> resp $ Wai.responseLBS status404 [] "api proxy runtime is disabled"
+  Just proxyrt -> do
+    ProdProxy.handleProxy proxyrt
 
 -- works with two configured engines: one for all of dev stuff and one in serve mode (for producing files)
 serveDevApi :: forall ext. (Show ext, Typeable ext) => Config -> Engine ext -> Engine ext -> Runtime ext -> Server DevApi
@@ -180,12 +180,12 @@ serveDevApi config devengine prodengine rt =
   :<|> handleDevListCommands config rt
   :<|> handleExecCommand config rt
   :<|> handleDevForceReload rt
-  :<|> coerce (handleProxyApi config rt)
+  :<|> coerce (handleProxyApi rt)
   :<|> coerce (handleOnTheFlyProduction rt (findTarget devengine rt))
 
-serveApi :: forall ext. (Show ext, Typeable ext) => Config -> Engine ext -> Runtime ext -> Server ServeApi
-serveApi config engine rt =
-  coerce (handleProxyApi config rt)
+serveApi :: forall ext. (Show ext, Typeable ext) => Engine ext -> Runtime ext -> Server ServeApi
+serveApi engine rt =
+  coerce (handleProxyApi rt)
   :<|> coerce (handleOnTheFlyProduction rt (findTarget engine rt))
 
 type TargetPath = ByteString

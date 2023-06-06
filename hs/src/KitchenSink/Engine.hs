@@ -75,9 +75,10 @@ defaultMain = do
       let tgts = evalTargets prodengine meta site
       traverse_ (execProduceTarget prodengine) tgts
     Serve _ _ mode _ _ _ _ -> do
+      ksconfig <- loadJSONFile kitchensinkFilePath >>= maybe (error "couldn't load kitchensink.json") pure
       kswebapp <- case (coerce mode) of
-        DEV   -> runDev kitchensinkFilePath devengine prodengine srcPath
-        SERVE -> runServe kitchensinkFilePath prodengine srcPath
+        DEV   -> runDev ksconfig devengine prodengine srcPath
+        SERVE -> runServe ksconfig prodengine srcPath
 
       let webapp = RequestLogger.logStdoutDev kswebapp
       let httpWarp = Warp.run <$> coerce httpPort cmd <*> pure webapp
@@ -100,11 +101,10 @@ defaultMain = do
        port <- coerce httpsPort cmd
        pure $ Warp.setPort port Warp.defaultSettings
 
-    runDev kspath devengine prodengine path = do
-      ksconfig <- loadJSONFile kspath >>= maybe (error "couldn't load kitchensink.json") pure
+    runDev ksconfig devengine prodengine path = do
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
-      rt <- initDevServerRuntime devengine path tracePrint
+      rt <- initDevServerRuntime ksconfig devengine path tracePrint
       init <- initialize healthRt
       let webapp = app
            init
@@ -114,17 +114,16 @@ defaultMain = do
            (Proxy @DevApi)
       pure webapp
 
-    runServe kspath engine path = do
-      ksconfig <- loadJSONFile kspath >>= maybe (error "couldn't load kitchensink.json") pure
+    runServe ksconfig engine path = do
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
-      rt <- initDevServerRuntime engine path tracePrint
+      rt <- initDevServerRuntime ksconfig engine path tracePrint
       init <- initialize healthRt
       let webapp = app
            init
            apiStatus
            (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
-           (serveApi ksconfig engine rt)
+           (serveApi engine rt)
            (Proxy @ServeApi)
       pure webapp
 

@@ -96,6 +96,7 @@ library
                     , commonmark-extensions
                     , lucid
                     , megaparsec
+                    , mtl
                     , optparse-generic
                     , prometheus-client
                     , blaze-markup
@@ -106,6 +107,7 @@ library
                     , servant-server
                     , process
                     , prodapi
+                    , prodapi-proxy
                     , stm
                     , http-types
                     , wai

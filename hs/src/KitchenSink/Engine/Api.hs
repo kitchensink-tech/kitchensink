@@ -11,6 +11,7 @@ import Servant
 import KitchenSink.Prelude
 import KitchenSink.Engine.Config (Command)
 import KitchenSink.Engine.Track (WatchResult)
+import qualified Prod.Proxy as ProdProxy
 
 
 type DevApi = DevWatchApi
@@ -50,6 +51,6 @@ instance ToJSON ForceReloadStatus
 
 type DevForceReloadApi = "dev" :> "reload" :> Post '[JSON] (Maybe ForceReloadStatus)
 
-type ProxyApi = "api" :> Raw
+type ProxyApi = "api" :> ProdProxy.Api
 
 type OnTheFlyProductionApi = Raw

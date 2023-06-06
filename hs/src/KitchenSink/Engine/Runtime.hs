@@ -11,11 +11,13 @@ import Control.Monad (forever,when)
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TVar
 import Control.Concurrent.STM.TMVar
+import qualified Data.Text.Encoding as Text
 import GHC.Enum (succ)
 import GHC.Float (int2Double)
 import Network.HTTP.Client as HTTP (Manager, newManager, defaultManagerSettings)
 import Prod.Tracer
 import Prod.Background as Background
+import qualified Prod.Proxy as ProdProxy
 import qualified Prometheus as Prometheus
 import qualified System.FSNotify as FSNotify
 import System.FilePath.Posix (takeExtension)
@@ -25,6 +27,7 @@ import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Layout.Blog
 import KitchenSink.Engine.Counters (Counters(..), initCounters)
+import KitchenSink.Engine.Config
 import KitchenSink.Engine.Track (DevServerTrack(..))
 
 -- | Part of the Engine that is shared between one-off production script and
@@ -44,10 +47,11 @@ data Runtime ext = Runtime
   , liveSite :: BackgroundVal (Site ext)
   , counters :: Counters
   , httpManager :: HTTP.Manager
+  , prodproxyRuntime :: Maybe ProdProxy.Runtime
   }
 
-initDevServerRuntime :: forall ext. Engine ext -> FilePath -> Tracer IO (DevServerTrack ext) -> IO (Runtime ext)
-initDevServerRuntime engine path devtracer = do
+initDevServerRuntime :: forall ext. Config -> Engine ext -> FilePath -> Tracer IO (DevServerTrack ext) -> IO (Runtime ext)
+initDevServerRuntime cfg engine path devtracer = do
   rtCounters <- initCounters
   initialSite <- load rtCounters
 
@@ -59,6 +63,8 @@ initDevServerRuntime engine path devtracer = do
   _ <- FSNotify.watchDir notify path shouldNotify (handleFSEvent fsTVar)
   _ <- forkIO (loadDebouncedFsEvents rtCounters fsTVar siteTMVar)
 
+  proxyRuntime <- traverse initProxyBackend (api cfg)
+
   Runtime
     <$> pure (waitChanges watches)
     <*> pure (pushNewSite rtCounters siteTMVar)
@@ -66,7 +72,12 @@ initDevServerRuntime engine path devtracer = do
     <*> background (contramap adaptTracer devtracer) 0 initialSite (waitSiteAndNotify rtCounters siteTMVar watches)
     <*> pure rtCounters
     <*> newManager defaultManagerSettings
+    <*> pure proxyRuntime
   where
+    initProxyBackend :: (HostName, PortNum) -> IO ProdProxy.Runtime
+    initProxyBackend (host,port) =
+        ProdProxy.initRuntime (ProdProxy.StaticBackend (Text.encodeUtf8 host) port)
+
     load :: Counters -> IO (Site ext)
     load cntrs = do
       site <- execLoadSite engine
