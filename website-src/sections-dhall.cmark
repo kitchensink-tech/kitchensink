@@ -26,6 +26,16 @@
 @import "/css/article.css";
 @import "/css/navigation.css";
 
+
+pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
+
+.output {
+  color: gray;
+  margin-left: 2em;
+  padding-left: 1em;
+  border-left: 4px solid gray;
+}
+
 =base:summary.cmark
 
 Documenting the special features of Dhall-sections.
@@ -43,16 +53,21 @@ __future work__
 - move evaluation a bit more lazily
 - some non-load-time evaluation (e.g., in layouts to generate new targets -- but needs IO for this)
 
-## kitchensink object
+## The `kitchensink` object
+
+Evaluated Dhall expressions carry information provided by
+KitchenSink. This information is bound to the `kitchensink`
+Dhall value and has the following structure:
 
 ```dhall
 { file : Text -- contains the source file for the cmark
+, sectionNum : Integer -- contains the section number of this file (starting from zero)
 }
 ```
 
 =base:main-content.cmark
 
-# a section in CommonMark
+# Rendering a section in CommonMark
 
 __example__
 
@@ -60,11 +75,9 @@ __example__
     
     { contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "cmark" }
 
-
-
 =base:main-content.cmark
 
-# a section in html
+# Rendering a section in HTML
 
 You can return HTML directly-formatted.
 
@@ -130,3 +143,20 @@ in
 { contents = cmd
 , format = "json"
 }
+
+=base:main-content.dhall
+    
+{ contents = [
+    "::: output"
+  , "\n"
+  , "__generated from dhall__"
+  , "\n"
+  , "file=", kitchensink.file
+  , "\n", "section="
+  , Integer/show kitchensink.pagenum
+  , "\n"
+  , ":::"
+  ]
+, format = "cmark"
+}
+

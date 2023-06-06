@@ -3,6 +3,7 @@ module KitchenSink.Engine.SiteLoader (module KitchenSink.Core.Build.Site, loadSi
 
 import qualified Data.Aeson as Aeson
 import Data.Aeson (FromJSON(..), withObject, (.:))
+import Prelude (Integer,succ)
 import Control.Exception (throwIO)
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text as Text
@@ -20,6 +21,8 @@ import qualified Dhall.Map as Dhall
 import qualified Dhall.Core as Core
 import qualified Dhall.Context as Context
 import Lens.Family
+
+import Control.Monad.State
 
 import KitchenSink.Prelude
 import KitchenSink.Core.Build.Site
@@ -40,13 +43,23 @@ data LogMsg ext
 
 type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 
+-- TODO: consider adding some LoadedArticle type to:
+-- - distinguish article that have just been parsed from pre-procssed-via Dhall
+-- - return some extra structure about the Article like:
+--   * dependencies using a specific section
+--   * dependencies between sections? or between articles?
+--   * dependencies to external query widgets or params?
+--   * references to generated datasets (e.g., `curl a page, use as input to other place`)
 loadArticle :: [ExtraSectionType ext] -> Loader ext (Article ext [Text])
 loadArticle extras trace path = do
   trace $ LoadArticle path
   eart <- runParser (article extras path) path <$> Text.readFile path
   case eart of
     Left err -> throwIO err
-    Right art -> Sourced (FileSource path) <$> overSections (evalSection path trace) art
+    Right art -> Sourced (FileSource path) <$> evalSections art
+
+  where
+    evalSections art = evalStateT (overSections (evalSection path trace) art) newState
 
 data DhallResult
   = DhallTextContents Text [Text]
@@ -66,33 +79,52 @@ data EvalError
   | DhallResultJsonDecodeError String
   deriving (Show, Exception)
 
-evalSection :: FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> IO (Section ext [Text])
-evalSection path trace x@(Section t fmt body) = do
-  trace $ EvalSection path t fmt
-  case fmt of
-    Dhall -> do
-      let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack path)) (Core.Text)
-      let ksExpr = Core.RecordLit $ Dhall.fromList [("file", Core.makeRecordField pathExpr)]
-      let ctx0 = Context.empty
-      let sub0 = Dhall.fromList [ ("kitchensink", ksExpr) ]
-      let setts = defaultInputSettings
-                  & Dhall.sourceName .~ (path <> " (section)")
-                  & Dhall.evaluateSettings . substitutions .~ sub0
-                  & Dhall.evaluateSettings . startingContext .~ ctx0
-      de <- inputExprWithSettings setts (Text.unlines body) :: IO (Core.Expr Src Void)
-      dj <- case dhallToJSON de of
-        Left err -> throwIO $ DhallRuntimeError err
-        Right jvalue -> pure $ jvalue
+data EvalState = EvalState {
+    _sectionNuber :: Integer
+  }
 
-      case Aeson.fromJSON dj of
-        Aeson.Error err -> throwIO $ DhallResultJsonDecodeError err
-        Aeson.Success (DhallJsonContents obj) -> pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
-        Aeson.Success (DhallTextContents format contents) ->
-          case format of
-            "cmark" -> pure $ Section t Cmark contents
-            "html" -> pure $ Section t TextHtml contents
-            newfmt -> throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> newfmt
-    _ -> pure x
+newState :: EvalState
+newState = EvalState 0
+
+type Eval a = StateT EvalState IO a
+
+evalSection :: FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> Eval (Section ext [Text])
+evalSection path trace x@(Section t fmt body) = do
+  st0 <- get
+  ret <- liftIO $ do
+    trace $ EvalSection path t fmt
+    exec st0
+  incrementPage
+  pure ret
+  where
+    incrementPage = modify (\st0 -> EvalState $ succ (_sectionNuber st0))
+
+    exec (EvalState sectionNum) = case fmt of
+        Dhall -> do
+          let sectionNumExpr = Core.Annot (Core.IntegerLit sectionNum) (Core.Integer)
+          let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack path)) (Core.Text)
+          let ksExpr = Core.RecordLit $ Dhall.fromList [("file", Core.makeRecordField pathExpr),("sectionNum", Core.makeRecordField sectionNumExpr)]
+          let ctx0 = Context.empty
+                      & Context.insert "kitchensink" ksExpr
+          let sub0 = Dhall.fromList [ ("kitchensink", ksExpr) ]
+          let setts = defaultInputSettings
+                      & Dhall.sourceName .~ (path <> " (section)")
+                      & Dhall.evaluateSettings . substitutions .~ sub0
+                      & Dhall.evaluateSettings . startingContext .~ ctx0
+          de <- inputExprWithSettings setts (Text.unlines body) :: IO (Core.Expr Src Void)
+          dj <- case dhallToJSON de of
+            Left err -> throwIO $ DhallRuntimeError err
+            Right jvalue -> pure $ jvalue
+    
+          case Aeson.fromJSON dj of
+            Aeson.Error err -> throwIO $ DhallResultJsonDecodeError err
+            Aeson.Success (DhallJsonContents obj) -> pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
+            Aeson.Success (DhallTextContents format contents) ->
+              case format of
+                "cmark" -> pure $ Section t Cmark contents
+                "html" -> pure $ Section t TextHtml contents
+                newfmt -> throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> newfmt
+        _ -> pure x
 
 loadImage :: Loader a Image
 loadImage trace path = do
