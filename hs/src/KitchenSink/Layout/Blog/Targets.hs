@@ -29,7 +29,7 @@ import Text.XML (def, rsPretty)
 import qualified Text.Atom.Feed as Atom
 import qualified Text.Feed.Export as Export (textFeedWith)
 
-import KitchenSink.Core.Build.Site (images, dotSourceFiles, videoFiles, rawFiles, cssFiles, jsFiles, htmlFiles, articles)
+import KitchenSink.Core.Build.Site (images, dotSourceFiles, videoFiles, rawFiles, cssFiles, jsFiles, htmlFiles, docFiles, articles)
 import KitchenSink.Core.Build.Target (DestinationLocation, OutputPrefix, Sourced(..), SourceLocation(..), copyFrom, execCmd, destinationUrl, destination, summary, runAssembler)
 import qualified KitchenSink.Core.Build.Target as Core
 import KitchenSink.Core.Generator
@@ -70,6 +70,10 @@ rawTargets :: OutputPrefix -> Site -> [Target]
 rawTargets prefix site =
   [ simpleTarget RawTarget (destRawFile prefix loc) (copyFrom loc) | Sourced loc _ <- rawFiles site ]
 
+documentTargets :: OutputPrefix -> Site -> [Target]
+documentTargets prefix site =
+  [ simpleTarget DocumentTarget (destDocumentFile prefix loc) (copyFrom loc) | Sourced loc _ <- docFiles site ]
+
 cssTargets :: OutputPrefix -> Site -> [Target]
 cssTargets prefix site =
   [ simpleTarget CssTarget (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- cssFiles site ]
@@ -105,6 +109,7 @@ siteTargets prefix extra site = allTargets
       , dotimageTargets prefix site
       , videoTargets prefix site
       , rawTargets prefix site
+      , documentTargets prefix site
       , cssTargets prefix site
       , jsTargets prefix site
       , htmlTargets prefix site

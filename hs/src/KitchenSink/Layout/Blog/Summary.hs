@@ -30,6 +30,7 @@ data TargetType
   | VideoTarget
   | RawTarget
   | DatasetTarget
+  | DocumentTarget
   | JavaScriptSourceTarget
   | HtmlSourceTarget
   | JSONTarget

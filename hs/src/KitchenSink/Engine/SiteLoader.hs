@@ -34,6 +34,7 @@ data LogMsg ext
   | LoadImage FilePath
   | LoadVideo FilePath
   | LoadRaw FilePath
+  | LoadDocument FilePath
   | LoadCss FilePath
   | LoadJs FilePath
   | LoadHtml FilePath
@@ -141,6 +142,11 @@ loadRaw trace path = do
   trace $ LoadRaw path
   pure $ (Sourced (FileSource path) RawFile)
 
+loadDocument :: Loader a DocumentFile
+loadDocument trace path = do
+  trace $ LoadDocument path
+  pure $ (Sourced (FileSource path) DocumentFile)
+
 loadCss :: Loader a CssFile
 loadCss trace path = do
   trace $ LoadCss path
@@ -173,6 +179,7 @@ loadSite extras trace dir = do
     <*> htmlM paths
     <*> dotsM paths
     <*> rawsM paths
+    <*> docsM paths
   where
     articlesM paths = traverse (loadArticle extras trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark" ] ]
@@ -190,3 +197,5 @@ loadSite extras trace dir = do
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".webm", ".mp4"] ]
     rawsM paths = traverse (loadRaw trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".txt", ".csv", ".json", ".dhall"] , takeFileName p /= "kitchen-sink.json"]
+    docsM paths = traverse (loadDocument trace)
+                     $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".pdf"] ]

@@ -148,4 +148,5 @@ showTargetType = case _ of
   GeneratedTarget -> "The output of a command."
   TopicsIndexTarget -> "An index."
   GlossaryTarget -> "The glossary."
+  DocumentTarget -> "Some document file"
 

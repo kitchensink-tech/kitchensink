@@ -80,6 +80,12 @@ destRawFile prefix (FileSource path)
         (Text.pack $ "/raw/" <> takeFileName path)
         (prefix </> "raw" </> takeFileName path)
 
+destDocumentFile :: OutputPrefix -> SourceLocation -> DestinationLocation
+destDocumentFile prefix (FileSource path) =
+  StaticFileDestination
+    (Text.pack $ "/docs/" <> takeFileName path)
+    (prefix </> "docs" </> takeFileName path)
+
 destImage :: OutputPrefix -> SourceLocation -> DestinationLocation
 destImage prefix (FileSource path) =
   StaticFileDestination

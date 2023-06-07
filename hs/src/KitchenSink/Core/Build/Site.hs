@@ -26,6 +26,9 @@ data VideoFile = VideoFile
 data RawFile = RawFile
   deriving (Show, Eq, Ord)
 
+data DocumentFile = DocumentFile
+  deriving (Show, Eq, Ord)
+
 data CssFile = CssFile
   deriving (Show, Eq, Ord)
 
@@ -50,6 +53,7 @@ data Site ext = Site
   , htmlFiles :: [ Sourced HtmlFile ]
   , dotSourceFiles :: [ Sourced DotSourceFile ]
   , rawFiles :: [ Sourced RawFile ]
+  , docFiles :: [ Sourced DocumentFile ]
   }
   deriving (Show, Eq, Ord)
 

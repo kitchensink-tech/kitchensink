@@ -45,6 +45,10 @@ KitchenSink copies `.webm` and `.mp4` files under `/videos`.
 
 KitchenSink copies `.jpg`, `.jpeg`, and `.png` files under `/images`.
 
+## documents
+
+KitchenSink copies `.pdf` files under `/docs`.
+
 ## HTML
 
 KitchenSink copies `.html` files under `/` that is, with no prefix.
