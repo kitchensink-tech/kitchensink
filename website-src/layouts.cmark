@@ -5,7 +5,7 @@
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "Layouts"
+,"title": "Layouts and extensions"
 }
 
 =base:topic.json
@@ -28,25 +28,202 @@
 
 =base:summary.cmark
 
-This article answers questions like: how do you change the layout of the blog?
+There are two notions of layouts in KitchenSink: article layouts and website
+layouts. This article answers questions like: how do you change the layout of
+the blog? how do you extend KitchenSink?
 
 =base:main-content.cmark
 
-Layouts in KitchenSink are implemented in Haskell and require some firm understanding of Haskell if you want to build one from scratch.
+There are two notions of layouts in KitchenSink: _article layouts_ and _website
+layouts_. This article first discusses how they differ, then we deep-dive in
+Website Layouts.
 
-Currently, a Layout has
-- a set of extension sections (on top of the base one) for main articles
-- a function to turn Sites (including artilces) into Targets
+## Article vs. Website layouts
 
-Today Site/SiteLoader and Layouts are bit coupled yet distinct. I'm not sure
-the distance between the two is really useful.
+Article Layouts are per-article configurations which allow to tune what a
+rendered-article looks like. This configuration is set in the
+`base:build-info.json` [section](/sections.html). For instance, while writing
+this text, this page is an __Upcoming Article__, when I'll find that the
+content is ready, I'll change this configuration to a __Published Article__ .
+An example configuration is as follows:.
+
+    =base:build-info.json
+    {"layout":"article"
+    ,"publicationStatus":"Upcoming"
+    }
+
+The `layout` directive indicates how KitchenSink should intepret (in a broad
+sense) the rest of the `.cmark` article. The layout not only influences the
+HTML output of the article content: the layout also can influence the presence
+of the navigation bar at the top, or just about anything.  If the directive
+were `application` instead, we would have no default CSS and no navigation bar
+as we expect the article content to take-over the whole page.  Currently, these
+layouts are mostly documented in the documentation about the build-info
+[section](/sections.html). 
+
+In addition, KitchenSink utilises the `publicationStatus` to further tweak some
+behaviours here and there. For instance, an `Upcoming` article will have a warning
+banner. Upcoming articles will show up grayed-out in article listings. Upcoming
+articles will not appear in the Atom feed. We've yet to document all such
+behaviors. However, if you wonder where KitchenSink takes all these rules, we
+can give you the answer right away: from the Website Layout :bulb:!
+
+Website Layouts carry most of the "business rules" in KitchenSink. Creating a
+Website Layout is a significant modification of KitchenSink. Indeed, Website
+Layouts have the control on almost everything about how the collection of files
+in the KitchenSink directory are interpreted into a website.
+
+Writing your own Layout allows you to:
+- support more or fewer Section types
+- redefine the set of Targets and their contents
+
+Layouts in KitchenSink are implemented in the [Haskell](https://haskell.org/)
+programming language and require some firm understanding of Haskell if you want
+to modify a layout, let-alone build a layout from scratch.
+
+## Article layouts
+
+todo: list a set of behaviours about articles
+
+## Writing website layouts
+
+The Website Layout is so important that the KichenSink code merely speak about
+Layout.  This section describes KitchenSink's Layout type in depth.
+
+Previous paragraphs introduced Website Layouts as the way to customize the
+business rules to turn `.cmark` section-files into `.html` and other sort of
+files. Hence, so far we've answered __what__ is the purpose of Website Layouts.
+We now discuss __how__ Website Layouts operate.  As often in Haskell, the best
+way to describe __how__ is to show and scrutinize type signatures. Hence, let's
+dive-in the `Layout` type and see for ourselves.  As of today, the `Layout`
+type is defined as follows:
+
+```haskell
+data Layout ext meta summary
+  = Layout
+  { siteTargets :: OutputPrefix -> meta -> Site ext -> [Target ext summary]
+  , extraSectiontypes :: [ExtraSectionType ext]
+  }
+```
+
+It helps to squint a bit and ignore type-level parameters. Simplifying the
+above, we could write Layout as:
+
+```haskell
+data Layout
+  = Layout
+  { siteTargets :: Site -> [Target]
+  , extraSectiontypes :: [ExtraSectionType]
+  }
+```
+
+In short, a `Layout` has two main purposes:
+- provide a `siteTargets` that turns a `Site` into a list of `Target`
+- provide a `extraSectiontypes` which is a list of Sections KitchenSink should learn how to parse
+
+The type parameters `ext`, `summary`, `meta` and so on and so forth are
+required to let the Haskell compiler ensure that everything is consistent
+(e.g., you can only build Targets in `siteTargets` for an extension if the
+extension is declared in `extraSectiontypes`).
+
+### deep dive on siteTargets
+
+A Layout basically gets to decide how to translate the in-memory represention
+of a whole Site into files, including their content-generation logic.
+
+Thus what is important is to get some example of `siteTargets` function.
+And understand, at least at a shallow-level, what is a Target.
+
+```
+data Target ext a = Target
+  { destination :: DestinationLocation
+  , productionRule :: ProductionRule ext
+  , summary :: a
+  } deriving (Functor)
+```
+
+The `destination` is roughly the HTTP path of where the content is placed.  The
+`productionRule` is roughly the IO-inducing code to generate the content (e.g.,
+rendering some HTML, copying some file, or executing a command).  Finally, the
+`summary` serves the purpose of having previews (e.g., in the search box).
+
+In short, a Target contains enough information __to locate, describe, and build__
+some document piece of your website.
+
+Let's now open KitchenSink's default `siteTargets` function at a first-level of details:
+
+```
+siteTargets :: OutputPrefix -> MetaData -> Site -> [Target]
+siteTargets prefix extra site = allTargets
+  where
+    allTargets = mconcat
+      [ embeddedGeneratorTargets
+      , embeddedDataTargets
+      , fmap fst articleTargets
+      , imageTargets prefix site
+      , dotimageTargets prefix site
+      , videoTargets prefix site
+      , rawTargets prefix site
+      , documentTargets prefix site
+      , cssTargets prefix site
+      , jsTargets prefix site
+      , htmlTargets prefix site
+      , topicIndexesTargets (lookupSpecialArticle SpecialArticles.Topics site)
+      , topicAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
+      , glossaryTargets (lookupSpecialArticleSource SpecialArticles.Glossary site)
+      , jsonDataTargets
+      , seoTargets
+      ]
+```
+
+ur experts assess that our diplomatic efforts have slowed the PRC down,” the official said. “We think the PRC isn’t quite where they had hoped to be.”
+Unsurprisingly, the default `siteTargets` parrots what the documentation pages about
+[sections](/sections.html) and [other types of files](/other-formats.html)
+decribe.  Each family of document, each specific section in article files,
+each magic-file (like glossaries)  gets a specific target. Each of these
+functions then have different techniques (e.g., HTML targets will render some
+HTML using an HTML-layout library, JSON targets will use Aeson-encoding of some
+structure etc.)
+
+As you can guess, writing a whole new `siteTargets` is a lot of work. That's
+why we recommend to start contacting me before jumping into such an endeavor.
+Longer-term I'd like to have support for templated-target, much like Dhall, but
+with a mini language better-suited for markup (like Mustache or ERB for
+instance).
+
+### deep dive on extraSectiontypes
+
+The way KitchenSink divides work operates in two phases:
+- load the Site
+  - read articles from disk (we discuss only .cmark)
+  - parsing content of .cmark as section format
+  - evaluating .dhall sections
+- assemble targets
+  - compute all the siteTargets
+  - evaluate siteTargets
+
+Extensions play a role in both phases.
+
+- for the __load__ phase: you need a name `ext:myextension` so that the loader recognizes `=ext:myextension` like `=base:main-content.cmark`
+- for the __assemble__ phase: you later need Assembler functions to use in your `siteTargets`
+
+## Extending KitchenSink in other forms
+
+You may want to modify KitchenSink in ways we have not discussed yet. For
+intance, you may want to support new filetypes (e.g., `docx` documents) in an
+existing family of filetypes, or new families of file types altogether (e.g.,
+source code of some form).
+
+Such changes are feasible but not _that easily_. Your best chance likely is to
+[contact me](https://dicioccio.fr/about-me.html) or by opening an issue on the
+[GitHub page](https://github.com/kitchensink-tech/kitchensink).
+
+## Summary
 
 So if you want to modify KitchenSink:
 - support a new filetype
   - modify the Site loader
   - modify the Layout function with whatever you need to turn the filetype into a set of targets
 - support a new section
-  - modify the layout to be able to parse the new data type
-  - modify the evalTarget function to
-- change the html shape
-  - modify an existing layout, either a singular target (fragment) or multiple targets
+  - modify the Layout to be able to parse the new data type
+  - modify the evalTarget function to apply the needed changes (most likely, you want to generate some extra information)
