@@ -81,7 +81,7 @@ data EvalError
   deriving (Show, Exception)
 
 data EvalState = EvalState {
-    _sectionNuber :: Integer
+    _sectionNumber :: Integer
   }
 
 newState :: EvalState
@@ -98,7 +98,7 @@ evalSection path trace x@(Section t fmt body) = do
   incrementPage
   pure ret
   where
-    incrementPage = modify (\st0 -> EvalState $ succ (_sectionNuber st0))
+    incrementPage = modify (\st0 -> EvalState $ succ (_sectionNumber st0))
 
     exec (EvalState sectionNum) = case fmt of
         Dhall -> do
