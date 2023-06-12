@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -70,8 +70,9 @@ can give you the answer right away: from the Website Layout :bulb:!
 
 Website Layouts carry most of the "business rules" in KitchenSink. Creating a
 Website Layout is a significant modification of KitchenSink. Indeed, Website
-Layouts have the control on almost everything about how the collection of files
-in the KitchenSink directory are interpreted into a website.
+Layouts control how the collection of files in the KitchenSink directory are
+interpreted into a website in a broad sense. The Website Layout dictates the
+directory structure, the HTML contents, CSS files, videos, what have you.
 
 Writing your own Layout allows you to:
 - support more or fewer Section types
@@ -83,7 +84,10 @@ to modify a layout, let-alone build a layout from scratch.
 
 ## Article layouts
 
-todo: list a set of behaviours about articles
+Website layouts define the behaviour of Article layouts. Kitchen-Sink currently
+supports a single website-layout (the one for this website).  For now, I'll
+refer you to [the build-info section
+documentation](/sections.html#build-info-mandatory).
 
 ## Writing website layouts
 
@@ -94,9 +98,9 @@ Previous paragraphs introduced Website Layouts as the way to customize the
 business rules to turn `.cmark` section-files into `.html` and other sort of
 files. Hence, so far we've answered __what__ is the purpose of Website Layouts.
 We now discuss __how__ Website Layouts operate.  As often in Haskell, the best
-way to describe __how__ is to show and scrutinize type signatures. Hence, let's
-dive-in the `Layout` type and see for ourselves.  As of today, the `Layout`
-type is defined as follows:
+way to describe __how__ something works is to show and scrutinize type
+signatures. Hence, let's dive-in the `Layout` type and see for ourselves.  As
+of today, the `Layout` type is defined as follows:
 
 ```haskell
 data Layout ext meta summary
@@ -126,10 +130,10 @@ required to let the Haskell compiler ensure that everything is consistent
 (e.g., you can only build Targets in `siteTargets` for an extension if the
 extension is declared in `extraSectiontypes`).
 
-### deep dive on siteTargets
+### understanding `siteTargets`
 
-A Layout basically gets to decide how to translate the in-memory represention
-of a whole Site into files, including their content-generation logic.
+A Layout gets to decide how to translate the in-memory represention of a whole
+Site into files, including their content-generation logic.
 
 Thus what is important is to get some example of `siteTargets` function.
 And understand, at least at a shallow-level, what is a Target.
@@ -176,36 +180,40 @@ siteTargets prefix extra site = allTargets
       ]
 ```
 
-ur experts assess that our diplomatic efforts have slowed the PRC down,” the official said. “We think the PRC isn’t quite where they had hoped to be.”
-Unsurprisingly, the default `siteTargets` parrots what the documentation pages about
-[sections](/sections.html) and [other types of files](/other-formats.html)
-decribe.  Each family of document, each specific section in article files,
-each magic-file (like glossaries)  gets a specific target. Each of these
-functions then have different techniques (e.g., HTML targets will render some
-HTML using an HTML-layout library, JSON targets will use Aeson-encoding of some
-structure etc.)
+Unsurprisingly, the default `siteTargets` parrots what the documentation pages
+about [sections](/sections.html) and [other types of
+files](/other-formats.html) decribe.  Each family of document, each specific
+section in article files, each magic-file (like glossaries)  gets a specific
+target. Each of these functions then have different techniques (e.g., HTML
+targets will render some HTML using an HTML-layout library, JSON targets will
+use Aeson-encoding of some structure etc.)
 
 As you can guess, writing a whole new `siteTargets` is a lot of work. That's
 why we recommend to start contacting me before jumping into such an endeavor.
-Longer-term I'd like to have support for templated-target, much like Dhall, but
-with a mini language better-suited for markup (like Mustache or ERB for
+Longer-term I'd like to have support for templated-targets, much like Dhall,
+but with a mini language better-suited for markup (like Mustache or ERB for
 instance).
 
-### deep dive on extraSectiontypes
+### some words on `extraSectiontypes`
 
 The way KitchenSink divides work operates in two phases:
-- load the Site
-  - read articles from disk (we discuss only .cmark)
-  - parsing content of .cmark as section format
-  - evaluating .dhall sections
+- load the `Site` object
+  - read articles from disk (we discuss only `.cmark`, but other files like `.png` are listed too)
+  - parsing content of `.cmark` as section format
+  - evaluating `.dhall` sections
 - assemble targets
-  - compute all the siteTargets
-  - evaluate siteTargets
+  - compute all the siteTargets (cf. above)
+  - evaluate all the targets
 
-Extensions play a role in both phases.
+If you were to extend the `.cmark` file with some form of new section type
+(e.g., you want to support some "license" section), you would have to modify
+KitchenSink in both phases:
+- during the __load__ phase: you need a name `ext:my-license-extension` so that the loader recognizes `=ext:my-license-extension` like `=base:main-content.cmark`
+- for the __assemble__ phase: you later need `Assembler` functions (that are capable of reading article sections) to decide how your license is interpreted and rendered in your Website layout.
 
-- for the __load__ phase: you need a name `ext:myextension` so that the loader recognizes `=ext:myextension` like `=base:main-content.cmark`
-- for the __assemble__ phase: you later need Assembler functions to use in your `siteTargets`
+Following the type-machinery should be enough. One remark though: there is one
+single "extension" parameter, so if you want to support multiple ones, you
+should build a sum-type of the extensions you support.
 
 ## Extending KitchenSink in other forms
 
@@ -220,10 +228,26 @@ Such changes are feasible but not _that easily_. Your best chance likely is to
 
 ## Summary
 
-So if you want to modify KitchenSink:
-- support a new filetype
-  - modify the Site loader
-  - modify the Layout function with whatever you need to turn the filetype into a set of targets
-- support a new section
-  - modify the Layout to be able to parse the new data type
-  - modify the evalTarget function to apply the needed changes (most likely, you want to generate some extra information)
+You want to modify how a given article is rendered using an existing Article layout:
+- a) modify `=base:build-info.json` section
+
+You want to modify the structure of the generated HTML (or create an Article Layout):
+  - a) the `siteTargets` function
+
+You want to generate addition `.json` magic file (or similar):
+  - a) the `siteTargets` function
+
+You want to modify the structure of the rendered HTML:
+  - a) the `siteTargets` function
+
+You want to support a new section:
+  - a) modify the Layout to be able to parse the new data type
+  - b) modify the `evalTarget` function to apply the needed changes (most likely, you want to generate some extra information)
+
+You want to support a new filetype:
+  - a) contact me
+  - b) modify the Site loader
+  - c) modify the Layout function with whatever you need to turn the filetype into a set of targets
+
+Other changes:
+  - a) contact me
