@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Upcoming"
+,"publicationStatus":"Published"
 }
 
 =base:preamble.json
@@ -10,7 +10,7 @@
 }
 
 =base:topic.json
-{"topics":["wip", "sections"]
+{"topics":["sections"]
 ,"keywords":["static-site generators", "design"]
 }
 
@@ -38,46 +38,106 @@ pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
 
 =base:summary.cmark
 
-Documenting the special features of Dhall-sections.
+Documenting the special feature of Dhall-sections.
 
 =base:main-content.cmark
 
-__present__
-- mechanism: find `.dhall` extensions and evaluate the dhall expression to substitute the content
-- evaluation time: for now a site-loading time
-- starting context: empty
-- substitution: a `kitchensink object`
+The [Dhall](https://dhall-lang.org/) support in KitchenSink provides a template
+engine unlike many static-site generators. In typical static-site generators,
+the template language serves two purposes: dictating the structure of the HTML
+files, and generating repetitive content of HTML files like for data tables. In
+KitchenSink, [Layouts](/layouts.html) dictate the HTML structure and are hard
+to change. Dhall provides a pre-processor to apply some template on repetititve
+contents to render [Sections](/sections.html).
 
-__future work__
-- carry-over more context from previous sections
-- move evaluation a bit more lazily
-- some non-load-time evaluation (e.g., in layouts to generate new targets -- but needs IO for this)
+# Dhall as a pre-processor
 
-## The `kitchensink` object
+Why Dhall rather than other languages? The short answer is that Dhall hits a
+sweet spot for pre-processing sections in static-blog generators. Dhall is at a
+same time: deterministic, easy to embed in Kitchen-Sink, and expressive.  Let's
+develop these points.
 
-Evaluated Dhall expressions carry information provided by
-KitchenSink. This information is bound to the `kitchensink`
-Dhall value and has the following structure:
+First, Dhall is a deterministic language. A major benefit here is that Dhall is
+simple on a conceptual level: you can substitute a Dhall expression with its
+result and it will work as expected. Further, being deterministic, Dhall
+disallows user-defined side-effects. Albeit a constraint for people writing
+Dhall code, such determinism comes handy to write a pre-processor: a
+pre-processor turns `Sections` into `Sections`, since the pre-processor does
+not do more, for instance, by having no extra side-effects to track. We do not
+freeze KitchenSink development into a bad-architecture as the `Section ->
+Section` function can be moved without surprises.
 
-```dhall
-{ file : Text -- contains the source file for the cmark
-, sectionNum : Integer -- contains the section number of this file (starting from zero)
-}
-```
+Second, Dhall is embeddable in Haskell, the programming language in which
+KitchenSink is written. The immediate benefit is that no external setup is
+required: KitchenSink embeds the same Dhall interpreter as the official Dhall
+binary and that's it. Compare this simplicity (no setup required) to generator
+sections, whose result vary depending on which tools are available on each
+setups.
+
+Third, Dhall is expressive enough to have libraries of functions that you
+import over the network or on the file-system. Such imports open the door to
+avoiding redundant code (e.g., to re-use the same `base:social` content in
+every article). Networked imports open the door to community-based sharing.
+
+Summarizing, the choice of Dhall is not that surprising after analyzis. Dhall
+fits the problem of pre-processing article sections pretty well, without
+costing much to implement and without freezing the design of KitchenSink
+engine.
+
+
+# Examples
+
+Let's now give some examples.
 
 =base:main-content.cmark
 
-# Rendering a section in CommonMark
+## Rendering a section in CommonMark
 
-__example__
+__example 1__
 
-    =base:main-content.dhall
+    =base:main-content.dhalL
     
     { contents = ["__generated from dhall__", "\n", kitchensink.file ], format = "cmark" }
 
+__example 2__
+
+    =base:main-content.dhall
+        
+    { contents = [
+        "::: output"
+      , "\n"
+      , "__this code block is defined in some Dhall__"
+      , "\n"
+      , "file=", kitchensink.file
+      , "\n", "section="
+      , Integer/show kitchensink.sectionNum
+      , "\n"
+      , ":::"
+      ]
+    , format = "cmark"
+    }
+
+rendered in HTML (via CommonMark)
+
+=base:main-content.dhall
+    
+{ contents = [
+    "::: output"
+  , "\n"
+  , "__this code block is defined in some Dhall__"
+  , "\n"
+  , "file=", kitchensink.file
+  , "\n", "section="
+  , Integer/show kitchensink.sectionNum
+  , "\n"
+  , ":::"
+  ]
+, format = "cmark"
+}
+
 =base:main-content.cmark
 
-# Rendering a section in HTML
+## Rendering a section in HTML
 
 You can return HTML directly-formatted.
 
@@ -90,7 +150,7 @@ __example__
 
 =base:main-content.cmark
 
-# a generated-generator command
+## Rendering JSON-sections
 
 Dhall can substitute itself to JSON objects as well.
 Jut replace a `.json` with `.dhall` and KitchenSink will interpret a Dhall expression to fill-in the JSON.
@@ -113,7 +173,12 @@ __example 1__
     , format = "json"
     }
 
+=base:main-content.cmark
+
 __example 2__
+
+This section is handy to show the content in this file. Note that I use
+`kitchensink.file` to get the path name.
 
     =generator:cmd.dhall
     let
@@ -126,12 +191,7 @@ __example 2__
     , format = "json"
     }
 
-__example 3__
-
-    =base:social.dhall
-    { contents = ./social.dhall
-    , format = "json"
-    }
+[once the generated section is evaluated](http://localhost:7654/gen/out/sections-dhall.cmark__cat-this-file)
 
 =generator:cmd.dhall
 let
@@ -144,19 +204,70 @@ in
 , format = "json"
 }
 
-=base:main-content.dhall
-    
-{ contents = [
-    "::: output"
-  , "\n"
-  , "__generated from dhall__"
-  , "\n"
-  , "file=", kitchensink.file
-  , "\n", "section="
-  , Integer/show kitchensink.sectionNum
-  , "\n"
-  , ":::"
-  ]
-, format = "cmark"
+
+=base:main-content.cmark
+
+__example 3__
+
+You could write the content in `./social.dhall` once and import the content.
+
+    =base:social.dhall
+    { contents = ./social.dhall
+    , format = "json"
+    }
+
+
+=base:main-content.cmark
+
+__example 4__
+
+You can also generate JSON datasets if for some reason writing them in JSON is
+not immediate enough .
+
+    =base:dataset.dhall
+    { contents =
+        [ {name = "Alice", posts = 22.0}
+        , {name = "Bob", posts = 7.0}
+        ]
+    , format = "json"
+    }
+
+[rendered](/raw/data/sections-dhall.cmark__1.json)
+
+=base:dataset.dhall
+{ contents =
+    [ {name = "Alice", posts = 22.0}
+    , {name = "Bob", posts = 7.0}
+    ]
+, format = "json"
 }
+
+=base:main-content.cmark
+
+# Implementation notes
+
+The following notes are more useful for myself and for people curious about modifying or contributing to KitchenSink.
+
+## present
+
+### The evaluation chain
+
+Today SiteLoader locates all `.dhall` sections after loading the Article objects (i.e., mapping Article Sections to Article Sections).
+
+### The `kitchensink` object
+
+Evaluated Dhall expressions carry information provided by
+KitchenSink. This information is bound to the `kitchensink`
+Dhall value and has the following structure:
+
+```dhall
+{ file : Text -- contains the source file path for the cmark
+, sectionNum : Integer -- contains the section number of this file (starting from zero)
+}
+```
+
+## future work
+
+- carry-over more context from previous sections
+- allow appending new sections (i.e., preprocess articles over sections)?
 
