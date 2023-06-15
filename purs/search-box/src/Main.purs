@@ -149,4 +149,5 @@ showTargetType = case _ of
   TopicsIndexTarget -> "An index."
   GlossaryTarget -> "The glossary."
   DocumentTarget -> "Some document file"
+  HashTagsIndexTarget -> "Hashtags index."
 

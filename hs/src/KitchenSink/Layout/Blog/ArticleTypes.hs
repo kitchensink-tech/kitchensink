@@ -19,6 +19,7 @@ data ArticleLayout
  | ArchivedArticle
  | IndexPage
  | TopicListingTemplate
+ | HashTagListingTemplate
  | GlossaryPage
  | SinglePageApp
  | ImageGallery
@@ -39,6 +40,7 @@ effectiveLayout :: PublicationStatus -> Text -> ArticleLayout
 effectiveLayout Public "article" = PublishedArticle
 effectiveLayout Public "index" = IndexPage
 effectiveLayout Public "topics" = TopicListingTemplate
+effectiveLayout Public "hashtags" = HashTagListingTemplate
 effectiveLayout Public "glossary" = GlossaryPage
 effectiveLayout Public "application" = SinglePageApp
 effectiveLayout Public "gallery" = ImageGallery

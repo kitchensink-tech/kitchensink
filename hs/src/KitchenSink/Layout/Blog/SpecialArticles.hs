@@ -18,11 +18,13 @@ import KitchenSink.Core.Build.Target (Sourced(..), SourceLocation(..))
 data SpecialArticle
   = Topics
   | Glossary
+  | HashTagListings
 
 articleName :: SpecialArticle -> Text
 articleName a = case a of
   Topics -> "topics.cmark"
   Glossary -> "glossary.cmark"
+  HashTagListings -> "hashtags.cmark"
 
 lookupSpecialArticleSource :: SpecialArticle -> Site -> Maybe (Sourced (Article [Text]))
 lookupSpecialArticleSource a site = List.find f (articles site)

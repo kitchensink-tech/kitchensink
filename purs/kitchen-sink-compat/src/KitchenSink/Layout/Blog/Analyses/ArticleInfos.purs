@@ -35,6 +35,23 @@ _LinkInfo :: Iso' LinkInfo { linkURL :: String, linkText :: String}
 _LinkInfo = _Newtype
 
 --------------------------------------------------------------------------------
+newtype HashTagInfo =
+    HashTagInfo {
+      hashtagValue :: String
+    }
+
+instance encodeJsonHashTagInfo :: EncodeJson HashTagInfo where
+  encodeJson = genericEncodeAeson Argonaut.defaultOptions
+instance decodeJsonHashTagInfo :: DecodeJson HashTagInfo where
+  decodeJson = genericDecodeAeson Argonaut.defaultOptions
+derive instance genericHashTagInfo :: Generic HashTagInfo _
+derive instance newtypeHashTagInfo :: Newtype HashTagInfo _
+
+--------------------------------------------------------------------------------
+_HashTagInfo :: Iso' HashTagInfo { hashtagValue :: String}
+_HashTagInfo = _Newtype
+
+--------------------------------------------------------------------------------
 newtype ImageInfo =
     ImageInfo {
       imageURL :: String

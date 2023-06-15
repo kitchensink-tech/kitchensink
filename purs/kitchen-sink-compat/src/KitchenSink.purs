@@ -11,7 +11,7 @@ import Effect.Aff (Aff)
 import Affjax.Web as Web
 import Affjax.ResponseFormat (json)
 
-import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph)
+import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph)
 import KitchenSink.Layout.Blog.Summary (PathList)
 
 topicsGraphPath :: String

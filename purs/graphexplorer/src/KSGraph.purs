@@ -27,8 +27,8 @@ import Data.Lens (view, toArrayOf, traversed, to, filtered)
 import Data.Lens.Fold (anyOf)
 import Data.Number as Number
 
-import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph, _TopicGraph)
-import KitchenSink.Layout.Blog.Analyses.Advanced as KS
+import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph, _TopicGraph)
+import KitchenSink.Layout.Blog.Analyses.SiteGraph as KS
 
 import Halogen.ECharts as ECharts
 
@@ -62,6 +62,7 @@ decodeEdge value = do
 data Category
   = Articles
   | Topics
+  | HashTags
   | Images
   | ExternalSites
 
@@ -69,8 +70,9 @@ readCategory :: Int -> Except (NonEmptyList ForeignError) Category
 readCategory = case _ of
   0 -> pure Articles
   1 -> pure Topics
-  2 -> pure Images
-  3 -> pure ExternalSites
+  3 -> pure HashTags
+  3 -> pure Images
+  4 -> pure ExternalSites
   _ -> throwError $ singleton (ForeignError "Unsupported category")
 
 type NodeId = String
@@ -134,6 +136,9 @@ chartOptions graph focusedNode =
     topicSize :: String -> Number
     topicSize _ = 10.0
 
+    hashtagSize :: String -> Number
+    hashtagSize _ = 8.0
+
     imageSize :: String -> Number
     imageSize _ = 5.0
 
@@ -155,24 +160,37 @@ chartOptions graph focusedNode =
         , symbol: "diamond"
         , symbolSize: selectionSize key $ topicSize key
         }
-      KS.ImageNode url ->
+      KS.HashTagNode url n ->
         { id: key
         , name: url
         , category: 2
+        , symbol: "rect"
+        , symbolSize: selectionSize key $ hashtagSize key
+        }
+      KS.ImageNode url ->
+        { id: key
+        , name: url
+        , category: 3
         , symbol: imageSymbol url key
         , symbolSize: selectionSize key $ imageSize key
         }
       KS.ExternalKitchenSinkSiteNode url ->
         { id: key
         , name: url
-        , category: 3
+        , category: 4
         , symbol: "triangle"
         , symbolSize: externalSiteSize key
         }
 
     echartEdge (Tuple source target) = {source, target}
 
-    categories = [{name:"articles"}, {name:"topics"}, {name:"images"}, {name:"external"}]
+    categories =
+      [ {name:"articles"}
+      , {name:"topics"}
+      , {name:"hashtags"}
+      , {name:"images"}
+      , {name:"external"}
+      ]
 
     options = {
       legend: [

@@ -12,7 +12,7 @@ import Data.Lens.Iso.Newtype (_Newtype)
 import Data.Lens.Record (prop)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
-import KitchenSink.Layout.Blog.Analyses.ArticleInfos (ImageInfo, LinkInfo, SnippetInfo)
+import KitchenSink.Layout.Blog.Analyses.ArticleInfos (HashTagInfo, ImageInfo, LinkInfo, SnippetInfo)
 import KitchenSink.Layout.Blog.Analyses.SkyLine (SkyLine)
 import Prim (Array)
 import Type.Proxy (Proxy(Proxy))
@@ -23,6 +23,7 @@ newtype ArticleInfos =
     ArticleInfos {
       linkInfos :: Array LinkInfo
     , imageInfos :: Array ImageInfo
+    , hashtagInfos :: Array HashTagInfo
     , snippetInfos :: Array SnippetInfo
     , skyline :: SkyLine
     }
@@ -35,7 +36,7 @@ derive instance genericArticleInfos :: Generic ArticleInfos _
 derive instance newtypeArticleInfos :: Newtype ArticleInfos _
 
 --------------------------------------------------------------------------------
-_ArticleInfos :: Iso' ArticleInfos { linkInfos :: Array LinkInfo, imageInfos :: Array ImageInfo, snippetInfos :: Array SnippetInfo, skyline :: SkyLine}
+_ArticleInfos :: Iso' ArticleInfos { linkInfos :: Array LinkInfo, imageInfos :: Array ImageInfo, hashtagInfos :: Array HashTagInfo, snippetInfos :: Array SnippetInfo, skyline :: SkyLine}
 _ArticleInfos = _Newtype
 
 --------------------------------------------------------------------------------

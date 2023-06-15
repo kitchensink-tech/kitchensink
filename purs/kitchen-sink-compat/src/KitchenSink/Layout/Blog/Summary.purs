@@ -91,6 +91,7 @@ data TargetType =
   | GeneratedTarget
   | TopicsIndexTarget
   | GlossaryTarget
+  | HashTagsIndexTarget
 
 instance encodeJsonTargetType :: EncodeJson TargetType where
   encodeJson = genericEncodeAeson Argonaut.defaultOptions
@@ -187,6 +188,12 @@ _GlossaryTarget :: Prism' TargetType Unit
 _GlossaryTarget = prism' (\_ -> GlossaryTarget) f
   where
     f GlossaryTarget = Just unit
+    f _ = Nothing
+
+_HashTagsIndexTarget :: Prism' TargetType Unit
+_HashTagsIndexTarget = prism' (\_ -> HashTagsIndexTarget) f
+  where
+    f HashTagsIndexTarget = Just unit
     f _ = Nothing
 
 --------------------------------------------------------------------------------

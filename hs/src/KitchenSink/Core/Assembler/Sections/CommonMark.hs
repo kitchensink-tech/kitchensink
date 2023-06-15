@@ -3,6 +3,7 @@ module KitchenSink.Core.Assembler.Sections.CommonMark
 
 import qualified Commonmark
 import qualified Commonmark.Extensions as CommonmarkE
+import qualified KitchenSink.Commonmark.HashTag as CommonmarkE
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LText
@@ -17,7 +18,13 @@ import KitchenSink.Core.Assembler.Sections.PreRendered (PreRenderedHtml(..))
 
 dumpCMark :: Section ext [Text] -> Assembler ext (Section ext (FreeCommonmark.Block ()))
 dumpCMark (Section ty Cmark lines) = do
-   let customSyntax = Commonmark.defaultSyntaxSpec
+   let customSyntax =
+           mconcat
+           [ CommonmarkE.hashtagSpec
+           , CommonmarkE.fencedDivSpec
+           , CommonmarkE.bracketedSpanSpec
+           , Commonmark.defaultSyntaxSpec
+           ]
    res <- Commonmark.commonmarkWith customSyntax "inline" (Text.unlines lines)
    case res of
      Left err -> Assembler $ Left (CommonMarkRenderingError err)
@@ -28,7 +35,8 @@ parseCMark :: Section ext [Text] -> Assembler ext (Section ext Html)
 parseCMark (Section ty Cmark lines) = do
    let customSyntax =
            mconcat
-           [ CommonmarkE.fencedDivSpec
+           [ CommonmarkE.hashtagSpec
+           , CommonmarkE.fencedDivSpec
            , CommonmarkE.bracketedSpanSpec
            , CommonmarkE.emojiSpec
            , CommonmarkE.smartPunctuationSpec

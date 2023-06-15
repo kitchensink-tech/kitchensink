@@ -94,3 +94,10 @@ div.social-links a {
   margin: 1rem;
   justify-content: space-between;
 }
+
+/*~~ hash tags ~~~~~~~~~~~~~~~*/
+
+span.hashtag {
+  color: rebeccapurple;
+}
+

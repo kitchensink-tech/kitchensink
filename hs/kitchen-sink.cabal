@@ -57,6 +57,7 @@ library
                  , KitchenSink.Core.Section.Payloads
                  , KitchenSink.Commonmark.BlogHTML
                  , KitchenSink.Commonmark.Highlighting
+                 , KitchenSink.Commonmark.HashTag
                  , KitchenSink.Commonmark.Free
                  , KitchenSink.Engine
                  , KitchenSink.Engine.Api
@@ -98,6 +99,7 @@ library
                     , megaparsec
                     , mtl
                     , optparse-generic
+                    , parsec
                     , prometheus-client
                     , blaze-markup
                     , blaze-html

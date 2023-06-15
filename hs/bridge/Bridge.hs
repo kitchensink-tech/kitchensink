@@ -8,12 +8,13 @@ module Bridge where
 import GHC.Generics (Generic)
 import Data.Aeson (ToJSON,FromJSON)
 import Data.Text (Text)
-import KitchenSink.Layout.Blog.Analyses (Node, TopicGraph, LinkInfo, ImageInfo, SnippetInfo)
+import KitchenSink.Layout.Blog.Analyses (Node, TopicGraph, LinkInfo, ImageInfo, SnippetInfo, HashTagInfo)
 import KitchenSink.Layout.Blog.Analyses.SkyLine (SkyLine, SkyLineItem)
 
 data ArticleInfos = ArticleInfos {
     linkInfos :: [LinkInfo]
   , imageInfos :: [ImageInfo]
+  , hashtagInfos :: [HashTagInfo]
   , snippetInfos :: [SnippetInfo]
   , skyline :: SkyLine
   } deriving (Show, Generic)

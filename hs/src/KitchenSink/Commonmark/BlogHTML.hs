@@ -6,7 +6,9 @@ module KitchenSink.Commonmark.BlogHTML where
 
 import qualified Commonmark
 import Commonmark.Extensions (HasDiv, HasSpan, HasEmoji, HasQuoted)
-import Commonmark (HasAttributes, IsInline, IsBlock(..), Rangeable, ToPlainText)
+import KitchenSink.Commonmark.HashTag (HasHashTag(..))
+import Commonmark (HasAttributes, IsInline, IsBlock(..), Rangeable, ToPlainText, addAttribute, htmlInline)
+import Data.Text (Text)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import qualified Data.Text.Lazy as TL
@@ -26,6 +28,13 @@ newtype Html = Html (Commonmark.Html ())
   deriving HasEmoji via (Commonmark.Html ())
   deriving HasQuoted via (Commonmark.Html ())
   deriving ToPlainText via (Commonmark.Html ())
+
+hashtagDestinationUrl :: Text -> Text
+hashtagDestinationUrl txt = "/hashtags/" <> txt <> ".html"
+
+instance HasHashTag Html where
+  hashtag a = Html $ addAttribute ("href", hashtagDestinationUrl a) $
+    htmlInline "a" $ Just $ hashtag a
 
 instance IsBlock Html Html  where
   paragraph (Html a) = Html (paragraph a)

@@ -318,6 +318,13 @@ Overall I found that skylighting does the job and since the library requires no
 extra JavaScript on the resulting website or external-dependencies at
 code-generation time: it's good.
 
+#### HashTags
+
+This extension is custom-made (until we upstream it). KitchenSinks discovers
+#hash-tags in artcicles. Such a feature enables you to turn your blog into some
+#note-taking apps. HashTags acts like Topics in the sense that they allow you
+to list all items on a special, per-HashTag page.
+
 ### copies other images, css
 
 An article often comes with extra medias. Images (with `jpeg`, `png`
@@ -426,7 +433,7 @@ Article can be labelled with a set of topics. Kitchen-Sink then collects all
 articles for a given topic under special categories and under the `/topics`
 route. This is not especially innovative but I believe it's a must have even if
 I suppose most readers do not really use these topics listing a lot, they are
-used to connect articles in the [site map](#sitemap graph).
+used to connect articles in the [site map](#sitemap) graph.
 
 Furthermore _topics double as series_ that is, a "previous/next" link show up
 on the article header. To follow the previous-next article within a topic.

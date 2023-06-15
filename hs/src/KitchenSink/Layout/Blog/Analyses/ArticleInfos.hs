@@ -3,8 +3,9 @@
 module KitchenSink.Layout.Blog.Analyses.ArticleInfos
   ( analyzeArticle
   , ArticleInfos(..)
-  , LinkInfo(..)
+  , HashTagInfo(..)
   , ImageInfo(..)
+  , LinkInfo(..)
   , SnippetInfo(..)
   ) where
 
@@ -27,6 +28,7 @@ data ArticleInfos = ArticleInfos {
   , linkInfos :: [LinkInfo]
   , imageInfos :: [ImageInfo]
   , snippetInfos :: [SnippetInfo]
+  , hashtagInfos :: [HashTagInfo]
   , skyline :: SkyLine
   } deriving (Show, Generic)
 instance ToJSON ArticleInfos
@@ -46,6 +48,11 @@ data ImageInfo = ImageInfo { imageURL :: Text, imageText :: Text }
 instance ToJSON ImageInfo
 instance FromJSON ImageInfo
 
+data HashTagInfo = HashTagInfo { hashtagValue :: Text }
+  deriving (Show, Generic, Eq, Ord)
+instance ToJSON HashTagInfo
+instance FromJSON HashTagInfo
+
 articleCMarks :: Article [Text] -> [CMark.Block ()]
 articleCMarks art =
   case runAssembler (getSections art MainContent >>= traverse dumpCMark . List.filter isCmark) of
@@ -64,6 +71,7 @@ analyzeArticle art =
         (mconcat [findLinksInSection x | x <- xs])
         (mconcat [findImagesInSection x | x <- xs])
         (mconcat [findSnippetsInSection x | x <- xs])
+        (List.nub $ mconcat [findHashTagsInSection x | x <- xs])
         (mconcat [sectionSkyLine x | x <- xs])
 
 findLinksInSection :: (CMark.Block a) -> [LinkInfo]
@@ -79,6 +87,13 @@ findSnippetsInSection s = do
   b <- blockUniverse (s)
   CodeBlock typ_ raw <- blockChunks b
   pure $ SnippetInfo typ_ raw
+
+findHashTagsInSection :: (CMark.Block a) -> [HashTagInfo]
+findHashTagsInSection s = do
+  -- list monad!
+  il <- blockInlines (s)
+  HashTag txt <- inlineChunks il
+  pure $ HashTagInfo txt
 
 findImagesInSection :: (CMark.Block a) -> [ImageInfo]
 findImagesInSection s = do

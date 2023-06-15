@@ -38,6 +38,7 @@ _TopicGraph = _Newtype
 --------------------------------------------------------------------------------
 data Node =
     TopicNode String Int
+  | HashTagNode String Int
   | ArticleNode String Int
   | ImageNode String
   | ExternalKitchenSinkSiteNode String
@@ -53,6 +54,12 @@ _TopicNode :: Prism' Node { a :: String, b :: Int }
 _TopicNode = prism' (\{ a, b } -> TopicNode a b) f
   where
     f (TopicNode a b) = Just $ { a: a, b: b }
+    f _ = Nothing
+
+_HashTagNode :: Prism' Node { a :: String, b :: Int }
+_HashTagNode = prism' (\{ a, b } -> HashTagNode a b) f
+  where
+    f (HashTagNode a b) = Just $ { a: a, b: b }
     f _ = Nothing
 
 _ArticleNode :: Prism' Node { a :: String, b :: Int }

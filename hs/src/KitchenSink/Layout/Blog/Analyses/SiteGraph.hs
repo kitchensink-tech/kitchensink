@@ -29,6 +29,7 @@ type URL = Text
 
 data Node
   = TopicNode URL Int
+  | HashTagNode URL Int
   | ArticleNode URL Int
   | ImageNode URL
   | ExternalKitchenSinkSiteNode URL
@@ -51,11 +52,12 @@ data ExternalSitesInfo = ExternalSitesInfo {
 topicsgraph :: ExternalSitesInfo -> TopicStats -> TopicGraph
 topicsgraph external stats =
     TopicGraph
-      (topicNodes <> articleNodes <> imagesNodes <> externalKSSitesNodes)
-      (topicArticleEdges <> articleArticleEdges <> articleImageEdges <> articleExternalSiteEdges)
+      (topicNodes <> hashtagNodes <> articleNodes <> imagesNodes <> externalKSSitesNodes)
+      (topicArticleEdges <> hashtagArticleEdges <> articleArticleEdges <> articleImageEdges <> articleExternalSiteEdges)
   where
-    topicNodes,articleNodes,externalKSSitesNodes :: [(NodeKey, Node)]
+    topicNodes,hashtagNodes,articleNodes,externalKSSitesNodes :: [(NodeKey, Node)]
     topicNodes = [ (topicKey t, TopicNode (destinationUrl $ destTopic "" t) (length xs)) | (t,xs) <- Map.toList (byTopic stats) ]
+    hashtagNodes = [ let t = hashtagValue tag in (hashtagKey tag, HashTagNode (destinationUrl $ destHashTag "" t) (length xs)) | (tag,xs) <- Map.toList (byHashTag stats) ]
     articleNodes = [ (articleKey t, ArticleNode (targetUrl t) histsize) | (t,histsize) <- uniqueTargetArticles ]
     imagesNodes = [ (imageKey url, ImageNode url) | url <- uniqueImages ]
     externalKSSitesNodes = [ (externalSiteKey url, ExternalKitchenSinkSiteNode url) | url <- externalKitchenSinks external]
@@ -65,6 +67,12 @@ topicsgraph external stats =
         mconcat
         $ fmap (\(topic, xs) -> [ (topicKey topic, articleKey tgt) | (tgt,_) <- xs])
         $ Map.toList (byTopic stats)
+
+    hashtagArticleEdges :: [(NodeKey, NodeKey)]
+    hashtagArticleEdges =
+        mconcat
+        $ fmap (\(tag, xs) -> [ (hashtagKey tag, articleKey tgt) | (tgt,_) <- xs])
+        $ Map.toList (byHashTag stats)
 
     allLinks :: [(Target (), LinkInfo)]
     allLinks = do
@@ -94,6 +102,7 @@ topicsgraph external stats =
       img <- imageInfos $ infos
       pure (articleKey from, imageKey $ imageURL img)
 
+    hashtagKey t = "#" <> hashtagValue t
     topicKey t = "topic:" <> t
     articleKey t = "article:" <> targetUrl t
     imageKey t = "image:" <> t

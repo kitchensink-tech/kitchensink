@@ -9,10 +9,13 @@ import Data.Function (($),(.))
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid (Monoid(..))
 import Commonmark.Types
+import Commonmark.Extensions (HasDiv(..), HasSpan(..))
 import Data.Int (Int)
 import Data.Text (Text)
 import Data.Char (Char)
 import Text.Show (Show)
+
+import KitchenSink.Commonmark.HashTag (HasHashTag(..))
 
 -- INLINES
 
@@ -27,7 +30,9 @@ data InlineChunk a
   | Link Text Text (Inline a)
   | Image Text Text (Inline a)
   | Code Text
+  | HashTag Text
   | RawInline Format Text
+  | SpanInline (Inline a)
   deriving (Show, Generic)
 instance ToJSON a => ToJSON (InlineChunk a)
 
@@ -73,6 +78,12 @@ instance Monoid (Inline ()) where
 instance HasAttributes (Inline ()) where
   addAttributes xs (Inline c ys _) = Inline c (xs <> ys) ()
 
+instance HasHashTag (Inline ()) where
+  hashtag t = Inline [HashTag t] mempty ()
+
+instance HasSpan (Inline ()) where
+  spanWith attrs il = Inline [SpanInline il] attrs ()
+
 instance Rangeable (Inline ()) where
   ranged _ a = a
 
@@ -101,6 +112,7 @@ data BlockChunk a
   | RawBlock Format Text
   | ReferenceLinkDefinition Text (Text, Text)
   | List ListType ListSpacing [Block a]
+  | NestedDivBlock (Block a)
   deriving (Show, Generic)
 instance ToJSON a => ToJSON (BlockChunk a)
 
@@ -121,6 +133,9 @@ data Block a = Block
   }
   deriving (Show, Generic)
 instance ToJSON a => ToJSON (Block a)
+
+instance HasDiv (Block ()) where
+  div_ bl = Block [NestedDivBlock bl] mempty ()
 
 instance ToJSON EnumeratorType where
   toJSON Decimal = toJSON ("Decimal" :: Text)

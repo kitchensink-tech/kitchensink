@@ -27,8 +27,8 @@ import Web.HTML.Window (Window, open)
 import Halogen.ECharts as ECharts
 import KSGraph as KSGraph
 import KitchenSink (fetchGraph)
-import KitchenSink.Layout.Blog.Analyses.Advanced (TopicGraph, _TopicGraph)
-import KitchenSink.Layout.Blog.Analyses.Advanced as KS
+import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph, _TopicGraph)
+import KitchenSink.Layout.Blog.Analyses.SiteGraph as KS
 
 type BaseUrl = String
 
@@ -125,6 +125,7 @@ url node graph =
     f (Tuple key n) = case n of
       KS.ArticleNode url _ -> Just url
       KS.TopicNode url _ -> Just url
+      KS.HashTagNode url _ -> Just url
       KS.ImageNode url -> Just url
       KS.ExternalKitchenSinkSiteNode url -> Just url
   in preview (_TopicGraph <<< to _.nodes <<< folded <<< filtered match <<< to f <<< _Just) graph
