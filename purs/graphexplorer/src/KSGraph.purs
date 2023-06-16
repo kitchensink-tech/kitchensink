@@ -70,7 +70,7 @@ readCategory :: Int -> Except (NonEmptyList ForeignError) Category
 readCategory = case _ of
   0 -> pure Articles
   1 -> pure Topics
-  3 -> pure HashTags
+  2 -> pure HashTags
   3 -> pure Images
   4 -> pure ExternalSites
   _ -> throwError $ singleton (ForeignError "Unsupported category")
