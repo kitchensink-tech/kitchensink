@@ -20,6 +20,9 @@ topicAtomName t = Text.unpack (Text.replace " " "-" t) <> ".atom"
 hashtagFileName :: TopicName -> FilePath
 hashtagFileName t = Text.unpack t <> ".html"
 
+hashtagAtomName :: TopicName -> FilePath
+hashtagAtomName t = Text.unpack t <> ".atom"
+
 data GenFileExtension
   = GenPngFile
 
@@ -42,6 +45,11 @@ destHashTag :: OutputPrefix -> HashTagName -> DestinationLocation
 destHashTag prefix tag = VirtualFileDestination
     (Text.pack $ "/hashtags/" <> hashtagFileName tag)
     (prefix </> "hashtags" </> hashtagFileName tag)
+
+destHashTagAtom :: OutputPrefix -> HashTagName -> DestinationLocation
+destHashTagAtom prefix tag = VirtualFileDestination
+    (Text.pack $ "/hashtags/" <> hashtagAtomName tag)
+    (prefix </> "hashtags" </> hashtagAtomName tag)
 
 destGenImage :: OutputPrefix -> SourceLocation -> GenFileExtension -> DestinationLocation
 destGenImage prefix (FileSource path) ext =

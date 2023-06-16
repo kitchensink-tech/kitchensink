@@ -116,6 +116,7 @@ siteTargets prefix extra site = allTargets
       , topicIndexesTargets (lookupSpecialArticle SpecialArticles.Topics site)
       , topicAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
       , hashtagIndexesTargets (lookupSpecialArticle SpecialArticles.HashTagListings site)
+      , hashtagAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
       , glossaryTargets (lookupSpecialArticleSource SpecialArticles.Glossary site)
       , jsonDataTargets
       , seoTargets
@@ -258,6 +259,14 @@ siteTargets prefix extra site = allTargets
       | (tag, articles) <- Map.toList (byHashTag stats)
       ]
 
+    hashtagAtomTargets :: Maybe (Article [Text]) -> [ Target ]
+    hashtagAtomTargets Nothing = []
+    hashtagAtomTargets (Just _) =
+      [ let u = destHashTagAtom prefix (hashtagValue tag)
+            rule = Core.ProduceAssembler $ pure $ LText.fromStrict $ atomFeedContent articles
+        in simpleTarget HashTagsIndexTarget u rule
+      | (tag, articles) <- Map.toList (byHashTag stats)
+      ]
 
     glossaryTargets :: Maybe (Sourced (Article [Text])) -> [ Target ]
     glossaryTargets Nothing = []
@@ -420,7 +429,7 @@ siteTargets prefix extra site = allTargets
 
     topicsLayout :: TopicName -> [ (Ext.Target a, Article [Text]) ] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     topicsLayout topic articles dloc jsondloc =
-      let atomDLoc = destTopic prefix topic in
+      let atomDLoc = destTopicAtom prefix topic in
       htmldoc
         $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc atomDLoc) assembleStyle
                   , htmlbody 
@@ -440,9 +449,9 @@ siteTargets prefix extra site = allTargets
 
     hashtagsLayout :: HashTagInfo -> [ (Ext.Target a, Article [Text]) ] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
     hashtagsLayout tag articles dloc jsondloc =
-      -- TODO: atom-per-hashtag
+      let atomDLoc = destHashTagAtom prefix (hashtagValue tag) in
       htmldoc
-        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+        $ mconcat [ htmlhead (MetaHeaders extra dloc jsondloc atomDLoc) assembleStyle
                   , htmlbody 
                     $ mconcat
                       [ wrap (nav_ [ id_ "site-navigation", class_ "nav"])
