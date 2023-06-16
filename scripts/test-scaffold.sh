@@ -2,8 +2,8 @@
 
 set -x
 
-rm -v -f "./scaffold-test-src"
-rm -v -f "./scaffold-test-out"
+rm -v -rf "./scaffold-test-src"
+rm -v -rf "./scaffold-test-out"
 
 mkdir "./scaffold-test-src"
 mkdir "./scaffold-test-out"
@@ -15,4 +15,4 @@ kitchen-sink serve \
   --servMode "DEV" \
   --srcDir "./scaffold-test-src" \
   --outDir "./scaffold-test-out" \
-  --port 8765
+  --httpPort 8765
