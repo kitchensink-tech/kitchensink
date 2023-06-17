@@ -97,7 +97,7 @@ component =
 
   renderGraph graph focusedNode =
     HH.div_
-    [ HH.slot _ksgraph unit ECharts.component (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
+    [ HH.slot _ksgraph unit (ECharts.component ECharts.style640x480) (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
     ]
 
   handleAction = case _ of

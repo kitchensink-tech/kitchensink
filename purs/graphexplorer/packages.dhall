@@ -132,7 +132,7 @@ let upstream =
     , repo =
        "https://github.com/lucasdicioccio/purescript-halogen-echarts-simple"
     , version =
-        "v0.0.2"
+        "v0.0.4"
     }
   with kitchen-sink-compat = ../kitchen-sink-compat/spago.dhall as Location
 
