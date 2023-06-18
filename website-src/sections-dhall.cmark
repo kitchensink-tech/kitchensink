@@ -191,7 +191,7 @@ This section is handy to show the content in this file. Note that I use
     , format = "json"
     }
 
-[once the generated section is evaluated](http://localhost:7654/gen/out/sections-dhall.cmark__cat-this-file)
+[once the generated section is evaluated](/gen/out/sections-dhall.cmark__cat-this-file)
 
 =generator:cmd.dhall
 let
