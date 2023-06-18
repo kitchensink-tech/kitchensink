@@ -68,7 +68,7 @@ An example of kitchen-sink.json
   ]
 , "api": ["localhost", 3000]
 , "linkedSites":
-  [ {"baseURL": "https://lucasdicioccio.github.io/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
+  [ {"baseURL": "https://dicioccio.fr/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
   , {"baseURL": "https://en.wikipedia.org/", "siteTitle": "The English WikiPedia.", "siteType": "website"}
   ]
 }

@@ -65,7 +65,7 @@ articles.
 =base:main-content.cmark
 
 In my [first article about why I wrote my own
-blog-engine](https://lucasdicioccio.github.io/how-this-blog-works.html), I
+blog-engine](https://dicioccio.fr/how-this-blog-works.html), I
 introduce an important separation between content and structure of articles. In
 short, the _meaty content_ is what readers are interested in, whereas structure
 is what readers navigate. You need both meaty content and some structure to
@@ -358,7 +358,7 @@ __example__
 There is one difficult design point when statically-generating website is when
 we have datasets of repeated structure (e.g., an image list with title, date,
 sizes, filepath, preferred corner thickness etc.) and you want to generate some
-content on a page in a static form. I touch on this difficult use-case in a [past article on my blog](https://lucasdicioccio.github.io/dhall-section-demo.html).
+content on a page in a static form. I touch on this difficult use-case in a [past article on my blog](https://dicioccio.fr/dhall-section-demo.html).
 
 In this specific case, the section consists of a
 [Dhall](https://dhall-lang.org/) expression typed so that it returns a page

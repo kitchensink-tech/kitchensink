@@ -7,7 +7,7 @@ The main documentation is to be found on the [GitHub pages](https://kitchensink-
 
 For a list of features: refer to [the feature list](https://kitchensink-tech.github.io/features.html).
 
-For some historical context and overview: refer to a [series of article](https://lucasdicioccio.github.io/topics/web.html).
+For some historical context and overview: refer to a [series of article](https://dicioccio.fr/topics/web.html).
 
 ## directory organization
 

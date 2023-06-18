@@ -71,7 +71,7 @@ illustrate the rather uninteresting life of a static-site generator:
 # In depth
 
 Most of what I want to write here is already covered partially in my [original
-article](https://lucasdicioccio.github.io/how-this-blog-works.html#implementation)
+article](https://dicioccio.fr/how-this-blog-works.html#implementation)
 but I'll come back to this page often to build some reference of the key
 data-types and functions.
 

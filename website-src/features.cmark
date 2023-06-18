@@ -227,7 +227,7 @@ directly (e.g., with the `blog_fullbuild_time` counters in the Prometheus
 summary). Other usages would be to track how fast you add content to articles
 by collecting and storing the counters. For instance, the following picture is a screenshot of a Prometheus timeseries showing the size of the article
 while editing this paragraph (screenshot is made using [a Firefox extension I
-built](https://lucasdicioccio.github.io/prometheus-monitor.html))
+built](https://dicioccio.fr/prometheus-monitor.html))
 
 ![a timeseries graph showing the `blog_targets_sizes` prometheus counter](/images/features-001-targetsizes-timeseries.png)
 
@@ -400,7 +400,7 @@ blog (e.g. `uname -a`). However you could get creative such as
 
 Less typical usage is for "personal" features like taking a selfie on demand:
 yes, this picture happens to be my face when I generate my [personal
-blog](https://lucasdicioccio.github.io/) as I've added this section in the
+blog](https://dicioccio.fr/) as I've added this section in the
 "about-me" page -- hat tip to `fswebcam`.
 
     =generator:cmd.json
@@ -413,7 +413,7 @@ blog](https://lucasdicioccio.github.io/) as I've added this section in the
 
 ### microscriptable in Dhall
 
-I have written a [full article](https://lucasdicioccio.github.io/dhall-section-demo.html) on my personal blog a while ago to motivate the whole usage of [Dhall](https://dhall-lang.org/). Keep in mind that I'm still happy about the choice. Dhall "powers" my photo galleries and my [stream of notes](https://lucasdicioccio.github.io/notes.html) on my personal blog.
+I have written a [full article](https://dicioccio.fr/dhall-section-demo.html) on my personal blog a while ago to motivate the whole usage of [Dhall](https://dhall-lang.org/). Keep in mind that I'm still happy about the choice. Dhall "powers" my photo galleries and my [stream of notes](https://lucasdicioccio.github.io/notes.html) on my personal blog.
 
 
 
