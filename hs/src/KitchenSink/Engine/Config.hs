@@ -19,13 +19,23 @@ instance ToJSON Command
 
 type HostName = Text
 type PortNum = Int
+type Prefix = Text
+
+data ApiProxyConfig
+  = NoProxying
+  | SlashApiProxy HostName PortNum
+  | SlashApiProxyList [(Prefix, HostName, PortNum)]
+  deriving (Generic, Show)
+instance FromJSON ApiProxyConfig
+instance ToJSON ApiProxyConfig
 
 data Config = Config {
     publishScript :: Maybe FilePath
   , commands :: [Command]
-  , api :: Maybe (HostName, PortNum)
+  , api :: ApiProxyConfig
   } deriving (Generic, Show)
 instance FromJSON Config
+instance ToJSON Config
 
 loadJSONFile :: FromJSON a => FilePath -> IO (Maybe a)
 loadJSONFile path =

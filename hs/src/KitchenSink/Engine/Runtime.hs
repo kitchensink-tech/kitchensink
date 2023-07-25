@@ -11,10 +11,13 @@ import Control.Monad (forever,when)
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TVar
 import Control.Concurrent.STM.TMVar
+import qualified Data.ByteString as ByteString
+import qualified Data.List as List
 import qualified Data.Text.Encoding as Text
 import GHC.Enum (succ)
 import GHC.Float (int2Double)
 import Network.HTTP.Client as HTTP (Manager, newManager, defaultManagerSettings)
+import qualified Network.Wai as Wai
 import Prod.Tracer
 import Prod.Background as Background
 import qualified Prod.Proxy as ProdProxy
@@ -63,7 +66,7 @@ initDevServerRuntime cfg engine path devtracer = do
   _ <- FSNotify.watchDir notify path shouldNotify (handleFSEvent fsTVar)
   _ <- forkIO (loadDebouncedFsEvents rtCounters fsTVar siteTMVar)
 
-  proxyRuntime <- traverse initProxyBackend (api cfg)
+  proxyRuntime <- initProxyBackend (api cfg)
 
   Runtime
     <$> pure (waitChanges watches)
@@ -74,9 +77,16 @@ initDevServerRuntime cfg engine path devtracer = do
     <*> newManager defaultManagerSettings
     <*> pure proxyRuntime
   where
-    initProxyBackend :: (HostName, PortNum) -> IO ProdProxy.Runtime
-    initProxyBackend (host,port) =
+    initProxyBackend :: ApiProxyConfig -> IO (Maybe ProdProxy.Runtime)
+    initProxyBackend NoProxying = pure Nothing
+    initProxyBackend (SlashApiProxy host port) = Just <$>
         ProdProxy.initRuntime (ProdProxy.StaticBackend (Text.encodeUtf8 host) port)
+    initProxyBackend (SlashApiProxyList []) = pure Nothing
+    initProxyBackend (SlashApiProxyList triplets) = do
+        let adapt (_,h,p) = (Text.encodeUtf8 h,p)
+        let hasreqprefix req (p,_,_) = Text.encodeUtf8 p `ByteString.isPrefixOf` Wai.rawPathInfo req
+        let flookup req = pure $ fmap adapt $ List.find (hasreqprefix req) triplets
+        Just <$> ProdProxy.initRuntime (ProdProxy.DynamicBackend flookup)
 
     load :: Counters -> IO (Site ext)
     load cntrs = do

@@ -51,7 +51,12 @@ As the time of writing this article, `kitchen-sink.json` supports the following 
   - a  `handle` that must be unique across command and gives a command name, this value is used as a query-param (suggestion: a lower-kebab-case word)
   - a  `exe` as a path to a script that is executable from the webserver
 - `publishScript` (deprecated, use a command instead): an historical "blessed" command. This is documented only if you ever encounter a kitchen-sink.json with this field, the support for this field will be removed in the feature.
-- `api` (optional,experimental): asks kitchen-sink, __when run in DEV mode__, to proxy `/api`-prefixed requests to an `[host,port]` destination
+- `api` (required,experimental): asks kitchen-sink, __when run in DEV mode__, to proxy `/api`-prefixed requests to an `[host,port]` destination
+  - the proper type is an Aeson-encoded Haskell datatype (i.e., using a level of JSON-object containing `tag` and `contents` keys)
+  - values can either be
+    - `{"tag": "NoProxying"}`
+    - `{"tag": "SlashApiProxy", "contents": ["localhost",3000]}`
+    - `{"tag": "SlashApiProxyList", "contents": [["/api/appli-1","localhost",3001], ["/api/appli-2","localhost",3002]]}`
 - `linkedSites` (optional, experimental): a series of json objects containing a listing of the external sites you consider especially important (and they show up on the site-graph for instance):
   - a `baseUrl` string
   - a `siteTitle` string
@@ -66,7 +71,7 @@ An example of kitchen-sink.json
 , "commands":
   [ {"display": "publish to github", "handle": "publish", "exe": "./scripts/publish.sh" }
   ]
-, "api": ["localhost", 3000]
+, "api": {"tag": "SlashApiProxy", "contents": ["localhost", 3000] }
 , "linkedSites":
   [ {"baseURL": "https://dicioccio.fr/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
   , {"baseURL": "https://en.wikipedia.org/", "siteTitle": "The English WikiPedia.", "siteType": "website"}
