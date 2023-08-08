@@ -41,6 +41,8 @@ publishing the HTML, the URL of published URLs.
 Rather than polluting all articles with this concern, we do it once for all
 articles. Enters the `kitchen-sink.json` configuration file.
 
+# contents of kitchen-sink.json
+
 As the time of writing this article, `kitchen-sink.json` supports the following keys:
 
 - `title`: the title on the index page and the prefix of per-articles titles
@@ -81,3 +83,10 @@ An example of kitchen-sink.json
 
 The `publishScript` here is very simple (switches to the output dir, git-add
 and commit everything, git pushes).
+
+# specifying a special-location
+
+The normal mode for KitchenSink is to locate `kitchen-sink.json` in your site source directory.
+Thus, if your `--srcDir` parameter is `foobar`, KitchenSink will look for `foobar/kitchen-sink.json`.
+
+You can override where to locate this special file with the `--ksFile` command line argument.

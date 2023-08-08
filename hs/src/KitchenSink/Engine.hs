@@ -42,10 +42,12 @@ data Action
   = Produce
     { srcDir :: FilePath <?> "source directory" 
     , outDir :: FilePath <?> "output directory" 
+    , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
     }
   | Serve
     { srcDir :: FilePath <?> "source directory" 
     , outDir :: FilePath <?> "output directory" 
+    , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
     , servMode :: ServMode <?> "SERVE|DEV" 
     , httpPort   :: Maybe Int <?> "port-num"
     , httpsPort   :: Maybe Int <?> "port-num"
@@ -56,17 +58,25 @@ data Action
 
 instance ParseRecord Action
 
+ksPath
+  :: FilePath <?> "source directory"
+  -> Maybe FilePath <?> "kitchen-sink.json file"
+  -> FilePath
+ksPath base preferred =
+  let fallback = coerce base </> "kitchen-sink.json"
+  in fromMaybe fallback (coerce preferred)
+
 defaultMain :: IO ()
 defaultMain = do
   cmd <- getRecord "kitchen-sink"
   case cmd of
-    Produce _ _ -> mainProduce cmd
-    Serve _ _ _ _ _ _ _ -> mainServe cmd
+    Produce _ _ _ -> mainProduce cmd
+    Serve _ _ _ _ _ _ _ _ -> mainServe cmd
 
 mainProduce :: Action -> IO ()
 mainProduce cmd = do
   let srcPath = coerce $ srcDir cmd
-  let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
+  let kitchensinkFilePath = ksPath (srcDir cmd) (ksFile cmd)
   serveMetadata <- loadServeModeExtraData kitchensinkFilePath
   let prodengine = Engine
                   (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
@@ -74,7 +84,7 @@ mainProduce cmd = do
                   (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
                   (produceTarget print)
   case cmd of
-    Produce _ _ -> do
+    Produce _ _ _ -> do
       site <- execLoadSite prodengine
       meta <- execLoadMetaExtradata prodengine
       let tgts = evalTargets prodengine meta site
@@ -84,7 +94,7 @@ mainProduce cmd = do
 mainServe :: Action -> IO ()
 mainServe cmd = do
   let srcPath = coerce $ srcDir cmd
-  let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
+  let kitchensinkFilePath = ksPath (srcDir cmd) (ksFile cmd)
   serveMetadata <- loadServeModeExtraData kitchensinkFilePath
   let prodengine = Engine
                   (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
@@ -93,7 +103,7 @@ mainServe cmd = do
                   (produceTarget print)
   let devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath }
   case cmd of
-    Serve _ _ mode _ _ _ _ -> do
+    Serve _ _ _ mode _ _ _ _ -> do
       ksconfig <- loadJSONFile kitchensinkFilePath >>= maybe (error "couldn't load kitchensink.json") pure
       kswebapp <- case (coerce mode) of
         DEV   -> runDev ksconfig devengine prodengine srcPath
