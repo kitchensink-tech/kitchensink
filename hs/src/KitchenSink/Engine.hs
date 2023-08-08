@@ -59,6 +59,30 @@ instance ParseRecord Action
 defaultMain :: IO ()
 defaultMain = do
   cmd <- getRecord "kitchen-sink"
+  case cmd of
+    Produce _ _ -> mainProduce cmd
+    Serve _ _ _ _ _ _ _ -> mainServe cmd
+
+mainProduce :: Action -> IO ()
+mainProduce cmd = do
+  let srcPath = coerce $ srcDir cmd
+  let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
+  serveMetadata <- loadServeModeExtraData kitchensinkFilePath
+  let prodengine = Engine
+                  (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
+                  (pure serveMetadata)
+                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
+                  (produceTarget print)
+  case cmd of
+    Produce _ _ -> do
+      site <- execLoadSite prodengine
+      meta <- execLoadMetaExtradata prodengine
+      let tgts = evalTargets prodengine meta site
+      traverse_ (execProduceTarget prodengine) tgts
+    _ -> pure ()
+
+mainServe :: Action -> IO ()
+mainServe cmd = do
   let srcPath = coerce $ srcDir cmd
   let kitchensinkFilePath = srcPath </> "kitchen-sink.json"
   serveMetadata <- loadServeModeExtraData kitchensinkFilePath
@@ -69,11 +93,6 @@ defaultMain = do
                   (produceTarget print)
   let devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath }
   case cmd of
-    Produce _ _ -> do
-      site <- execLoadSite prodengine
-      meta <- execLoadMetaExtradata prodengine
-      let tgts = evalTargets prodengine meta site
-      traverse_ (execProduceTarget prodengine) tgts
     Serve _ _ mode _ _ _ _ -> do
       ksconfig <- loadJSONFile kitchensinkFilePath >>= maybe (error "couldn't load kitchensink.json") pure
       kswebapp <- case (coerce mode) of
@@ -82,22 +101,23 @@ defaultMain = do
 
       let webapp = RequestLogger.logStdoutDev kswebapp
       let httpWarp = Warp.run <$> coerce httpPort cmd <*> pure webapp
-      let httpsWarp = WarpTLS.runTLS <$> tlsSettings cmd <*> tlsWarpSettings cmd <*> pure webapp
+      let httpsWarp = WarpTLS.runTLS <$> tlsSettings <*> tlsWarpSettings <*> pure webapp
 
       let program = (,) <$> Concurrently (mio httpWarp) <*> Concurrently (mio httpsWarp)
       void $ runConcurrently program
+    _ -> pure ()
   where
     mio :: Maybe (IO ()) -> IO ()
     mio = fromMaybe (pure ())
 
-    tlsSettings :: Action -> Maybe WarpTLS.TLSSettings
-    tlsSettings cmd = do
+    tlsSettings :: Maybe WarpTLS.TLSSettings
+    tlsSettings = do
        cert <- coerce tlsCertFile cmd
        key <- coerce tlsKeyFile cmd
        pure $ WarpTLS.tlsSettings cert key
 
-    tlsWarpSettings :: Action -> Maybe Warp.Settings
-    tlsWarpSettings cmd = do
+    tlsWarpSettings :: Maybe Warp.Settings
+    tlsWarpSettings = do
        port <- coerce httpsPort cmd
        pure $ Warp.setPort port Warp.defaultSettings
 
