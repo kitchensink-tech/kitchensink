@@ -5,6 +5,7 @@ module KitchenSink.Engine.SiteConfig where
 import Data.Aeson (FromJSON)
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import qualified Dhall
 
 import KitchenSink.Prelude
 
@@ -14,6 +15,7 @@ data LinkedSite = LinkedSite {
   , siteTitle :: Text
   } deriving (Generic, Show)
 instance FromJSON LinkedSite
+instance Dhall.FromDhall LinkedSite
 
 data GlobalSite = GlobalSite {
     title      :: Text
@@ -22,6 +24,7 @@ data GlobalSite = GlobalSite {
   , linkedSites :: Maybe [LinkedSite]
   } deriving (Generic, Show)
 instance FromJSON GlobalSite
+instance Dhall.FromDhall GlobalSite
 
 defaultGlobalSite :: GlobalSite
 defaultGlobalSite =

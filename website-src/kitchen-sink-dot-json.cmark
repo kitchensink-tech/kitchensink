@@ -58,7 +58,7 @@ As the time of writing this article, `kitchen-sink.json` supports the following 
   - values can either be
     - `{"tag": "NoProxying"}`
     - `{"tag": "SlashApiProxy", "contents": ["localhost",3000]}`
-    - `{"tag": "SlashApiProxyList", "contents": [["/api/appli-1","localhost",3001], ["/api/appli-2","localhost",3002]]}`
+    - `{"tag": "SlashApiProxyList", "contents": [ {"prefix":"/api/appli-1", "hostname":"localhost", "portnum":8001}, {"prefix":"/api/appli-2", "hostname":"localhost", "portnum":8002}]}`
 - `linkedSites` (optional, experimental): a series of json objects containing a listing of the external sites you consider especially important (and they show up on the site-graph for instance):
   - a `baseUrl` string
   - a `siteTitle` string

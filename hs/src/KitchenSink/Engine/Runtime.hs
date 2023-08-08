@@ -1,4 +1,4 @@
-
+{-# LANGUAGE OverloadedRecordDot #-}
 module KitchenSink.Engine.Runtime
   ( Engine(..)
   , Runtime(..)
@@ -83,8 +83,8 @@ initDevServerRuntime cfg engine path devtracer = do
         ProdProxy.initRuntime (ProdProxy.StaticBackend (Text.encodeUtf8 host) port)
     initProxyBackend (SlashApiProxyList []) = pure Nothing
     initProxyBackend (SlashApiProxyList triplets) = do
-        let adapt (_,h,p) = (Text.encodeUtf8 h,p)
-        let hasreqprefix req (p,_,_) = Text.encodeUtf8 p `ByteString.isPrefixOf` Wai.rawPathInfo req
+        let adapt directive = (Text.encodeUtf8 directive.hostname, directive.portnum)
+        let hasreqprefix req directive = Text.encodeUtf8 directive.prefix `ByteString.isPrefixOf` Wai.rawPathInfo req
         let flookup req = pure $ fmap adapt $ List.find (hasreqprefix req) triplets
         Just <$> ProdProxy.initRuntime (ProdProxy.DynamicBackend flookup)
 

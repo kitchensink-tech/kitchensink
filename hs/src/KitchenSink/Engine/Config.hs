@@ -6,6 +6,7 @@ import Data.Aeson (FromJSON, ToJSON, decode)
 import qualified Data.ByteString.Lazy as LByteString
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import qualified Dhall
 
 import KitchenSink.Prelude
 
@@ -16,18 +17,31 @@ data Command = Command {
   } deriving (Generic, Show)
 instance FromJSON Command
 instance ToJSON Command
+instance Dhall.FromDhall Command
 
 type HostName = Text
 type PortNum = Int
 type Prefix = Text
 
+data SlashApiProxyDirective
+  = SlashApiProxyDirective
+  { prefix :: Prefix
+  , hostname :: HostName
+  , portnum :: PortNum
+  }
+  deriving (Generic, Show)
+instance FromJSON SlashApiProxyDirective
+instance ToJSON SlashApiProxyDirective
+instance Dhall.FromDhall SlashApiProxyDirective
+
 data ApiProxyConfig
   = NoProxying
   | SlashApiProxy HostName PortNum
-  | SlashApiProxyList [(Prefix, HostName, PortNum)]
+  | SlashApiProxyList [SlashApiProxyDirective]
   deriving (Generic, Show)
 instance FromJSON ApiProxyConfig
 instance ToJSON ApiProxyConfig
+instance Dhall.FromDhall ApiProxyConfig
 
 data Config = Config {
     publishScript :: Maybe FilePath
@@ -36,6 +50,7 @@ data Config = Config {
   } deriving (Generic, Show)
 instance FromJSON Config
 instance ToJSON Config
+instance Dhall.FromDhall Config
 
 loadJSONFile :: FromJSON a => FilePath -> IO (Maybe a)
 loadJSONFile path =
