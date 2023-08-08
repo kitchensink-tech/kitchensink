@@ -29,6 +29,7 @@ import Servant
 import System.Process (readCreateProcess, proc)
 
 import KitchenSink.Prelude
+import KitchenSink.Core.Build.Site (Site)
 import KitchenSink.Core.Build.Target (Target, destinationUrl, destination)
 import KitchenSink.Core.Build.Trace as Build
 import KitchenSink.Engine.SiteBuilder
@@ -123,7 +124,11 @@ handleDevForceReload rt = do
     let status = if worked then Just ForceReloaded else Nothing
     pure status
 
-handleOnTheFlyProduction :: forall ext. (Show ext, Typeable ext) => Runtime ext -> FetchTarget ext -> Application
+handleOnTheFlyProduction
+  :: forall ext. (Show ext, Typeable ext)
+  => Runtime ext
+  -> FetchTarget ext
+  -> Application
 handleOnTheFlyProduction rt fetchTarget = go
   where
     cntrs = counters rt
@@ -199,5 +204,55 @@ findTarget engine rt = \origpath -> do
   site <- readBackgroundVal (liveSite rt)
   meta <- execLoadMetaExtradata engine
   let tgts = evalTargets engine meta site
+  let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
+  pure (path, target)
+
+handleOnTheFlyProduction2
+  :: forall ext. (Show ext, Typeable ext)
+  => FetchTarget ext
+  -> Prod.Tracer.Tracer IO (DevServerTrack ext)
+  -> Application
+handleOnTheFlyProduction2 fetchTarget track = go
+  where
+    go :: Application
+    go req resp = do
+      let origpath = requestedPath req
+      (path, target) <- fetchTarget origpath
+      maybe
+        (handleNotFound origpath resp)
+        (handleFound path resp)
+        target
+
+    handleNotFound :: RequestedPath -> (Response -> IO a) -> IO a
+    handleNotFound path resp = do
+      runTracer track (TargetMissing $ coerce path)
+      resp $ Wai.responseLBS status404 [] "not found"
+
+    handleFound :: TargetPath -> (Response -> IO a) -> Target ext () -> IO a
+    handleFound path resp tgt = do
+      let produce :: IO x -> IO x
+          produce work = work
+      (body,size) <- produce $ do
+        body <- LByteString.fromStrict <$> outputTarget (blogTargetTracer track) tgt
+        let size = LByteString.length body
+        seq size (pure (body,size))
+      runTracer track (TargetBuilt path size)
+      resp $ Wai.responseLBS status200 [("content-type", ctypeFor path)] body
+
+    ctypeFor path
+      | ".js" `ByteString.isSuffixOf` path = "application/javascript"
+      | ".json" `ByteString.isSuffixOf` path = "application/json"
+      | ".html" `ByteString.isSuffixOf` path = "text/html"
+      | True = ""
+
+findTarget2
+  :: Engine ext
+  -> IO (Site ext)
+  -> Prod.Tracer.Tracer IO (DevServerTrack ext)
+  -> FetchTarget ext
+findTarget2 engine loadSite track = \origpath -> do
+  runTracer track (TargetRequested origpath)
+  let path = if origpath == rootRequestPath then "/index.html" else coerce origpath
+  tgts <- evalTargets engine <$> execLoadMetaExtradata engine <*> loadSite
   let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
   pure (path, target)

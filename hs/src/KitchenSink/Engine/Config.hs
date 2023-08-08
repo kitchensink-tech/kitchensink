@@ -2,8 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 module KitchenSink.Engine.Config where
 
-import Data.Aeson (FromJSON, ToJSON, decode)
-import qualified Data.ByteString.Lazy as LByteString
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import qualified Dhall
@@ -51,7 +50,3 @@ data Config = Config {
 instance FromJSON Config
 instance ToJSON Config
 instance Dhall.FromDhall Config
-
-loadJSONFile :: FromJSON a => FilePath -> IO (Maybe a)
-loadJSONFile path =
-  decode <$> LByteString.readFile path

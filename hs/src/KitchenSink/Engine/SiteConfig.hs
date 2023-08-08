@@ -2,7 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 module KitchenSink.Engine.SiteConfig where
 
-import Data.Aeson (FromJSON)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import qualified Dhall
@@ -15,17 +15,19 @@ data LinkedSite = LinkedSite {
   , siteTitle :: Text
   } deriving (Generic, Show)
 instance FromJSON LinkedSite
+instance ToJSON LinkedSite
 instance Dhall.FromDhall LinkedSite
 
-data GlobalSite = GlobalSite {
+data SiteInfo = SiteInfo {
     title      :: Text
   , publishURL :: Text
   , twitterLogin :: Maybe Text
   , linkedSites :: Maybe [LinkedSite]
   } deriving (Generic, Show)
-instance FromJSON GlobalSite
-instance Dhall.FromDhall GlobalSite
+instance FromJSON SiteInfo
+instance ToJSON SiteInfo
+instance Dhall.FromDhall SiteInfo
 
-defaultGlobalSite :: GlobalSite
-defaultGlobalSite =
-  GlobalSite "invalid siteconfig!" "/" Nothing Nothing
+defaultSiteInfo :: SiteInfo
+defaultSiteInfo =
+  SiteInfo "invalid siteconfig!" "/" Nothing Nothing

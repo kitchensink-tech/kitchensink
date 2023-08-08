@@ -64,11 +64,13 @@ library
                  , KitchenSink.Engine.Config
                  , KitchenSink.Engine.Counters
                  , KitchenSink.Engine.Handlers
+                 , KitchenSink.Engine.MultiSiteConfig
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
                  , KitchenSink.Engine.SiteLoader
                  , KitchenSink.Engine.SiteBuilder
                  , KitchenSink.Engine.Track
+                 , KitchenSink.Engine.Utils
                  , KitchenSink.Prelude
 
     -- LANGUAGE extensions used by modules in this package.
@@ -111,6 +113,7 @@ library
                     , prodapi
                     , prodapi-proxy
                     , stm
+                    , tls
                     , http-types
                     , wai
                     , warp
