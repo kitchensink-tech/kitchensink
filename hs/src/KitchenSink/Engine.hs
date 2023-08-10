@@ -212,7 +212,7 @@ loadDevModeExtraData path = do
 
 mainMultiSite :: Action -> IO ()
 mainMultiSite cmd = do
-  mcfg <- loadJSONFile @MultiSiteConfig (coerce $ configFile cmd)
+  mcfg <- loadConfigFile @MultiSiteConfig (coerce $ configFile cmd)
   case mcfg of
     Nothing -> print ("could not load config app" :: Text)
     Just cfg -> do
