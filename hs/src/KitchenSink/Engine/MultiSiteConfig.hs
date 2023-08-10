@@ -40,14 +40,13 @@ instance ToJSON TLSStanza
 instance Dhall.FromDhall TLSStanza
 
 data SiteStanza = SiteStanza {
-    -- todo: multiple domains
-    -- todo: consider binding domains and TLS together
-    domain      :: HostName
-  , tls         :: Maybe TLSStanza
-  , siteSource  :: SourceStanza
-  , tmpDir      :: FilePath
-  , site        :: SiteInfo
-  , api         :: ApiProxyConfig
+    domain       :: HostName
+  , extraDomains :: [HostName]
+  , tls          :: Maybe TLSStanza
+  , siteSource   :: SourceStanza
+  , tmpDir       :: FilePath
+  , site         :: SiteInfo
+  , api          :: ApiProxyConfig
   } deriving (Generic, Show)
 instance FromJSON SiteStanza
 instance ToJSON SiteStanza

@@ -9,6 +9,9 @@ import Data.Maybe (fromMaybe, catMaybes)
 import Data.Time.Clock (getCurrentTime)
 import Lucid as Lucid
 import qualified Lucid.Base as Lucid
+import Data.List.NonEmpty (NonEmpty((:|)))
+import qualified Data.List.NonEmpty as NEList
+import Data.List (concatMap)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import qualified Network.TLS as TLS
@@ -21,7 +24,7 @@ import Options.Generic
 import qualified Paths_prodapi
 import Prelude (Read,error)
 import Prod.Tracer
-import Prod.App as Prod
+import qualified Prod.App as Prod
 import Prod.Status
 import qualified Prod.Proxy.MultiApp as ProdProxy
 import Servant
@@ -152,8 +155,8 @@ mainServe cmd = do
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
       rt <- initDevServerRuntime ksconfig devengine path tracePrint
-      init <- initialize healthRt
-      let webapp = app
+      init <- Prod.initialize healthRt
+      let webapp = Prod.app
            init
            apiStatus
            (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
@@ -165,8 +168,8 @@ mainServe cmd = do
       let apiStatus = pure ("ok" :: Text)
       healthRt <- Prod.alwaysReadyRuntime tracePrint
       rt <- initDevServerRuntime ksconfig engine path tracePrint
-      init <- initialize healthRt
-      let webapp = app
+      init <- Prod.initialize healthRt
+      let webapp = Prod.app
            init
            apiStatus
            (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
@@ -228,8 +231,8 @@ mainMultiSite cmd = do
           let multiapp = ProdProxy.routeApplication apps fallbackApp
           healthRt <- Prod.alwaysReadyRuntime tracePrint
           let status = pure ("ok" :: Text)
-          init <- initialize healthRt
-          let prodapiapp = app
+          init <- Prod.initialize healthRt
+          let prodapiapp = Prod.app
                init
                status
                (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
@@ -247,20 +250,27 @@ mainMultiSite cmd = do
     buildFallbackApp :: MultiSiteConfig -> IO (Maybe (TLS.HostName, Wai.Application))
     buildFallbackApp cfg = case cfg.fallback of
       FallbackWithOminousError -> pure $ Just ("*", ominousApp)
-      FallbackSite s -> siteApplication s
+      FallbackSite s ->
+        let pickHeadHost (hosts,a) = (NEList.head hosts,a)
+        in fmap pickHeadHost <$> siteApplication s
 
     buildApplicationMap :: MultiSiteConfig -> IO ProdProxy.ApplicationMap
     buildApplicationMap cfg =
-      Map.fromList . catMaybes <$> traverse siteApplication (sites cfg)
+      let
+        flattenHosts (hosts,a) = [(host,a) | host <- NEList.toList hosts]
+        bundleApps = Map.fromList . concatMap flattenHosts
+      in
+      bundleApps . catMaybes <$> traverse siteApplication (sites cfg)
 
-    siteApplication :: SiteStanza -> IO (Maybe (TLS.HostName, Wai.Application))
+    siteApplication :: SiteStanza -> IO (Maybe (NEList.NonEmpty TLS.HostName, Wai.Application))
     siteApplication cfg = do
       case cfg.siteSource of
         NoFiles -> pure Nothing
         FileSource (FileSourceStanza path) -> do
           v <- fileSiteApp path cfg
-          let k = Text.unpack (domain cfg)
-          pure $ Just (k, v)
+          let k = Text.unpack cfg.domain
+          let ks = fmap Text.unpack cfg.extraDomains
+          pure $ Just (k :| ks, v)
 
     fileSiteApp:: FilePath -> SiteStanza -> IO Wai.Application
     fileSiteApp path cfg = do
@@ -310,6 +320,3 @@ mainMultiSite cmd = do
            case x of
              Left _ -> pure $ Nothing
              Right c -> pure $ Just $ TLS.Credentials [c]
-
-mio :: Maybe (IO ()) -> IO ()
-mio = fromMaybe (pure ())

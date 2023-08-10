@@ -1,5 +1,6 @@
 module KitchenSink.Engine.Utils where
 
+import Data.Maybe (fromMaybe)
 import Data.Aeson (FromJSON, decode)
 import qualified Data.ByteString.Lazy as LByteString
 import KitchenSink.Prelude
@@ -19,3 +20,6 @@ loadJSONFile path =
 loadDhallFile :: Dhall.FromDhall a => FilePath -> IO (Maybe a)
 loadDhallFile path =
   Dhall.inputFile Dhall.auto path
+
+mio :: Maybe (IO ()) -> IO ()
+mio = fromMaybe (pure ())
