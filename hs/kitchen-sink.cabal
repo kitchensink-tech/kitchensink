@@ -66,6 +66,7 @@ library
                  , KitchenSink.Engine.Handlers
                  , KitchenSink.Engine.MultiSite
                  , KitchenSink.Engine.MultiSiteConfig
+                 , KitchenSink.Engine.Produce
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
                  , KitchenSink.Engine.SiteLoader

@@ -19,7 +19,6 @@ import Prod.Tracer
 import qualified Prod.App as Prod
 import Prod.Status
 import Servant
-import System.FilePath.Posix ((</>))
 
 import KitchenSink.Layout.Blog as Blog
 import KitchenSink.Prelude
@@ -34,6 +33,7 @@ import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.Handlers
 import KitchenSink.Engine.Utils
 import qualified KitchenSink.Engine.MultiSite as MultiSite
+import qualified KitchenSink.Engine.Produce as Produce
 
 data ServMode = SERVE | DEV
   deriving (Generic, Read, Show)
@@ -69,39 +69,13 @@ data Action
 
 instance ParseRecord Action
 
-ksPath
-  :: FilePath <?> "source directory"
-  -> Maybe FilePath <?> "kitchen-sink.json file"
-  -> FilePath
-ksPath base preferred =
-  let fallback = coerce base </> "kitchen-sink.json"
-  in fromMaybe fallback (coerce preferred)
-
 defaultMain :: IO ()
 defaultMain = do
   cmd <- getRecord "kitchen-sink"
   case cmd of
-    Produce _ _ _ -> mainProduce cmd
+    Produce a b c -> Produce.run (Produce.Args a b c)
     Serve _ _ _ _ _ _ _ _ -> mainServe cmd
     MultiSite a b c d e -> MultiSite.run (MultiSite.Args a b c d e)
-
-mainProduce :: Action -> IO ()
-mainProduce cmd = do
-  let srcPath = coerce $ srcDir cmd
-  let kitchensinkFilePath = ksPath (srcDir cmd) (ksFile cmd)
-  serveMetadata <- loadServeModeExtraData kitchensinkFilePath
-  let prodengine = Engine
-                  (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
-                  (pure serveMetadata)
-                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
-                  (produceTarget print)
-  case cmd of
-    Produce _ _ _ -> do
-      site <- execLoadSite prodengine
-      meta <- execLoadMetaExtradata prodengine
-      let tgts = evalTargets prodengine meta site
-      traverse_ (execProduceTarget prodengine) tgts
-    _ -> pure ()
 
 mainServe :: Action -> IO ()
 mainServe cmd = do
