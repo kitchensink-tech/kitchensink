@@ -64,6 +64,7 @@ library
                  , KitchenSink.Engine.Config
                  , KitchenSink.Engine.Counters
                  , KitchenSink.Engine.Handlers
+                 , KitchenSink.Engine.MultiSite
                  , KitchenSink.Engine.MultiSiteConfig
                  , KitchenSink.Engine.Runtime
                  , KitchenSink.Engine.SiteConfig
