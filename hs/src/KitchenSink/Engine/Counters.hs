@@ -30,19 +30,19 @@ data Counters
 initCounters :: IO Counters
 initCounters =
   Counters
-    <$> reg1s "blog_single_build_time" "path" "time spent building single targets on disk"
-    <*> reg0s "blog_fullbuild_time" "time spent building targets on disk"
-    <*> reg0s "blog_publish_time" "time spent publishing"
-    <*> reg1s "blog_ontheflybuild_time" "path" "time spent building targets on disk"
-    <*> reg0 "blog_reloads" "number of time the site is reloaded"
-    <*> reg1 "blog_watches" "status" "number of watches created"
-    <*> reg0 "blog_rebuilds" "number of time the output has been rebuilt"
-    <*> reg0 "blog_publishes" "number of time the site has been published"
-    <*> reg1 "blog_targets_requests" ("status","path") "number of queries per blog target"
-    <*> reg1g "blog_targets_sizes" ("path") "sizes of targets in bytes"
-    <*> reg0g "blog_targets_number" "number of targets"
-    <*> reg0 "blog_forceReloads" "number of time the site has been reloaded upon user request"
-    <*> reg1 "blog_commands" "status" "number of command ran"
+    <$> reg1s "ks_single_build_time" "path" "time spent building single targets on disk"
+    <*> reg0s "ks_fullbuild_time" "time spent building targets on disk"
+    <*> reg0s "ks_publish_time" "time spent publishing"
+    <*> reg1s "ks_ontheflybuild_time" "path" "time spent building targets on disk"
+    <*> reg0 "ks_reloads" "number of time the site is reloaded"
+    <*> reg1 "ks_watches" "status" "number of watches created"
+    <*> reg0 "ks_rebuilds" "number of time the output has been rebuilt"
+    <*> reg0 "ks_publishes" "number of time the site has been published"
+    <*> reg1 "ks_targets_requests" ("status","path") "number of queries per blog target"
+    <*> reg1g "ks_targets_sizes" ("path") "sizes of targets in bytes"
+    <*> reg0g "ks_targets_number" "number of targets"
+    <*> reg0 "ks_forceReloads" "number of time the site has been reloaded upon user request"
+    <*> reg1 "ks_commands" "status" "number of command ran"
   where
     reg0 k h =
       Prometheus.register

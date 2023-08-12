@@ -175,7 +175,6 @@ ignoreFileReload p = takeExtension p == ".swp"
 adaptTracer :: Background.Track (Site ext) -> DevServerTrack ext
 adaptTracer trk = SiteReloaded $ fmap (const ()) trk
 
-
 countSources :: Site ext -> Int
 countSources s = sum
   [ length $ articles s

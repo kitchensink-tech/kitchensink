@@ -1,12 +1,10 @@
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 module KitchenSink.Engine.Handlers where
 
 import Control.Concurrent.Async (mapConcurrently_)
 import Control.Monad.IO.Class (liftIO)
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as ByteString
-import qualified Data.ByteString.Lazy as LByteString
 import Data.IORef (newIORef, readIORef, atomicModifyIORef')
 import qualified Data.List as List
 import qualified Data.Text as Text
@@ -14,8 +12,7 @@ import qualified Data.Text.Encoding as Text
 import Data.Typeable (Typeable)
 import Data.Maybe (isJust)
 import Data.Text (Text)
-import GHC.Real (fromIntegral)
-import Network.HTTP.Types (status200, status404)
+import Network.HTTP.Types (status404)
 import Network.Wai as Wai
 import Prelude (id,unlines)
 import Prod.Tracer
@@ -29,15 +26,16 @@ import Servant
 import System.Process (readCreateProcess, proc)
 
 import KitchenSink.Prelude
-import KitchenSink.Core.Build.Site (Site)
-import KitchenSink.Core.Build.Target (Target, destinationUrl, destination)
+import KitchenSink.Core.Build.Target (destinationUrl, destination)
 import KitchenSink.Core.Build.Trace as Build
 import KitchenSink.Engine.SiteBuilder
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
-import KitchenSink.Engine.Counters (Counters(..), timeItWithLabel)
-import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..), RequestedPath(..), rootRequestPath, requestedPath, blogTargetTracer)
+import KitchenSink.Engine.Counters (Counters(..))
+import KitchenSink.Engine.SiteLoader (Site)
+import KitchenSink.Engine.Track (DevServerTrack(..), WatchResult(..), RequestedPath(..))
 import KitchenSink.Engine.Runtime
+import KitchenSink.Engine.OnTheFly
 
 handleDevWatch :: Engine ext -> Runtime ext -> Maybe Text -> Maybe TargetPathName -> Handler (Prod.Identification, WatchResult)
 handleDevWatch _ rt srvId pathname
@@ -49,7 +47,8 @@ handleDevWatch engine rt _ pathname = liftIO $ do
   Prometheus.withLabel (cnt_watches $ counters rt) "matching" Prometheus.incCounter
   runTracer (traceDev rt) (WatchAdded (coerce Prod.this) pathname)
   waitReload rt
-  let lookupTarget = fmap snd . findTarget engine rt . RequestedPath . Text.encodeUtf8
+  let readSite = readBackgroundVal (liveSite rt)
+  let lookupTarget = fmap snd . findTarget engine readSite (traceDev rt) . RequestedPath . Text.encodeUtf8
   targetStillExists <- isJust <$> maybe (pure Nothing) lookupTarget pathname
   let res = if targetStillExists
             then Reloaded
@@ -124,50 +123,6 @@ handleDevForceReload rt = do
     let status = if worked then Just ForceReloaded else Nothing
     pure status
 
-handleOnTheFlyProduction
-  :: forall ext. (Show ext, Typeable ext)
-  => Runtime ext
-  -> FetchTarget ext
-  -> Application
-handleOnTheFlyProduction rt fetchTarget = go
-  where
-    cntrs = counters rt
-    track = traceDev rt
-
-    go :: Application
-    go req resp = do
-      let origpath = requestedPath req
-      (path, target) <- fetchTarget origpath
-      maybe
-        (handleNotFound origpath resp)
-        (handleFound path resp)
-        target
-
-    handleNotFound :: RequestedPath -> (Response -> IO a) -> IO a
-    handleNotFound path resp = do
-      Prometheus.withLabel (cnt_targetRequests cntrs) ("not-found", Text.decodeUtf8 $ coerce path) Prometheus.incCounter
-      runTracer track (TargetMissing $ coerce path)
-      resp $ Wai.responseLBS status404 [] "not found"
-
-    handleFound :: TargetPath -> (Response -> IO a) -> Target ext () -> IO a
-    handleFound path resp tgt = do
-      Prometheus.withLabel (cnt_targetRequests cntrs) ("found", Text.decodeUtf8 path) Prometheus.incCounter
-      let produce :: IO x -> IO x
-          produce work = timeItWithLabel (time_ontheflybuild cntrs) (destinationUrl $ destination tgt) work
-      (body,size) <- produce $ do
-        body <- LByteString.fromStrict <$> outputTarget (blogTargetTracer track) tgt
-        let size = LByteString.length body
-        seq size (pure (body,size))
-      runTracer track (TargetBuilt path size)
-      Prometheus.withLabel (cnt_targetSizes cntrs) (Text.decodeUtf8 path) (flip Prometheus.setGauge $ fromIntegral size)
-      resp $ Wai.responseLBS status200 [("content-type", ctypeFor path)] body
-
-    ctypeFor path
-      | ".js" `ByteString.isSuffixOf` path = "application/javascript"
-      | ".json" `ByteString.isSuffixOf` path = "application/json"
-      | ".html" `ByteString.isSuffixOf` path = "text/html"
-      | True = ""
-
 handleProxyApi :: Runtime ext -> Application
 handleProxyApi rt = case prodproxyRuntime rt of
   Nothing ->
@@ -186,73 +141,15 @@ serveDevApi config devengine prodengine rt =
   :<|> handleExecCommand config rt
   :<|> handleDevForceReload rt
   :<|> coerce (handleProxyApi rt)
-  :<|> coerce (handleOnTheFlyProduction rt (findTarget devengine rt))
+  :<|> coerce (handleOnTheFlyProduction (findTarget devengine readSite (traceDev rt)) (ontheflyCounters rt.counters) (traceDev rt))
+  where
+    readSite :: IO (Site ext)
+    readSite = readBackgroundVal (liveSite rt)
 
 serveApi :: forall ext. (Show ext, Typeable ext) => Engine ext -> Runtime ext -> Server ServeApi
 serveApi engine rt =
   coerce (handleProxyApi rt)
-  :<|> coerce (handleOnTheFlyProduction rt (findTarget engine rt))
-
-type TargetPath = ByteString
-
-type FetchTarget ext = RequestedPath -> IO (TargetPath, Maybe (Target ext ()))
-
-findTarget :: Engine ext -> Runtime ext -> FetchTarget ext
-findTarget engine rt = \origpath -> do
-  runTracer (traceDev rt) (TargetRequested origpath)
-  let path = if origpath == rootRequestPath then "/index.html" else coerce origpath
-  site <- readBackgroundVal (liveSite rt)
-  meta <- execLoadMetaExtradata engine
-  let tgts = evalTargets engine meta site
-  let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
-  pure (path, target)
-
-handleOnTheFlyProduction2
-  :: forall ext. (Show ext, Typeable ext)
-  => FetchTarget ext
-  -> Prod.Tracer.Tracer IO (DevServerTrack ext)
-  -> Application
-handleOnTheFlyProduction2 fetchTarget track = go
+  :<|> coerce (handleOnTheFlyProduction (findTarget engine readSite (traceDev rt)) (ontheflyCounters rt.counters) (traceDev rt))
   where
-    go :: Application
-    go req resp = do
-      let origpath = requestedPath req
-      (path, target) <- fetchTarget origpath
-      maybe
-        (handleNotFound origpath resp)
-        (handleFound path resp)
-        target
-
-    handleNotFound :: RequestedPath -> (Response -> IO a) -> IO a
-    handleNotFound path resp = do
-      runTracer track (TargetMissing $ coerce path)
-      resp $ Wai.responseLBS status404 [] "not found"
-
-    handleFound :: TargetPath -> (Response -> IO a) -> Target ext () -> IO a
-    handleFound path resp tgt = do
-      let produce :: IO x -> IO x
-          produce work = work
-      (body,size) <- produce $ do
-        body <- LByteString.fromStrict <$> outputTarget (blogTargetTracer track) tgt
-        let size = LByteString.length body
-        seq size (pure (body,size))
-      runTracer track (TargetBuilt path size)
-      resp $ Wai.responseLBS status200 [("content-type", ctypeFor path)] body
-
-    ctypeFor path
-      | ".js" `ByteString.isSuffixOf` path = "application/javascript"
-      | ".json" `ByteString.isSuffixOf` path = "application/json"
-      | ".html" `ByteString.isSuffixOf` path = "text/html"
-      | True = ""
-
-findTarget2
-  :: Engine ext
-  -> IO (Site ext)
-  -> Prod.Tracer.Tracer IO (DevServerTrack ext)
-  -> FetchTarget ext
-findTarget2 engine loadSite track = \origpath -> do
-  runTracer track (TargetRequested origpath)
-  let path = if origpath == rootRequestPath then "/index.html" else coerce origpath
-  tgts <- evalTargets engine <$> execLoadMetaExtradata engine <*> loadSite
-  let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
-  pure (path, target)
+    readSite :: IO (Site ext)
+    readSite = readBackgroundVal (liveSite rt)
