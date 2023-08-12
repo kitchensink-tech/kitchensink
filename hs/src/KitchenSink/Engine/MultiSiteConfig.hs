@@ -13,27 +13,44 @@ import KitchenSink.Engine.Config (ApiProxyConfig)
 
 type HostName = Text
 
-data FileSourceStanza
-  = FileSourceStanza
+data KitchenSinkDirectorySourceStanza
+  = KitchenSinkDirectorySourceStanza
   { path :: FilePath
+  , metadata :: SiteInfo
   }
   deriving (Generic, Show)
-instance FromJSON FileSourceStanza
-instance ToJSON FileSourceStanza
-instance Dhall.FromDhall FileSourceStanza
+instance FromJSON KitchenSinkDirectorySourceStanza
+instance ToJSON KitchenSinkDirectorySourceStanza
+instance Dhall.FromDhall KitchenSinkDirectorySourceStanza
 
 data SourceStanza
   = NoFiles
-  | FileSource FileSourceStanza
+  | KitchenSinkDirectorySource KitchenSinkDirectorySourceStanza
   deriving (Generic, Show)
 instance FromJSON SourceStanza
 instance ToJSON SourceStanza
 instance Dhall.FromDhall SourceStanza
 
-data TLSStanza = TLSStanza {
+data CertificateFiles = CertificateFiles {
     pem :: FilePath
   , key :: FilePath
-  , sniDomain :: Maybe HostName
+  }
+  deriving (Generic, Show)
+instance FromJSON CertificateFiles
+instance ToJSON CertificateFiles
+instance Dhall.FromDhall CertificateFiles
+
+data CertificateSource
+  = NoCertificates --lazy way to force a {tag:/contents:} json serialization
+  | CertificateFileSource CertificateFiles
+  deriving (Generic, Show)
+instance FromJSON CertificateSource
+instance ToJSON CertificateSource
+instance Dhall.FromDhall CertificateSource
+
+data TLSStanza = TLSStanza {
+    sniDomains :: Maybe [HostName]
+  , certificate :: CertificateSource
   } deriving (Generic, Show)
 instance FromJSON TLSStanza
 instance ToJSON TLSStanza
@@ -42,10 +59,8 @@ instance Dhall.FromDhall TLSStanza
 data SiteStanza = SiteStanza {
     domain       :: HostName
   , extraDomains :: [HostName]
-  , tls          :: Maybe TLSStanza
-  , siteSource   :: SourceStanza
-  , tmpDir       :: FilePath
-  , site         :: SiteInfo
+  , tls          :: [TLSStanza]
+  , site         :: SourceStanza
   , api          :: ApiProxyConfig
   } deriving (Generic, Show)
 instance FromJSON SiteStanza
@@ -61,7 +76,7 @@ instance ToJSON FallbackStanza
 instance Dhall.FromDhall FallbackStanza
 
 data MultiSiteConfig = MultiSiteConfig {
-    sites :: [SiteStanza]
+    services :: [SiteStanza]
   , fallback :: FallbackStanza
   } deriving (Generic, Show)
 instance FromJSON MultiSiteConfig

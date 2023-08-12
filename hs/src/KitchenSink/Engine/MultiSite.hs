@@ -189,10 +189,10 @@ type SiteAndProxyApi =
 buildSiteApplication :: Runtime -> SiteStanza -> IO (Maybe (NEList.NonEmpty TLS.HostName, Wai.Application))
 buildSiteApplication rt cfg = do
   proxyApp <- fmap ProdProxy.handleProxy <$> buildProxyBackend rt cfg.api
-  ksApp <- case cfg.siteSource of
+  ksApp <- case cfg.site of
     NoFiles -> pure Nothing
-    FileSource (FileSourceStanza path) ->
-      Just <$> buildFileSiteApp rt path cfg
+    KitchenSinkDirectorySource src ->
+      Just <$> buildDirectorySourceApp rt src cfg
   pure $ wrap <$> fullApp proxyApp ksApp
   where
     fullApp :: Maybe Wai.Application -> Maybe Wai.Application -> Maybe Wai.Application
@@ -231,10 +231,10 @@ buildProxyBackend rt (SlashApiProxyList triplets) = do
     pure $ Just (mkProdProxyRuntime rt (ProdProxy.DynamicBackend flookup))
 
 
-buildFileSiteApp:: Runtime -> FilePath -> SiteStanza -> IO Wai.Application
-buildFileSiteApp rt path cfg = do
+buildDirectorySourceApp:: Runtime -> KitchenSinkDirectorySourceStanza -> SiteStanza -> IO Wai.Application
+buildDirectorySourceApp rt src cfg = do
     -- loaded once for the whole duration of the application
-    metadata <- loadMetadata cfg.site
+    metadata <- loadMetadata src.metadata
     site <- loadSource
     let targets = evalTargets metadata site
     let engine = Engine (pure site) (pure metadata) (\_ _ -> targets) (produceTarget print)
@@ -244,13 +244,16 @@ buildFileSiteApp rt path cfg = do
                    tracePrint
     pure webapp
   where
-    -- TODO: remove dependency on tmpDir here (initially as siteTargets outputdir)
+    -- An output prefix that is unused when generating results on the fly.
+    unusedPrefix :: FilePath
+    unusedPrefix = ""
+
     evalTargets :: MetaData -> SiteLoader.Site () -> [Target () ()]
     evalTargets med site = fmap (fmap $ const ())
-      $ (siteTargets Blog.layout) (coerce cfg.tmpDir) med site
+      $ (siteTargets Blog.layout) unusedPrefix med site
 
     loadSource :: IO (SiteLoader.Site ())
-    loadSource = SiteLoader.loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) path
+    loadSource = SiteLoader.loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) src.path
 
 buildFallbackApp :: Runtime -> MultiSiteConfig -> IO (Maybe (TLS.HostName, Wai.Application))
 buildFallbackApp rt cfg = case cfg.fallback of
@@ -268,16 +271,23 @@ buildApplicationMap rt cfg =
     flattenHosts (hosts,a) = [(host,a) | host <- NEList.toList hosts]
     bundleApps = Map.fromList . concatMap flattenHosts
   in
-  bundleApps . catMaybes <$> traverse (buildSiteApplication rt) (sites cfg)
+  bundleApps . catMaybes <$> traverse (buildSiteApplication rt) cfg.services
 
 buildTLSMap :: MultiSiteConfig -> IO (Either String ProdProxy.CredentialMap)
 buildTLSMap cfg =
   ProdProxy.loadCredentialMap
-    $ catMaybes
-    $ fmap siteTLSTriplet (sites cfg)
+    $ mconcat
+    $ fmap siteTLSTriplet cfg.services
 
-siteTLSTriplet :: SiteStanza -> Maybe (TLS.HostName, ProdProxy.X509Path, ProdProxy.PrivateKeyPath)
+siteTLSTriplet :: SiteStanza -> [(TLS.HostName, ProdProxy.X509Path, ProdProxy.PrivateKeyPath)]
 siteTLSTriplet cfg = do
-  c <- cfg.tls
-  d <- c.sniDomain <|> pure cfg.domain
+  t <- cfg.tls
+  c <- toList (tlsCert t)
+  d <- join (toList (t.sniDomains <|> (Just [cfg.domain])))
   pure (Text.unpack d, c.pem, c.key)
+  where
+    tlsCert :: TLSStanza -> Maybe CertificateFiles
+    tlsCert s = case s.certificate of
+                  NoCertificates -> Nothing
+                  CertificateFileSource x -> Just x
+
