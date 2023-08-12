@@ -22,9 +22,18 @@ type HostName = Text
 type PortNum = Int
 type Prefix = Text
 
+data TransportSecurity
+  = UseHTTPS
+  | UsePlainText
+  deriving (Eq, Generic, Show)
+instance FromJSON TransportSecurity
+instance ToJSON TransportSecurity
+instance Dhall.FromDhall TransportSecurity
+
 data SlashApiProxyDirective
   = SlashApiProxyDirective
-  { prefix :: Prefix
+  { security :: TransportSecurity
+  , prefix :: Prefix
   , hostname :: HostName
   , portnum :: PortNum
   }

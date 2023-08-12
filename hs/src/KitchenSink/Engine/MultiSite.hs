@@ -18,6 +18,7 @@ import qualified Data.Text.Encoding as Text
 import qualified Network.TLS as TLS
 import qualified Network.Wai as Wai
 import Network.Wai.Handler.Warp as Warp
+import qualified Network.HTTP.ReverseProxy as WaiProxy
 import qualified Network.Wai.Handler.WarpTLS as WarpTLS
 import qualified Network.Wai.Middleware.RequestLogger as RequestLogger
 import Network.HTTP.Types.Status (status404)
@@ -26,7 +27,8 @@ import qualified Paths_prodapi
 import Prod.Tracer
 import qualified Prod.App as Prod
 import Prod.Status
-import Network.HTTP.Client as HTTP (Manager, newManager, defaultManagerSettings)
+import Network.HTTP.Client as HTTP (Manager)
+import Network.HTTP.Client.TLS as HTTP (newTlsManager)
 import qualified Prod.Proxy as ProdProxy
 import qualified Prod.Proxy.MultiApp as ProdProxy
 import Servant
@@ -37,7 +39,7 @@ import KitchenSink.Prelude
 import qualified KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.SiteBuilder (produceTarget)
-import KitchenSink.Engine.Config (SlashApiProxyDirective(..),ApiProxyConfig(..))
+import KitchenSink.Engine.Config (SlashApiProxyDirective(..),ApiProxyConfig(..),TransportSecurity(..))
 import KitchenSink.Engine.SiteConfig
 import KitchenSink.Engine.MultiSiteConfig
 import KitchenSink.Engine.Track (DevServerTrack(..))
@@ -96,7 +98,7 @@ initRuntime :: IO Runtime
 initRuntime =
   Runtime
     <$> initCounters
-    <*> newManager defaultManagerSettings
+    <*> newTlsManager
     <*> ProdProxy.initCounters
 
 run :: Args -> IO ()
@@ -220,16 +222,30 @@ mkProdProxyRuntime rt backends =
     (rt.httpManager)
 
 buildProxyBackend :: Runtime -> ApiProxyConfig -> IO (Maybe ProdProxy.Runtime)
-buildProxyBackend _ NoProxying = pure Nothing
-buildProxyBackend rt (SlashApiProxy host port) =
-    pure $ Just $ mkProdProxyRuntime rt (ProdProxy.StaticBackend (Text.encodeUtf8 host) port)
-buildProxyBackend _ (SlashApiProxyList []) = pure Nothing
-buildProxyBackend rt (SlashApiProxyList triplets) = do
-    let adapt directive = (Text.encodeUtf8 directive.hostname, directive.portnum)
-    let hasreqprefix req directive = Text.encodeUtf8 directive.prefix `ByteString.isPrefixOf` Wai.rawPathInfo req
-    let flookup req = pure $ fmap adapt $ List.find (hasreqprefix req) triplets
-    pure $ Just (mkProdProxyRuntime rt (ProdProxy.DynamicBackend flookup))
-
+buildProxyBackend rt cfg =
+  case cfg of
+    NoProxying -> pure Nothing
+    (SlashApiProxyList []) -> pure Nothing
+    (SlashApiProxy host port) ->
+      pure $ Just $ mkProdProxyRuntime rt (static (Text.encodeUtf8 host) port)
+    (SlashApiProxyList directives) -> do
+      pure $ Just $ mkProdProxyRuntime rt (prefixed directives)
+  where
+    dest host port = WaiProxy.WPRProxyDest $ WaiProxy.ProxyDest host port
+    destSecure host port = WaiProxy.WPRProxyDestSecure $ WaiProxy.ProxyDest host port
+    static host port =
+      ProdProxy.WaiProxyBackend (\_ -> pure $ dest host port)
+    prefixed directives =
+      let
+        matchPrefix req directive = Text.encodeUtf8 directive.prefix `ByteString.isPrefixOf` Wai.rawPathInfo req
+        plainTextDestinations = [ (directive, dest (Text.encodeUtf8 directive.hostname) directive.portnum) | directive <- directives , directive.security == UsePlainText]
+        httpsDestinations = [ (directive, destSecure (Text.encodeUtf8 directive.hostname) directive.portnum) | directive <- directives , directive.security == UseHTTPS ]
+        destinations = httpsDestinations <> plainTextDestinations -- note: we favor https destinations if there are two prefix matches
+        noDest = WaiProxy.WPRResponse $ Wai.responseLBS status404 [] "no such api route"
+        findDestination req = List.find (matchPrefix req . fst) destinations
+        getDestination req = maybe noDest snd (findDestination req)
+      in
+      ProdProxy.WaiProxyBackend (\req -> pure $ getDestination req)
 
 buildDirectorySourceApp:: Runtime -> KitchenSinkDirectorySourceStanza -> SiteStanza -> IO Wai.Application
 buildDirectorySourceApp rt src cfg = do

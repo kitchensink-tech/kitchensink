@@ -96,6 +96,7 @@ library
                     , filepath
                     , http-reverse-proxy
                     , http-client
+                    , http-client-tls
                     , process-extras
                     , text
                     , time
