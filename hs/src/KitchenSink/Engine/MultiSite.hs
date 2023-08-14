@@ -39,7 +39,7 @@ import KitchenSink.Prelude
 import qualified KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.SiteBuilder (produceTarget)
-import KitchenSink.Engine.Config (SlashApiProxyDirective(..),ApiProxyConfig(..),TransportSecurity(..))
+import KitchenSink.Engine.Config (SlashApiProxyDirective(..),ApiProxyConfig(..),TransportSecurity(..), RewriteRule(..))
 import KitchenSink.Engine.SiteConfig
 import KitchenSink.Engine.MultiSiteConfig
 import KitchenSink.Engine.Track (DevServerTrack(..))
@@ -231,18 +231,36 @@ buildProxyBackend rt cfg =
     (SlashApiProxyList directives) -> do
       pure $ Just $ mkProdProxyRuntime rt (prefixed directives)
   where
-    dest host port = WaiProxy.WPRProxyDest $ WaiProxy.ProxyDest host port
-    destSecure host port = WaiProxy.WPRProxyDestSecure $ WaiProxy.ProxyDest host port
+    proxydest host port = WaiProxy.ProxyDest host port
+    dest host port = WaiProxy.WPRProxyDest $ proxydest host port
+    destSecure host port = WaiProxy.WPRProxyDestSecure $ proxydest host port
+    mkdest directive =
+      let host = Text.encodeUtf8 directive.hostname
+      in
+      case (directive.rewrite, directive.security) of
+        (NoRewrite, UsePlainText) -> const $ dest host directive.portnum
+        (NoRewrite, UseHTTPS)     -> const $ destSecure host directive.portnum
+        (DropPrefix, UsePlainText) ->
+          \req -> WaiProxy.WPRModifiedRequest (stripPrefix req directive.prefix) (proxydest host directive.portnum)
+        (DropPrefix, UseHTTPS) ->
+          \req -> WaiProxy.WPRModifiedRequestSecure (stripPrefix req directive.prefix) (proxydest host directive.portnum)
+        (RewritePrefix pfx, UsePlainText) ->
+          \req -> WaiProxy.WPRModifiedRequest (rewritePrefix req directive.prefix pfx) (proxydest host directive.portnum)
+        (RewritePrefix pfx, UseHTTPS) ->
+          \req -> WaiProxy.WPRModifiedRequestSecure (rewritePrefix req directive.prefix pfx) (proxydest host directive.portnum)
+
+    stripPrefix req pfx = req { Wai.rawPathInfo = ByteString.drop (ByteString.length $ Text.encodeUtf8 pfx) req.rawPathInfo }
+    rewritePrefix req pfx newPfx = req { Wai.rawPathInfo = (Text.encodeUtf8 newPfx) <> ByteString.drop (ByteString.length $ Text.encodeUtf8 pfx) req.rawPathInfo }
+
     static host port =
       ProdProxy.WaiProxyBackend (\_ -> pure $ dest host port)
     prefixed directives =
       let
         matchPrefix req directive = Text.encodeUtf8 directive.prefix `ByteString.isPrefixOf` Wai.rawPathInfo req
-        plainTextDestinations = [ (directive, dest (Text.encodeUtf8 directive.hostname) directive.portnum) | directive <- directives , directive.security == UsePlainText]
-        httpsDestinations = [ (directive, destSecure (Text.encodeUtf8 directive.hostname) directive.portnum) | directive <- directives , directive.security == UseHTTPS ]
-        destinations = httpsDestinations <> plainTextDestinations -- note: we favor https destinations if there are two prefix matches
+
+        destinations = [ (directive, mkdest directive) | directive <- directives ]
         noDest = WaiProxy.WPRResponse $ Wai.responseLBS status404 [] "no such api route"
-        findDestination req = List.find (matchPrefix req . fst) destinations
+        findDestination req = fmap (\mk -> mk req) <$> List.find (matchPrefix req . fst) destinations
         getDestination req = maybe noDest snd (findDestination req)
       in
       ProdProxy.WaiProxyBackend (\req -> pure $ getDestination req)

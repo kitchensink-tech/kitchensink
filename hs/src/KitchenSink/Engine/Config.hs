@@ -30,10 +30,20 @@ instance FromJSON TransportSecurity
 instance ToJSON TransportSecurity
 instance Dhall.FromDhall TransportSecurity
 
+data RewriteRule
+  = NoRewrite
+  | DropPrefix
+  | RewritePrefix Prefix
+  deriving (Eq, Generic, Show)
+instance FromJSON RewriteRule
+instance ToJSON RewriteRule
+instance Dhall.FromDhall RewriteRule
+
 data SlashApiProxyDirective
   = SlashApiProxyDirective
   { security :: TransportSecurity
   , prefix :: Prefix
+  , rewrite :: RewriteRule
   , hostname :: HostName
   , portnum :: PortNum
   }
