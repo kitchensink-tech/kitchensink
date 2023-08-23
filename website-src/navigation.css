@@ -60,17 +60,30 @@
 }
 #search-box ul {
   list-style: none;
+}
+#search-box li {
+  margin-top: 1rem;
+}
+#search-box ul.routes-list-list {
   margin: 0;
   margin-bottom: 1rem;
   padding: 0 0.8rem;
 }
-#search-box li {
-  margin-top: 1rem;
+#search-box li.routes-list-item {
   padding: 12px;
   border-radius: 4px;
 }
-#search-box li:nth-child(even) {
+#search-box li.routes-list-item:nth-child(even) {
   background-color: rgba(200,200,200,0.3);
+}
+#search-box ul.hashtags-list {
+  padding:0;
+  display: flex;
+}
+#search-box li.hashtags-list-item {
+  padding: 0.3em;
+  margin-right: 0.4em;
+  border: 1px solid lightgray;
 }
 #search-box a {
   font-size: 12pt;

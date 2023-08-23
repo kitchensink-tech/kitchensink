@@ -12,13 +12,5 @@
   [ {"baseURL": "https://dicioccio.fr/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
   , {"baseURL": "https://en.wikipedia.org/", "siteTitle": "The English WikiPedia.", "siteType": "website"}
   ]
-, "api":
-  { "tag": "SlashApiProxyList"
-  , "contents":
-    [ {"prefix":"/api/appli-1", "hostname":"localhost", "portnum":8001}
-    , {"prefix":"/api/appli-2", "hostname":"localhost", "portnum":8002}
-    ]
-  }
-, "--api": {"tag": "SlashApiProxy", "contents": ["localhost", 3000] }
-, "--api": {"tag": "NoProxying"}
+, "api": { "tag": "NoProxying" }
 }

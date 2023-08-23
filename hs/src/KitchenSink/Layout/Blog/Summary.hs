@@ -11,6 +11,9 @@ module KitchenSink.Layout.Blog.Summary (
   , GlossarySummary(..)
   , GlossaryItem(..)
   , summarizeGlossary
+  , HashTagSummary(..)
+  , HashTagItem(..)
+  , summarizeHashTags
   ) where
 
 import Data.Aeson (ToJSON, FromJSON)
@@ -22,6 +25,7 @@ import KitchenSink.Core.Section hiding (target)
 import qualified KitchenSink.Core.Section.Payloads as SectionBasics
 import KitchenSink.Prelude
 import KitchenSink.Layout.Blog.Fragments
+import KitchenSink.Layout.Blog.Analyses.ArticleInfos
 
 data TargetType
   = CssTarget
@@ -74,6 +78,18 @@ data GlossarySummary = GlossarySummary {
 instance FromJSON GlossarySummary
 instance ToJSON GlossarySummary
 
+data HashTagItem = HashTagItem {
+    hashtag :: Text
+  } deriving (Show, Eq, Generic)
+instance FromJSON HashTagItem
+instance ToJSON HashTagItem
+
+data HashTagSummary = HashTagSummary {
+    hashtags :: [HashTagItem]
+  } deriving (Show, Eq, Generic)
+instance FromJSON HashTagSummary
+instance ToJSON HashTagSummary
+
 summarizePreamble :: SectionBasics.PreambleData -> PreambleSummary
 summarizePreamble p =
   PreambleSummary
@@ -90,6 +106,11 @@ summarizeGlossary (GlossaryData terms) = GlossarySummary (fmap f terms)
   where
     f (GlossaryTerm{..}) = GlossaryItem{..} 
 
+summarizeHashTags :: ArticleInfos -> HashTagSummary
+summarizeHashTags infos = HashTagSummary (fmap f $ hashtagInfos infos)
+  where
+    f (HashTagInfo{hashtagValue}) = HashTagItem{hashtag=hashtagValue}
+
 data TargetSummary
   = TargetSummary
   { targetType :: TargetType
@@ -98,6 +119,7 @@ data TargetSummary
   , preambleSummary :: Maybe PreambleSummary
   , topicSummary :: Maybe TopicSummary
   , glossarySummary :: Maybe GlossarySummary
+  , hashtagSummary :: HashTagSummary
   } deriving (Show, Generic)
 instance ToJSON TargetSummary
 instance FromJSON TargetSummary

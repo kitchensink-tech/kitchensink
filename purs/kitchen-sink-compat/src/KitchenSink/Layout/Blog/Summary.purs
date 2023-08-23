@@ -26,6 +26,7 @@ newtype TargetSummary =
     , preambleSummary :: Maybe PreambleSummary
     , topicSummary :: Maybe TopicSummary
     , glossarySummary :: Maybe GlossarySummary
+    , hashtagSummary :: HashTagSummary
     }
 
 instance encodeJsonTargetSummary :: EncodeJson TargetSummary where
@@ -36,7 +37,7 @@ derive instance genericTargetSummary :: Generic TargetSummary _
 derive instance newtypeTargetSummary :: Newtype TargetSummary _
 
 --------------------------------------------------------------------------------
-_TargetSummary :: Iso' TargetSummary { targetType :: TargetType, textualTitle :: Maybe String, textualSummary :: Maybe String, preambleSummary :: Maybe PreambleSummary, topicSummary :: Maybe TopicSummary, glossarySummary :: Maybe GlossarySummary}
+_TargetSummary :: Iso' TargetSummary { targetType :: TargetType, textualTitle :: Maybe String, textualSummary :: Maybe String, preambleSummary :: Maybe PreambleSummary, topicSummary :: Maybe TopicSummary, glossarySummary :: Maybe GlossarySummary, hashtagSummary :: HashTagSummary}
 _TargetSummary = _Newtype
 
 --------------------------------------------------------------------------------
@@ -73,6 +74,40 @@ derive instance newtypeGlossarySummary :: Newtype GlossarySummary _
 --------------------------------------------------------------------------------
 _GlossarySummary :: Iso' GlossarySummary { glossary :: Array GlossaryItem}
 _GlossarySummary = _Newtype
+
+--------------------------------------------------------------------------------
+newtype HashTagItem =
+    HashTagItem {
+      hashtag :: String
+    }
+
+instance encodeJsonHashTagItem :: EncodeJson HashTagItem where
+  encodeJson = genericEncodeAeson Argonaut.defaultOptions
+instance decodeJsonHashTagItem :: DecodeJson HashTagItem where
+  decodeJson = genericDecodeAeson Argonaut.defaultOptions
+derive instance genericHashTagItem :: Generic HashTagItem _
+derive instance newtypeHashTagItem :: Newtype HashTagItem _
+
+--------------------------------------------------------------------------------
+_HashTagItem :: Iso' HashTagItem { hashtag :: String}
+_HashTagItem = _Newtype
+
+--------------------------------------------------------------------------------
+newtype HashTagSummary =
+    HashTagSummary {
+      hashtags :: Array HashTagItem
+    }
+
+instance encodeJsonHashTagSummary :: EncodeJson HashTagSummary where
+  encodeJson = genericEncodeAeson Argonaut.defaultOptions
+instance decodeJsonHashTagSummary :: DecodeJson HashTagSummary where
+  decodeJson = genericDecodeAeson Argonaut.defaultOptions
+derive instance genericHashTagSummary :: Generic HashTagSummary _
+derive instance newtypeHashTagSummary :: Newtype HashTagSummary _
+
+--------------------------------------------------------------------------------
+_HashTagSummary :: Iso' HashTagSummary { hashtags :: Array HashTagItem}
+_HashTagSummary = _Newtype
 
 --------------------------------------------------------------------------------
 data TargetType =

@@ -52,7 +52,7 @@ target :: TargetSummary -> DestinationLocation -> ProductionRule -> Target
 target z x y = Core.Target x y z
 
 simpleTarget :: TargetType -> DestinationLocation -> ProductionRule -> Target
-simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing Nothing) x y
+simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing Nothing (HashTagSummary [])) x y
 
 imageTargets :: OutputPrefix -> Site -> [Target]
 imageTargets prefix site =
@@ -174,7 +174,7 @@ siteTargets prefix extra site = allTargets
     articleTarget (Sourced loc@(FileSource path) art) =
       let u = destHtml prefix loc
           j = destJsonDataFile prefix (path <> ".json") -- todo:unify
-          tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art)
+          tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art) (summarizeHashTags $ analyzeArticle art)
       in target tgtSummary u (Core.ProduceAssembler $ layoutFor u j art)
 
     articleTargets :: [(Target, Article [Text])]

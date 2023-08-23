@@ -13,7 +13,7 @@ import qualified Language.PureScript.Bridge as Bridge
 
 import KitchenSink.Layout.Blog.Analyses (Node, TopicGraph, HashTagInfo, LinkInfo, ImageInfo, SnippetInfo)
 import KitchenSink.Layout.Blog.Analyses.SkyLine (SkyLine, SkyLineItem)
-import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, TargetType, PreambleSummary, TopicSummary, GlossarySummary, GlossaryItem)
+import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, TargetType, PreambleSummary, TopicSummary, GlossarySummary, GlossaryItem, HashTagSummary, HashTagItem)
 import Bridge (ArticleInfos)
 
 data Bridge
@@ -39,6 +39,8 @@ pureScriptTypes =
   , mkSumType (Proxy @TargetSummary)
   , mkSumType (Proxy @GlossaryItem)
   , mkSumType (Proxy @GlossarySummary)
+  , mkSumType (Proxy @HashTagItem)
+  , mkSumType (Proxy @HashTagSummary)
   , mkSumType (Proxy @TargetType)
   , mkSumType (Proxy @PathList)
   , mkSumType (Proxy @PreambleSummary)

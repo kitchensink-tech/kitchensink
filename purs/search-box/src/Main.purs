@@ -1,6 +1,6 @@
 module Main where
 
-import Prelude (Unit, bind, discard, pure, show, ($), (<<<), (<>))
+import Prelude (Unit, map, bind, discard, pure, show, ($), (<<<), (<>))
 
 import Affjax.Web as AX
 import Data.Lens (view, preview, toArrayOf, traversed, _Just, to)
@@ -22,7 +22,7 @@ import Halogen.VDom.Driver (runUI)
 import Web.DOM.ParentNode (QuerySelector(..))
 
 import KitchenSink (fetchPaths)
-import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, _TargetSummary, _TopicSummary, _PreambleSummary, TargetType(..), _PathList)
+import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, _TargetSummary, _TopicSummary, _PreambleSummary, _HashTagSummary, _HashTagItem, TargetType(..), _PathList)
 
 import Searchbox
 
@@ -80,6 +80,7 @@ renderRoute visibility (Tuple r summary) =
     summaryDescription = view (_TargetSummary <<< to _.textualSummary) summary
     preambleFavicon = preview (_TargetSummary <<< to _.preambleSummary <<< _Just <<< _PreambleSummary <<< to _.faviconUrl) summary
     topicImage = preview (_TargetSummary <<< to _.topicSummary <<< _Just <<< _TopicSummary <<< to _.imageLink <<< _Just) summary
+    hashtags = toArrayOf (_TargetSummary <<< to _.hashtagSummary <<< _HashTagSummary <<< to _.hashtags <<< traversed <<< _HashTagItem <<< to _.hashtag ) summary
   in
   HH.li
   [ HP.classes [ HH.ClassName "routes-list-item", HH.ClassName "link-description" , HH.ClassName visibilityClass ] -- note we hide only on div.hidden
@@ -101,6 +102,7 @@ renderRoute visibility (Tuple r summary) =
       ]
       [ HH.text $ fromMaybe defaultTitle summaryTitle
       ]
+    , renderTopicHashtags hashtags
     ]
   , HH.div
     [ HP.classes [ HH.ClassName "link-description-body" , HH.ClassName visibilityClass ]
@@ -120,6 +122,15 @@ renderFavicon url =
   , HP.width 32
   , HP.height 32
   ]
+
+renderTopicHashtags :: forall w i. Array String -> HH.HTML w i
+renderTopicHashtags tags =
+  HH.ul
+  [ HP.class_ $ HH.ClassName "hashtags-list"
+  ]
+  $ map ht tags
+  where
+    ht t = HH.li [ HP.class_ $ HH.ClassName "hashtags-list-item" ] [ HH.text $ "#" <> t ]
 
 renderTopicImage :: forall w i. String -> HH.HTML w i
 renderTopicImage url =

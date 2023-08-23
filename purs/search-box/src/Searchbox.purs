@@ -93,7 +93,10 @@ component props =
       [ HP.classes [ HH.ClassName "routes-list", HH.ClassName $ visibilityClass visibility ]
       ]
       [ HH.div_ [ renderCollapseListButton ]
-      , HH.ul_ $ map (\x -> props.renderRoute (itemVisibility state.expanded x) x) rts
+      , HH.ul
+        [ HP.class_ $ HH.ClassName "routes-list-list"
+        ]
+        $ map (\x -> props.renderRoute (itemVisibility state.expanded x) x) rts
       ]
 
   itemVisibility expanded (Tuple r _) =
