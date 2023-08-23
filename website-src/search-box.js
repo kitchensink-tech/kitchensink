@@ -10678,7 +10678,7 @@
       return "Hashtags index.";
     }
     ;
-    throw new Error("Failed pattern match at Main (line 147, column 18 - line 163, column 43): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 150, column 18 - line 166, column 43): " + [v.constructor.name]);
   };
   var renderTopicImage = function(url) {
     return img([src9(url)]);
@@ -10710,66 +10710,66 @@
           return "hidden";
         }
         ;
-        throw new Error("Failed pattern match at Main (line 74, column 23 - line 76, column 46): " + [visibility.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 77, column 23 - line 79, column 46): " + [visibility.constructor.name]);
       }();
       var topicImage = preview(function() {
-        var $61 = to2(function(v1) {
+        var $65 = to2(function(v1) {
           return v1.topicSummary;
         });
-        var $62 = to2(function(v1) {
+        var $66 = to2(function(v1) {
           return v1.imageLink;
         });
-        return function($63) {
-          return _TargetSummary2($61(_Just2(_TopicSummary2($62(_Just2($63))))));
+        return function($67) {
+          return _TargetSummary2($65(_Just2(_TopicSummary2($66(_Just2($67))))));
         };
       }())(v.value1);
       var targetType = view(function() {
-        var $64 = to2(function(v1) {
-          return v1.targetType;
-        });
-        return function($65) {
-          return _TargetSummary2($64($65));
-        };
-      }())(v.value1);
-      var summaryTitle = view(function() {
-        var $66 = to2(function(v1) {
-          return v1.textualTitle;
-        });
-        return function($67) {
-          return _TargetSummary2($66($67));
-        };
-      }())(v.value1);
-      var summaryDescription = view(function() {
         var $68 = to2(function(v1) {
-          return v1.textualSummary;
+          return v1.targetType;
         });
         return function($69) {
           return _TargetSummary2($68($69));
         };
       }())(v.value1);
-      var preambleFavicon = preview(function() {
+      var summaryTitle = view(function() {
         var $70 = to2(function(v1) {
+          return v1.textualTitle;
+        });
+        return function($71) {
+          return _TargetSummary2($70($71));
+        };
+      }())(v.value1);
+      var summaryDescription = view(function() {
+        var $72 = to2(function(v1) {
+          return v1.textualSummary;
+        });
+        return function($73) {
+          return _TargetSummary2($72($73));
+        };
+      }())(v.value1);
+      var preambleFavicon = preview(function() {
+        var $74 = to2(function(v1) {
           return v1.preambleSummary;
         });
-        var $71 = to2(function(v1) {
+        var $75 = to2(function(v1) {
           return v1.faviconUrl;
         });
-        return function($72) {
-          return _TargetSummary2($70(_Just2(_PreambleSummary2($71($72)))));
+        return function($76) {
+          return _TargetSummary2($74(_Just2(_PreambleSummary2($75($76)))));
         };
       }())(v.value1);
       var hashtags = toArrayOf(function() {
-        var $73 = to2(function(v1) {
+        var $77 = to2(function(v1) {
           return v1.hashtagSummary;
         });
-        var $74 = to2(function(v1) {
+        var $78 = to2(function(v1) {
           return v1.hashtags;
         });
-        var $75 = to2(function(v1) {
+        var $79 = to2(function(v1) {
           return v1.hashtag;
         });
-        return function($76) {
-          return _TargetSummary2($73(_HashTagSummary2($74(traversed2(_HashTagItem2($75($76)))))));
+        return function($80) {
+          return _TargetSummary2($77(_HashTagSummary2($78(traversed2(_HashTagItem2($79($80)))))));
         };
       }())(v.value1);
       var defaultTitle = showTargetType(targetType);
@@ -10788,26 +10788,43 @@
   };
   var matchRoute = function(filter4) {
     return function(v) {
+      var hashtags = toArrayOf(function() {
+        var $81 = to2(function(v1) {
+          return v1.hashtagSummary;
+        });
+        var $82 = to2(function(v1) {
+          return v1.hashtags;
+        });
+        var $83 = to2(function(v1) {
+          return v1.hashtag;
+        });
+        return function($84) {
+          return _TargetSummary2($81(_HashTagSummary2($82(traversed2(_HashTagItem2($83($84)))))));
+        };
+      }())(v.value1);
       var f = matchFilter(filter4);
+      var inHashtags = or2(map30(f)(map30(function(v1) {
+        return "#" + v1;
+      })(hashtags)));
       var inSummary = preview(function() {
-        var $77 = to2(function(v1) {
+        var $85 = to2(function(v1) {
           return v1.textualSummary;
         });
-        var $78 = to2(f);
-        return function($79) {
-          return _TargetSummary2($77(_Just2($78($79))));
+        var $86 = to2(f);
+        return function($87) {
+          return _TargetSummary2($85(_Just2($86($87))));
         };
       }())(v.value1);
       var inTitle = preview(function() {
-        var $80 = to2(function(v1) {
+        var $88 = to2(function(v1) {
           return v1.textualTitle;
         });
-        var $81 = to2(f);
-        return function($82) {
-          return _TargetSummary2($80(_Just2($81($82))));
+        var $89 = to2(f);
+        return function($90) {
+          return _TargetSummary2($88(_Just2($89($90))));
         };
       }())(v.value1);
-      return or2([f(v.value0), fromMaybe(false)(inTitle), fromMaybe(false)(inSummary)]);
+      return or2([f(v.value0), fromMaybe(false)(inTitle), fromMaybe(false)(inSummary), inHashtags]);
     };
   };
   var fetchPathList = /* @__PURE__ */ bind11(fetchPaths)(function(res) {
@@ -10832,11 +10849,11 @@
   var main2 = /* @__PURE__ */ runHalogenAff(/* @__PURE__ */ bind11(awaitBody)(function(body2) {
     return bind11(liftAff2(fetchPathList))(function(blogPaths) {
       var routes = toArrayOf(function() {
-        var $83 = to2(function(v) {
+        var $91 = to2(function(v) {
           return v.paths;
         });
-        return function($84) {
-          return _Just1(_PathList2($83(traversed2($84))));
+        return function($92) {
+          return _Just1(_PathList2($91(traversed2($92))));
         };
       }())(blogPaths);
       return bind11(selectElement("#search-box"))(function(elem3) {

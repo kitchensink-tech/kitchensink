@@ -61,11 +61,14 @@ matchRoute filter (Tuple r summary) =
   let f = matchFilter filter 
       inTitle = preview (_TargetSummary <<< to _.textualTitle <<< _Just <<< to f) summary
       inSummary = preview (_TargetSummary <<< to _.textualSummary <<< _Just <<< to f) summary
+      hashtags = toArrayOf (_TargetSummary <<< to _.hashtagSummary <<< _HashTagSummary <<< to _.hashtags <<< traversed <<< _HashTagItem <<< to _.hashtag ) summary
+      inHashtags = Foldable.or $ map f $ map ("#" <> _) hashtags
   in
   Foldable.or
   [ f r
   , fromMaybe false inTitle
   , fromMaybe false inSummary
+  , inHashtags
   ]
 
 renderRoute :: forall m. ItemVisibility -> Tuple Route TargetSummary -> HH.ComponentHTML Action () m
