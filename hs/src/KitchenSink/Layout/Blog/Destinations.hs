@@ -87,6 +87,12 @@ destVideoFile prefix (FileSource path) =
     (Text.pack $ "/videos/" <> takeFileName path)
     (prefix </> "videos" </> takeFileName path)
 
+destAudioFile :: OutputPrefix -> SourceLocation -> DestinationLocation
+destAudioFile prefix (FileSource path) =
+  StaticFileDestination
+    (Text.pack $ "/audios/" <> takeFileName path)
+    (prefix </> "audios" </> takeFileName path)
+
 destRawFile :: OutputPrefix -> SourceLocation -> DestinationLocation
 destRawFile prefix (FileSource path)
   | takeFileName path == "robots.txt" =

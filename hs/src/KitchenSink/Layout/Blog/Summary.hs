@@ -32,6 +32,7 @@ data TargetType
   | ImageTarget
   | GraphVizImageTarget
   | VideoTarget
+  | AudioTarget
   | RawTarget
   | DatasetTarget
   | DocumentTarget

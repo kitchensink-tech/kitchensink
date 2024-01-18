@@ -325,13 +325,14 @@ This extension is custom-made (until we upstream it). KitchenSinks discovers
 #note-taking apps. HashTags acts like Topics in the sense that they allow you
 to list all items on a special, per-HashTag page.
 
-### copies other images, css
+### copies other images, css, medias
 
 An article often comes with extra medias. Images (with `jpeg`, `png`
 extensions), JavaScript (`.js`) and CSS (`.css`) files are copied to
-their own target at known location.  That is, KitchenSink wants everything in a
-directory but applies rule so that you get something a bit cleaner in return,
-isn't it awesome?
+their own target at known locations. The same thing occurs for a variety of
+filetypes (`.mp3`, `.mp4` and so on).
+That is, KitchenSink wants everything in a directory but applies rule so that
+you get something a bit cleaner in return, isn't it awesome?
 
 You can see for yourself, compare the [listing of this website source directory](/gen/out/features.cmark__tree-site-input-cmark.json) with the [listing of the website output directory](/gen/out/features.cmark__tree-site-output-cmark.json) (courtesy of `tree -J`).
 

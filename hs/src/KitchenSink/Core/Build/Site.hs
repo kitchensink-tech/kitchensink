@@ -20,6 +20,9 @@ overSections :: (Applicative t) => (Section ext a -> t (Section ext b)) -> Artic
 overSections f (Article p xs) =
   Article p <$> traverse f xs
 
+data AudioFile = AudioFile
+  deriving (Show, Eq, Ord)
+
 data VideoFile = VideoFile
   deriving (Show, Eq, Ord)
 
@@ -48,6 +51,7 @@ data Site ext = Site
   { articles :: [ Sourced (Article ext [Text]) ]
   , images :: [ Sourced Image ]
   , videoFiles :: [ Sourced VideoFile ]
+  , audioFiles :: [ Sourced AudioFile ]
   , cssFiles :: [ Sourced CssFile ]
   , jsFiles :: [ Sourced JsFile ]
   , htmlFiles :: [ Sourced HtmlFile ]

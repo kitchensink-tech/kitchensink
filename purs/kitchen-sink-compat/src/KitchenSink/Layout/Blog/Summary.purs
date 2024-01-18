@@ -115,6 +115,7 @@ data TargetType =
   | ImageTarget
   | GraphVizImageTarget
   | VideoTarget
+  | AudioTarget
   | RawTarget
   | DatasetTarget
   | DocumentTarget
@@ -157,6 +158,12 @@ _VideoTarget :: Prism' TargetType Unit
 _VideoTarget = prism' (\_ -> VideoTarget) f
   where
     f VideoTarget = Just unit
+    f _ = Nothing
+
+_AudioTarget :: Prism' TargetType Unit
+_AudioTarget = prism' (\_ -> AudioTarget) f
+  where
+    f AudioTarget = Just unit
     f _ = Nothing
 
 _RawTarget :: Prism' TargetType Unit

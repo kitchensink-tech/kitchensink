@@ -132,6 +132,11 @@ loadImage trace path = do
   trace $ LoadImage path
   pure $ (Sourced (FileSource path) Image)
 
+loadAudio :: Loader a AudioFile
+loadAudio trace path = do
+  trace $ LoadVideo path
+  pure $ (Sourced (FileSource path) AudioFile)
+
 loadVideo :: Loader a VideoFile
 loadVideo trace path = do
   trace $ LoadVideo path
@@ -174,6 +179,7 @@ loadSite extras trace dir = do
     <$> articlesM paths
     <*> imagesM paths
     <*> videosM paths
+    <*> audiosM paths
     <*> cssM paths
     <*> jsM paths
     <*> htmlM paths
@@ -195,6 +201,8 @@ loadSite extras trace dir = do
                      $ [ dir </> p | p <- paths, takeExtension p == ".dot" ]
     videosM paths = traverse (loadVideo trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".webm", ".mp4"] ]
+    audiosM paths = traverse (loadAudio trace)
+                     $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".ogg", ".mp3", ".wav"] ]
     rawsM paths = traverse (loadRaw trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".txt", ".csv", ".json", ".dhall"] , takeFileName p /= "kitchen-sink.json"]
     docsM paths = traverse (loadDocument trace)

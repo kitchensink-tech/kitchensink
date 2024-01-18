@@ -9,7 +9,7 @@ import Data.Aeson (ToJSON)
 import Data.Text (Text)
 
 import KitchenSink.Layout.Blog.Extensions (Site)
-import KitchenSink.Core.Build.Site (articles, images, videoFiles, rawFiles, cssFiles, jsFiles, dotSourceFiles)
+import KitchenSink.Core.Build.Site (articles, images, videoFiles, audioFiles, rawFiles, cssFiles, jsFiles, dotSourceFiles)
 import KitchenSink.Prelude
 
 data FileCount = FileCount {
@@ -24,6 +24,7 @@ filecounts site =
   [ FileCount "articles" (length $ articles site)
   , FileCount "images"   (length $ images site)
   , FileCount "videos" (length $ videoFiles site)
+  , FileCount "audios" (length $ audioFiles site)
   , FileCount "raws" (length $ rawFiles site)
   , FileCount "css" (length $ cssFiles site)
   , FileCount "js" (length $ jsFiles site)
