@@ -9,6 +9,12 @@
 ,"title": "Home"
 }
 
+=base:summary.cmark
+
+Kitchen-Sink is the website-tool you need, not the one you need.
+Kitchen-Sink is a frivolous static-site generator.
+Kitchen-Sink also is an API gateway.
+
 =base:main-content.cmark
 
 Kitchen-Sink is a [_frivolous_](/philosophy.html)  static-site generator.
