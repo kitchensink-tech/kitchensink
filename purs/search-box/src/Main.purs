@@ -114,6 +114,7 @@ renderRoute visibility (Tuple r summary) =
       [ HH.text $ fromMaybe "" summaryDescription
       ]
     , maybe (HH.text "") renderTopicImage topicImage
+    , fromMaybe (HH.text "") (renderMediaEmbed r targetType)
     ]
   ]
 
@@ -166,3 +167,29 @@ showTargetType = case _ of
   DocumentTarget -> "Some document file"
   HashTagsIndexTarget -> "Hashtags index"
 
+renderMediaEmbed :: forall w i. Route -> TargetType -> Maybe (HH.HTML w i)
+renderMediaEmbed r =
+  case _ of
+    ImageTarget -> Just $
+      renderTopicImage r
+    GraphVizImageTarget -> Just $
+      renderTopicImage r
+    VideoTarget -> Just $
+      HH.video
+      [ HP.controls true
+      , HP.width 320
+      , HP.height 240
+      ]
+      [ HH.source
+        [ HP.src r
+        ]
+      ]
+    AudioTarget -> Just $
+      HH.audio
+      [ HP.controls true
+      ]
+      [ HH.source
+        [ HP.src r
+        ]
+      ]
+    _ -> Nothing
