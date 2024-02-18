@@ -51,8 +51,8 @@ type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 --   * dependencies between sections? or between articles?
 --   * dependencies to external query widgets or params?
 --   * references to generated datasets (e.g., `curl a page, use as input to other place`)
-loadArticle :: [ExtraSectionType ext] -> Loader ext (Article ext [Text])
-loadArticle extras trace path = do
+loadArticle :: FilePath -> [ExtraSectionType ext] -> Loader ext (Article ext [Text])
+loadArticle dhallRoot extras trace path = do
   trace $ LoadArticle path
   eart <- runParser (article extras path) path <$> Text.readFile path
   case eart of
@@ -60,7 +60,7 @@ loadArticle extras trace path = do
     Right art -> Sourced (FileSource path) <$> evalSections art
 
   where
-    evalSections art = evalStateT (overSections (evalSection path trace) art) newState
+    evalSections art = evalStateT (overSections (evalSection path dhallRoot trace) art) newState
 
 data DhallResult
   = DhallTextContents Text [Text]
@@ -89,8 +89,8 @@ newState = EvalState 0
 
 type Eval a = StateT EvalState IO a
 
-evalSection :: FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> Eval (Section ext [Text])
-evalSection path trace x@(Section t fmt body) = do
+evalSection :: FilePath -> FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> Eval (Section ext [Text])
+evalSection path dhallRoot trace x@(Section t fmt body) = do
   st0 <- get
   ret <- liftIO $ do
     trace $ EvalSection path t fmt
@@ -110,6 +110,7 @@ evalSection path trace x@(Section t fmt body) = do
           let sub0 = Dhall.fromList [ ("kitchensink", ksExpr) ]
           let setts = defaultInputSettings
                       & Dhall.sourceName .~ (path <> " (section)")
+                      & Dhall.rootDirectory .~ dhallRoot
                       & Dhall.evaluateSettings . substitutions .~ sub0
                       & Dhall.evaluateSettings . startingContext .~ ctx0
           de <- inputExprWithSettings setts (Text.unlines body) :: IO (Core.Expr Src Void)
@@ -172,8 +173,8 @@ loadDotSource trace path = do
   trace $ LoadDotSource path
   pure $ (Sourced (FileSource path) DotSourceFile)
 
-loadSite :: [ExtraSectionType ext] -> (LogMsg ext -> IO ()) -> FilePath -> IO (Site ext)
-loadSite extras trace dir = do
+loadSite :: FilePath -> [ExtraSectionType ext] -> (LogMsg ext -> IO ()) -> FilePath -> IO (Site ext)
+loadSite dhallRoot extras trace dir = do
   paths <- listDirectory dir
   Site
     <$> articlesM paths
@@ -187,7 +188,7 @@ loadSite extras trace dir = do
     <*> rawsM paths
     <*> docsM paths
   where
-    articlesM paths = traverse (loadArticle extras trace)
+    articlesM paths = traverse (loadArticle dhallRoot extras trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark" ] ]
     imagesM paths = traverse (loadImage trace)
                      $ [ dir </> p | p <- paths, takeExtension p `List.elem` [".jpg", ".jpeg", ".png" ] ]

@@ -5,7 +5,7 @@
 module KitchenSink.Engine.MultiSite where
 
 import Control.Concurrent.Async (Concurrently(..))
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Time.Clock (getCurrentTime)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.ByteString as ByteString
@@ -287,7 +287,7 @@ buildDirectorySourceApp rt src cfg = do
       $ (siteTargets Blog.layout) unusedPrefix med site
 
     loadSource :: IO (SiteLoader.Site ())
-    loadSource = SiteLoader.loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) src.path
+    loadSource = SiteLoader.loadSite (fromMaybe "." src.dhallRoot) (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) src.path
 
 buildFallbackApp :: Runtime -> MultiSiteConfig -> IO (Maybe (TLS.HostName, Wai.Application))
 buildFallbackApp rt cfg = case cfg.fallback of

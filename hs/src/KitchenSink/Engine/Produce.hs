@@ -31,7 +31,7 @@ run cmd = do
   let kitchensinkFilePath = ksPath (srcDir cmd) (ksFile cmd)
   serveMetadata <- loadMetadata kitchensinkFilePath
   let prodengine = Engine
-                  (loadSite (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
+                  (loadSite "." (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (pure serveMetadata)
                   (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
                   (produceTarget print)

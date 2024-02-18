@@ -17,6 +17,7 @@ data KitchenSinkDirectorySourceStanza
   = KitchenSinkDirectorySourceStanza
   { path :: FilePath
   , metadata :: SiteInfo
+  , dhallRoot :: Maybe FilePath
   }
   deriving (Generic, Show)
 instance FromJSON KitchenSinkDirectorySourceStanza
