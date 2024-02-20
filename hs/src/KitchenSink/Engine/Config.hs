@@ -34,6 +34,7 @@ data RewriteRule
   = NoRewrite
   | DropPrefix
   | RewritePrefix Prefix
+  | RewritePrefixHost Prefix HostName
   deriving (Eq, Generic, Show)
 instance FromJSON RewriteRule
 instance ToJSON RewriteRule

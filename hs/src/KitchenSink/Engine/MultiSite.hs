@@ -39,7 +39,7 @@ import KitchenSink.Prelude
 import qualified KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.SiteBuilder (produceTarget)
-import KitchenSink.Engine.Config (SlashApiProxyDirective(..),ApiProxyConfig(..),TransportSecurity(..), RewriteRule(..))
+import KitchenSink.Engine.Config (SlashApiProxyDirective(..),ApiProxyConfig(..),TransportSecurity(..), RewriteRule(..), Prefix)
 import KitchenSink.Engine.SiteConfig
 import KitchenSink.Engine.MultiSiteConfig
 import KitchenSink.Engine.Track (DevServerTrack(..))
@@ -235,22 +235,40 @@ buildProxyBackend rt cfg =
     dest host port = WaiProxy.WPRProxyDest $ proxydest host port
     destSecure host port = WaiProxy.WPRProxyDestSecure $ proxydest host port
     mkdest directive =
-      let host = Text.encodeUtf8 directive.hostname
+      let
+        host = Text.encodeUtf8 directive.hostname
       in
       case (directive.rewrite, directive.security) of
         (NoRewrite, UsePlainText) -> const $ dest host directive.portnum
         (NoRewrite, UseHTTPS)     -> const $ destSecure host directive.portnum
         (DropPrefix, UsePlainText) ->
-          \req -> WaiProxy.WPRModifiedRequest (stripPrefix req directive.prefix) (proxydest host directive.portnum)
+          \req -> WaiProxy.WPRModifiedRequest (stripPrefix directive.prefix req) (proxydest host directive.portnum)
         (DropPrefix, UseHTTPS) ->
-          \req -> WaiProxy.WPRModifiedRequestSecure (stripPrefix req directive.prefix) (proxydest host directive.portnum)
+          \req -> WaiProxy.WPRModifiedRequestSecure (stripPrefix directive.prefix req) (proxydest host directive.portnum)
         (RewritePrefix pfx, UsePlainText) ->
-          \req -> WaiProxy.WPRModifiedRequest (rewritePrefix req directive.prefix pfx) (proxydest host directive.portnum)
+          \req -> WaiProxy.WPRModifiedRequest (rewritePrefix directive.prefix pfx req) (proxydest host directive.portnum)
         (RewritePrefix pfx, UseHTTPS) ->
-          \req -> WaiProxy.WPRModifiedRequestSecure (rewritePrefix req directive.prefix pfx) (proxydest host directive.portnum)
+          \req -> WaiProxy.WPRModifiedRequestSecure (rewritePrefix directive.prefix pfx req) (proxydest host directive.portnum)
+        (RewritePrefixHost pfx newHost, UsePlainText) ->
+          \req -> WaiProxy.WPRModifiedRequest (changeHost (Text.encodeUtf8 newHost) $ rewritePrefix directive.prefix pfx $ req) (proxydest host directive.portnum)
+        (RewritePrefixHost pfx newHost, UseHTTPS) ->
+          \req -> WaiProxy.WPRModifiedRequestSecure (changeHost (Text.encodeUtf8 newHost) $ rewritePrefix directive.prefix pfx $ req) (proxydest host directive.portnum)
 
-    stripPrefix req pfx = req { Wai.rawPathInfo = ByteString.drop (ByteString.length $ Text.encodeUtf8 pfx) req.rawPathInfo }
-    rewritePrefix req pfx newPfx = req { Wai.rawPathInfo = (Text.encodeUtf8 newPfx) <> ByteString.drop (ByteString.length $ Text.encodeUtf8 pfx) req.rawPathInfo }
+    stripPrefix :: Prefix -> Wai.Request -> Wai.Request
+    stripPrefix pfx req = req { Wai.rawPathInfo = ByteString.drop (ByteString.length $ Text.encodeUtf8 pfx) req.rawPathInfo }
+
+    rewritePrefix :: Prefix -> Prefix -> Wai.Request -> Wai.Request
+    rewritePrefix pfx newPfx req = req { Wai.rawPathInfo = (Text.encodeUtf8 newPfx) <> ByteString.drop (ByteString.length $ Text.encodeUtf8 pfx) req.rawPathInfo }
+
+    changeHost :: ByteString.ByteString -> Wai.Request -> Wai.Request
+    changeHost newHost req =
+      let
+        notHostHeader (hn,_) = hn /= "host"
+      in
+      req
+      { Wai.requestHeaderHost = Just newHost
+      , Wai.requestHeaders = ("host", newHost) : List.filter notHostHeader (Wai.requestHeaders req)
+      }
 
     static host port =
       ProdProxy.WaiProxyBackend (\_ -> pure $ dest host port)
