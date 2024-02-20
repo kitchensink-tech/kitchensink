@@ -284,7 +284,7 @@ buildDirectorySourceApp rt src cfg = do
 
     evalTargets :: MetaData -> SiteLoader.Site () -> [Target () ()]
     evalTargets med site = fmap (fmap $ const ())
-      $ (siteTargets Blog.layout) unusedPrefix med site
+      $ (siteTargets Blog.layout) (src.execRoot) unusedPrefix med site
 
     loadSource :: IO (SiteLoader.Site ())
     loadSource = SiteLoader.loadSite (fromMaybe "." src.dhallRoot) (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) src.path

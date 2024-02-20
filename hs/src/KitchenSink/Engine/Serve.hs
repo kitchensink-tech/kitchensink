@@ -60,7 +60,7 @@ run cmd = do
   let prodengine = Engine
                   (loadSite "." (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (pure serveMetadata)
-                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
+                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing (coerce $ outDir cmd) med site)
                   (produceTarget print)
   let devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath }
   ksconfig <- loadJSONFile @Config kitchensinkFilePath >>= maybe (error "couldn't load kitchensink.json") pure

@@ -30,7 +30,7 @@ import qualified Text.Atom.Feed as Atom
 import qualified Text.Feed.Export as Export (textFeedWith)
 
 import KitchenSink.Core.Build.Site (images, dotSourceFiles, videoFiles, audioFiles, rawFiles, cssFiles, jsFiles, htmlFiles, docFiles, articles)
-import KitchenSink.Core.Build.Target (DestinationLocation, OutputPrefix, Sourced(..), SourceLocation(..), copyFrom, execCmd, destinationUrl, destination, summary, runAssembler)
+import KitchenSink.Core.Build.Target (DestinationLocation, OutputPrefix, Sourced(..), SourceLocation(..), copyFrom, execCmd, destinationUrl, destination, summary, runAssembler, ExecRoot)
 import qualified KitchenSink.Core.Build.Target as Core
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)
@@ -60,7 +60,10 @@ imageTargets prefix site =
 
 dotimageTargets :: OutputPrefix -> Site -> [Target]
 dotimageTargets prefix site =
-  [ simpleTarget GraphVizImageTarget (destGenImage prefix loc GenPngFile) (execCmd "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site ]
+  [ simpleTarget GraphVizImageTarget (destGenImage prefix loc GenPngFile) (execCmd root "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site ]
+  where
+    root :: ExecRoot
+    root = Nothing
 
 videoTargets :: OutputPrefix -> Site -> [Target]
 videoTargets prefix site =
@@ -102,8 +105,8 @@ rootDataTarget prefix v loc =
   where
     f _ = Generator $ pure $ Right $ Text.encodeUtf8 v
 
-siteTargets :: OutputPrefix -> MetaData -> Site -> [Target]
-siteTargets prefix extra site = allTargets
+siteTargets :: ExecRoot -> OutputPrefix -> MetaData -> Site -> [Target]
+siteTargets execRoot prefix extra site = allTargets
   where
     allTargets = mconcat
       [ embeddedGeneratorTargets
@@ -205,7 +208,7 @@ siteTargets prefix extra site = allTargets
 
         generatorTarget :: SourceLocation -> GeneratorInstructionsData -> Target
         generatorTarget loc g =
-          let rule = execCmd (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
+          let rule = execCmd execRoot (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
           in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
 
         generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]

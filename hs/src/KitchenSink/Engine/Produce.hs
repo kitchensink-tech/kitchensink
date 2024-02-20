@@ -33,7 +33,7 @@ run cmd = do
   let prodengine = Engine
                   (loadSite "." (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
                   (pure serveMetadata)
-                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) (coerce $ outDir cmd) med site)
+                  (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing (coerce $ outDir cmd) med site)
                   (produceTarget print)
   site <- execLoadSite prodengine
   meta <- execLoadMetaExtradata prodengine
