@@ -435,7 +435,7 @@ topicTag prefix stats currentDestination topic =
     prevArticles = List.takeWhile isOtherTarget articles
     nextArticles = List.drop 1 $ List.dropWhile isOtherTarget articles
     previousArticle = if null prevArticles then Nothing else Just $ List.last prevArticles
-    nextArticle = if null nextArticles then Nothing else Just $ List.head nextArticles
+    nextArticle = fst <$> List.uncons nextArticles
 
     tgtLink word (target, _) = mylink_ (destinationUrl $ destination target) word
     prevLink = fmap (tgtLink "[prev]") previousArticle
