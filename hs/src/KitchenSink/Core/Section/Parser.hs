@@ -1,24 +1,24 @@
-module KitchenSink.Core.Section.Parser
-  ( module KitchenSink.Core.Section.Base
-  , extract
-  , extract'
-  , section
-  , sectionType
-  , ExtraSectionType(..)
-  , Parser
-  )
+module KitchenSink.Core.Section.Parser (
+    module KitchenSink.Core.Section.Base,
+    extract,
+    extract',
+    section,
+    sectionType,
+    ExtraSectionType (..),
+    Parser,
+)
 where
 
 import Data.Foldable (asum)
 import Data.Text (Text)
-import Text.Megaparsec
-import Text.Megaparsec.Char (string, newline)
 import Data.Void (Void)
+import Text.Megaparsec
+import Text.Megaparsec.Char (newline, string)
 
-import KitchenSink.Prelude
 import KitchenSink.Core.Section.Base
+import KitchenSink.Prelude
 
-extract' :: Coercible a b => Section ext a -> b
+extract' :: (Coercible a b) => Section ext a -> b
 extract' (Section _ _ a) = coerce a
 
 extract :: Section ext a -> a
@@ -27,10 +27,10 @@ extract (Section _ _ a) = a
 type Parser = Parsec Void Text
 
 data ExtraSectionType userdef
-  = ExtraSectionType
-  { key :: Text
-  , val :: userdef
-  }
+    = ExtraSectionType
+    { key :: Text
+    , val :: userdef
+    }
 
 sectionType :: [ExtraSectionType ext] -> Parser (SectionType ext)
 sectionType extras =
@@ -41,25 +41,25 @@ sectionType extras =
     gen = mkSectionType "generator"
     ext = mkSectionType "ext"
 
-    basics = 
-      [ base "build-info" BuildInfo
-      , base "preamble" Preamble
-      , base "topic" Topic
-      , base "main-content" MainContent
-      , base "summary" Summary
-      , base "main-css" MainCss
-      , base "taken-off" TakenOff
-      , base "social" Social
-      , base "glossary" Glossary
-      , base "dataset" Dataset
-      ]
+    basics =
+        [ base "build-info" BuildInfo
+        , base "preamble" Preamble
+        , base "topic" Topic
+        , base "main-content" MainContent
+        , base "summary" Summary
+        , base "main-css" MainCss
+        , base "taken-off" TakenOff
+        , base "social" Social
+        , base "glossary" Glossary
+        , base "dataset" Dataset
+        ]
 
     dangerous =
-      [ gen "cmd" GeneratorInstructions
-      ]
+        [ gen "cmd" GeneratorInstructions
+        ]
 
     extensions =
-      [ ext k (Extension v) | ExtraSectionType k v <- extras ]
+        [ext k (Extension v) | ExtraSectionType k v <- extras]
 
 format :: Parser Format
 format = cmark <|> json <|> css <|> csv <|> dhall

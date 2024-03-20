@@ -1,10 +1,11 @@
--- | Module to simplify types for the layout by pinning the parametrizable
--- extension to a single known value.
+{- | Module to simplify types for the layout by pinning the parametrizable
+extension to a single known value.
+-}
 module KitchenSink.Layout.Blog.Extensions where
 
-import qualified KitchenSink.Core.Build.Target as Core
-import qualified KitchenSink.Core.Section as Core
-import qualified KitchenSink.Core.Build.Site as Core
+import KitchenSink.Core.Build.Site qualified as Core
+import KitchenSink.Core.Build.Target qualified as Core
+import KitchenSink.Core.Section qualified as Core
 
 type Article a = Core.Article () a
 type Site = Core.Site ()

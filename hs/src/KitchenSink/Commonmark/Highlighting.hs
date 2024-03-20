@@ -1,15 +1,13 @@
+module KitchenSink.Commonmark.Highlighting (
+    CodeLanguage (..),
+    Code (..),
+    highlightCode,
+) where
 
-module KitchenSink.Commonmark.Highlighting
-  ( CodeLanguage(..)
-  , Code(..)
-  , highlightCode
-  ) where
-
-
+import Data.ByteString.Lazy qualified as LByteString
 import Skylighting
-import qualified Text.Blaze.Html as Blaze
+import Text.Blaze.Html qualified as Blaze
 import Text.Blaze.Renderer.Utf8 (renderMarkup)
-import qualified Data.ByteString.Lazy as LByteString
 
 import Data.Text (Text)
 import KitchenSink.Prelude
@@ -19,11 +17,11 @@ newtype Code = Code Text
 
 highlightCode :: CodeLanguage -> Code -> Maybe LByteString.ByteString
 highlightCode fmt code = do
-  s <- syntaxByName defaultSyntaxMap (coerce fmt)
-  either (const Nothing) (Just . render)
-    $ tokenize (TokenizerConfig defaultSyntaxMap False) s (coerce code)
+    s <- syntaxByName defaultSyntaxMap (coerce fmt)
+    either (const Nothing) (Just . render)
+        $ tokenize (TokenizerConfig defaultSyntaxMap False) s (coerce code)
   where
     render tkns =
-      renderMarkup
-      $ Blaze.toHtml
-      $ formatHtmlBlock defaultFormatOpts tkns
+        renderMarkup
+            $ Blaze.toHtml
+            $ formatHtmlBlock defaultFormatOpts tkns

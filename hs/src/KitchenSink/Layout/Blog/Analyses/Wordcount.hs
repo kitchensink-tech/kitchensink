@@ -1,14 +1,14 @@
 module KitchenSink.Layout.Blog.Analyses.Wordcount where
 
-import qualified Commonmark
+import Commonmark qualified
 import Data.Text (Text)
-import qualified Data.Text as Text
+import Data.Text qualified as Text
 
-import KitchenSink.Layout.Blog.Extensions (Section)
+import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Target (runAssembler)
 import KitchenSink.Core.Section (extract)
+import KitchenSink.Layout.Blog.Extensions (Section)
 import KitchenSink.Prelude
-import KitchenSink.Core.Assembler.Sections
 
 wordcount :: Text -> Int
 wordcount = length . Text.words
@@ -19,6 +19,5 @@ contentWordCount xs = sum $ fmap go xs
     go :: Section [Text] -> Int
     go sec =
         case runAssembler $ parseCMark sec of
-          Left _ -> sum $ [ wordcount w | w <- extract sec ]
-          Right html -> wordcount $ Commonmark.toPlainText $ extract html
-
+            Left _ -> sum $ [wordcount w | w <- extract sec]
+            Right html -> wordcount $ Commonmark.toPlainText $ extract html

@@ -1,33 +1,33 @@
-module KitchenSink.Core.Section.Base (SectionType(..), Format(..), Section(..))
+module KitchenSink.Core.Section.Base (SectionType (..), Format (..), Section (..))
 where
 
 import KitchenSink.Prelude
 
 data SectionType ext
-  = BuildInfo
-  | Preamble
-  | Topic
-  | Summary
-  | MainContent
-  | MainCss
-  | TakenOff
-  | Social
-  | GeneratorInstructions
-  | Glossary
-  | Dataset
-  | Extension ext
-  deriving (Show, Eq, Ord)
+    = BuildInfo
+    | Preamble
+    | Topic
+    | Summary
+    | MainContent
+    | MainCss
+    | TakenOff
+    | Social
+    | GeneratorInstructions
+    | Glossary
+    | Dataset
+    | Extension ext
+    deriving (Show, Eq, Ord)
 
 data Format
-  = Cmark
-  | Dhall
-  | Json
-  | TextHtml
-  | Css
-  | Csv
-  | InMemory
-  deriving (Show, Eq, Ord)
+    = Cmark
+    | Dhall
+    | Json
+    | TextHtml
+    | Css
+    | Csv
+    | InMemory
+    deriving (Show, Eq, Ord)
 
 data Section ext a
-  =  Section (SectionType ext) Format a
-  deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+    = Section (SectionType ext) Format a
+    deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
