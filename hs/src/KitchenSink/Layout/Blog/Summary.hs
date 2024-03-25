@@ -19,7 +19,6 @@ module KitchenSink.Layout.Blog.Summary (
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Maybe (fromMaybe)
-import Data.Text (Text)
 import GHC.Generics (Generic)
 
 import KitchenSink.Core.Section hiding (target)

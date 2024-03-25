@@ -9,7 +9,6 @@ import Data.ByteString.Char8 qualified as ByteString
 import Data.ByteString.Lazy qualified as LByteString
 import Data.Int (Int64)
 import Data.List qualified as List
-import Data.Text (Text)
 import Data.Text.Encoding qualified as Text
 import Data.Typeable (Typeable)
 import Network.HTTP.Types (status200, status404)

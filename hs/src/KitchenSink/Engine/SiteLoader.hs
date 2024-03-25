@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 
 module KitchenSink.Engine.SiteLoader (module KitchenSink.Core.Build.Site, loadSite, LogMsg (..)) where
 
@@ -6,7 +7,10 @@ import Control.Exception (throwIO)
 import Data.Aeson (FromJSON (..), withObject, (.:))
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Lazy qualified as LByteString
+import Data.Either (fromRight)
 import Data.List qualified as List
+import Data.Map (Map)
+import Data.Map qualified as Map
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Text.IO qualified as Text
@@ -15,6 +19,7 @@ import Dhall
 import Dhall.Context qualified as Context
 import Dhall.Core qualified as Core
 import Dhall.JSON (CompileError, dhallToJSON)
+import Dhall.JSONToDhall (defaultConversion, dhallFromJSON, inferSchema, schemaToDhallType)
 import Dhall.Map qualified as Dhall
 import Dhall.Src (Src)
 import Lens.Family
@@ -60,7 +65,8 @@ loadArticle dhallRoot extras trace path = do
         Left err -> throwIO err
         Right art -> Sourced (FileSource path) <$> evalSections art
   where
-    evalSections art = evalStateT (overSections (evalSection path dhallRoot trace) art) newState
+    env = EvalEnv path dhallRoot trace
+    evalSections art = evalStateT (overSections (evalSection env) art) newState
 
 data DhallResult
     = DhallTextContents Text [Text]
@@ -74,60 +80,103 @@ instance FromJSON DhallResult where
             "json" -> DhallJsonContents <$> obj .: "contents"
             _ -> DhallTextContents format <$> obj .: "contents"
 
+data EvalEnv ext
+    = EvalEnv
+    { path :: FilePath
+    , dhallRoot :: FilePath
+    , trace :: LogMsg ext -> IO ()
+    }
+
 data EvalError
     = UnsupportedReturnFormat Text
     | DhallRuntimeError CompileError
     | DhallResultJsonDecodeError String
+    | MalformedJSONDataset Name String
     deriving (Show, Exception)
 
+type DatasetCells =
+    Map Name Aeson.Value
+
 data EvalState = EvalState
-    { _sectionNumber :: Integer
+    { sectionNumber :: Integer
+    , datasets :: DatasetCells
     }
 
 newState :: EvalState
-newState = EvalState 0
+newState = EvalState 0 Map.empty
 
 type Eval a = StateT EvalState IO a
 
-evalSection :: FilePath -> FilePath -> (LogMsg ext -> IO ()) -> Section ext [Text] -> Eval (Section ext [Text])
-evalSection path dhallRoot trace x@(Section t fmt body) = do
-    st0 <- get
-    ret <- liftIO $ do
-        trace $ EvalSection path t fmt
-        exec st0
+evalSection :: EvalEnv ext -> Section ext [Text] -> Eval (Section ext [Text])
+evalSection env s = do
+    x <- sectionStep env s
     incrementPage
-    pure ret
-  where
-    incrementPage = modify (\st0 -> EvalState $ succ (_sectionNumber st0))
+    pure x
 
-    exec (EvalState sectionNum) = case fmt of
-        Dhall -> do
-            let sectionNumExpr = Core.Annot (Core.IntegerLit sectionNum) (Core.Integer)
-            let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack path)) (Core.Text)
-            let ksExpr = Core.RecordLit $ Dhall.fromList [("file", Core.makeRecordField pathExpr), ("sectionNum", Core.makeRecordField sectionNumExpr)]
+incrementPage :: Eval ()
+incrementPage = modify f
+  where
+    f st0 = st0{sectionNumber = succ (sectionNumber st0)}
+
+insertDatasetContents :: Name -> Aeson.Value -> Eval ()
+insertDatasetContents k val = modify f
+  where
+    f st0 = st0{datasets = Map.insert k val (datasets st0)}
+
+sectionStep :: forall ext. EvalEnv ext -> Section ext [Text] -> Eval (Section ext [Text])
+sectionStep env x@(Section t fmt body) = do
+    st0 <- get
+    liftIO $ env.trace $ EvalSection env.path t fmt
+    exec st0
+  where
+    exec :: EvalState -> Eval (Section ext [Text])
+    exec st0 = case (t, fmt) of
+        (_, Dhall) -> do
+            -- prepare kitchensink expression
+            let jsonDataset = Aeson.toJSON st0.datasets
+            let dhallDataset = dhallFromJSON defaultConversion (schemaToDhallType $ inferSchema jsonDataset) jsonDataset
+            let sectionNumExpr = Core.Annot (Core.IntegerLit st0.sectionNumber) (Core.Integer)
+            let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack env.path)) (Core.Text)
+            let errorExpr = Core.Annot (Core.TextLit (Core.Chunks [] "could not load datasets into Dhall")) (Core.Text)
+            let ksExpr =
+                    Core.RecordLit
+                        $ Dhall.fromList
+                            [ ("file", Core.makeRecordField pathExpr)
+                            , ("sectionNum", Core.makeRecordField sectionNumExpr)
+                            , ("datasets", Core.makeRecordField $ fromRight errorExpr dhallDataset)
+                            ]
             let ctx0 =
                     Context.empty
                         & Context.insert "kitchensink" ksExpr
             let sub0 = Dhall.fromList [("kitchensink", ksExpr)]
+            -- eval dhall expression
             let setts =
                     defaultInputSettings
-                        & Dhall.sourceName .~ (path <> " (section)")
-                        & Dhall.rootDirectory .~ dhallRoot
+                        & Dhall.sourceName .~ (env.path <> " (section)")
+                        & Dhall.rootDirectory .~ env.dhallRoot
                         & Dhall.evaluateSettings . substitutions .~ sub0
                         & Dhall.evaluateSettings . startingContext .~ ctx0
-            de <- inputExprWithSettings setts (Text.unlines body) :: IO (Core.Expr Src Void)
-            dj <- case dhallToJSON de of
-                Left err -> throwIO $ DhallRuntimeError err
-                Right jvalue -> pure $ jvalue
+            de <- liftIO $ inputExprWithSettings setts (Text.unlines body) :: Eval (Core.Expr Src Void)
 
+            -- turn expression into a parsed result, using JSON as an intermediary parser
+            dj <- case dhallToJSON de of
+                Left err -> liftIO $ throwIO $ DhallRuntimeError err
+                Right jvalue -> pure $ jvalue
             case Aeson.fromJSON dj of
-                Aeson.Error err -> throwIO $ DhallResultJsonDecodeError err
-                Aeson.Success (DhallJsonContents obj) -> pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
-                Aeson.Success (DhallTextContents format contents) ->
-                    case format of
+                Aeson.Error err ->
+                    liftIO $ throwIO $ DhallResultJsonDecodeError err
+                Aeson.Success (DhallJsonContents obj) ->
+                    liftIO $ pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
+                Aeson.Success (DhallTextContents newFormat contents) ->
+                    case newFormat of
                         "cmark" -> pure $ Section t Cmark contents
                         "html" -> pure $ Section t TextHtml contents
-                        newfmt -> throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> newfmt
+                        unsupportedFmt -> liftIO $ throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> unsupportedFmt
+        (Dataset name, Json) -> do
+            case (Aeson.eitherDecode $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
+                Right v -> insertDatasetContents name v
+                Left err -> liftIO $ throwIO $ MalformedJSONDataset name err
+            pure x
         _ -> pure x
 
 loadImage :: Loader a Image

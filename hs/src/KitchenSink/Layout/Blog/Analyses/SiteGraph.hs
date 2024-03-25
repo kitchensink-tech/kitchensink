@@ -11,7 +11,6 @@ module KitchenSink.Layout.Blog.Analyses.SiteGraph (
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List qualified as List
 import Data.Map.Strict qualified as Map
-import Data.Text (Text)
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
 

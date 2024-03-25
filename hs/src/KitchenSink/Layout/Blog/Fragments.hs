@@ -5,7 +5,6 @@ import Data.Either (fromRight)
 import Data.List qualified as List
 import Data.Map.Strict qualified as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust)
-import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Lazy qualified as LText
 import Data.Time.Clock (UTCTime (..))
@@ -38,9 +37,9 @@ import KitchenSink.Layout.Blog.Metadata
 assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
 assembleHeader prefix stats currentDestination art =
     r
-        <$> (extract <$> json @() @PreambleData art Preamble)
-        <*> (fmap extract <$> jsonm @() @SocialData art Social)
-        <*> (fmap extract <$> jsonm @() @TopicData art Topic)
+        <$> (extract <$> json @() @PreambleData art isPreamble)
+        <*> (fmap extract <$> jsonm @() @SocialData art isSocial)
+        <*> (fmap extract <$> jsonm @() @TopicData art isTopic)
   where
     r :: PreambleData -> Maybe SocialData -> Maybe TopicData -> Lucid.Html ()
     r content social topic = do
@@ -63,7 +62,7 @@ assembleHeader prefix stats currentDestination art =
                     $ show
                     $ fromRight 0
                     $ contentWordCount
-                    <$> runAssembler (getSections art MainContent)
+                    <$> runAssembler (getSections art isMainContent)
         let infos = analyzeArticle art
         let lc = toHtml . show . length . linkInfos $ infos
         let ic = toHtml . show . length . imageInfos $ infos
@@ -82,7 +81,7 @@ assembleHeader prefix stats currentDestination art =
 
 assembleGlossary :: Article [Text] -> Assembler (Lucid.Html ())
 assembleGlossary art = do
-    gd <- fmap extract <$> jsonm @() @GlossaryData art Glossary
+    gd <- fmap extract <$> jsonm @() @GlossaryData art isGlossary
     let out = maybe mempty r gd
     pure out
   where
@@ -97,7 +96,7 @@ assembleGlossary art = do
         dd_ [class_ "definition"] (toHtml d)
 
 assembleFooter :: Article [Text] -> Assembler (Lucid.Html ())
-assembleFooter a = r <$> (fmap extract . jsonSection @SocialData =<< getSection a Social)
+assembleFooter a = r <$> (fmap extract . jsonSection @SocialData =<< getSection a isSocial)
   where
     r :: SocialData -> Lucid.Html ()
     r s =
@@ -122,7 +121,7 @@ assembleDefaultLayoutWarning _ = pure $ do
         p_ "this page uses a default layout"
 
 assembleUpcomingMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleUpcomingMain a = r <$> (getSections a MainContent >>= traverse renderSection)
+assembleUpcomingMain a = r <$> (getSections a isMainContent >>= traverse renderSection)
   where
     r :: [Section PreRenderedHtml] -> Lucid.Html ()
     r content = do
@@ -138,7 +137,7 @@ assembleUpcomingMain a = r <$> (getSections a MainContent >>= traverse renderSec
             toHtmlRaw @Text (extract' content)
 
 assembleArchivedMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleArchivedMain a = r <$> (getSections a MainContent >>= traverse renderSection)
+assembleArchivedMain a = r <$> (getSections a isMainContent >>= traverse renderSection)
   where
     r :: [Section PreRenderedHtml] -> Lucid.Html ()
     r content = do
@@ -154,7 +153,7 @@ assembleArchivedMain a = r <$> (getSections a MainContent >>= traverse renderSec
             toHtmlRaw @Text (extract' content)
 
 assembleMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleMain a = r <$> (getSections a MainContent >>= traverse renderSection)
+assembleMain a = r <$> (getSections a isMainContent >>= traverse renderSection)
   where
     r :: [Section PreRenderedHtml] -> Lucid.Html ()
     r content =
@@ -167,7 +166,7 @@ assembleMain a = r <$> (getSections a MainContent >>= traverse renderSection)
             toHtmlRaw @Text (extract' content)
 
 assembleStyle :: Article [Text] -> Assembler (Lucid.Html ())
-assembleStyle a = r <$> (fmap Text.concat <$> getSection a MainCss)
+assembleStyle a = r <$> (fmap Text.concat <$> getSection a isMainCss)
   where
     r :: Section Text -> Lucid.Html ()
     r content = style_ (extract content)
@@ -278,10 +277,10 @@ htmlhead mh f = \art -> do
 -- see https://www.linkedin.com/post-inspector/inspect/
 metaheaders :: MetaHeaders -> Article [Text] -> Assembler (Lucid.Html ())
 metaheaders (MetaHeaders extra dloc jsondloc atomLoc) art = do
-    topic <- fmap extract <$> jsonm @() @TopicData art Topic
-    social <- fmap extract <$> jsonm @() @SocialData art Social
-    summary <- fmap extract <$> lookupSection art Summary
-    preamble <- fmap extract <$> jsonm @() @PreambleData art Preamble
+    topic <- fmap extract <$> jsonm @() @TopicData art isTopic
+    social <- fmap extract <$> jsonm @() @SocialData art isSocial
+    summary <- fmap extract <$> lookupSection art isSummary
+    preamble <- fmap extract <$> jsonm @() @PreambleData art isPreamble
     let titleTxt = maybe defaultTitle mktitle preamble :: Text
     let faviconHref = mkfavicon preamble :: Text
     pure
@@ -345,7 +344,7 @@ buildinfo art =
     either (const Nothing) Just
         $ fmap extract
         $ runAssembler
-        $ json @() @BuildInfoData art BuildInfo
+        $ json @() @BuildInfoData art isBuildInfo
 
 isPublishedArticle :: Article [Text] -> Bool
 isPublishedArticle art = isPublic
@@ -381,7 +380,7 @@ articleLink (Core.Target d _ _) art =
     txt =
         either (const url) (compactTitle . extract)
             $ runAssembler
-            $ json @() @PreambleData art Preamble
+            $ json @() @PreambleData art isPreamble
 
 mylink_ :: Url -> Text -> Lucid.Html ()
 mylink_ url txt = a_ [href_ url] (toHtml txt)
@@ -455,7 +454,7 @@ extractDate :: Article [Text] -> Maybe UTCTime
 extractDate art =
     either (const Nothing) (date . extract)
         $ runAssembler
-        $ json @() @PreambleData art Preamble
+        $ json @() @PreambleData art isPreamble
 
 mainArticleLinks :: [(Target a, Article [Text])] -> Lucid.Html ()
 mainArticleLinks targets =
@@ -519,7 +518,7 @@ mainArticleLinkWithAnnotation t art =
         either (const Nothing) Just
             $ fmap extract
             $ runAssembler
-            $ json @() @PreambleData art Preamble
+            $ json @() @PreambleData art isPreamble
 
 preambleDateText :: PreambleData -> Maybe Text
 preambleDateText preamble =
@@ -538,7 +537,7 @@ articleSummary art = when (isJust x) $ do
         maybe mempty (toHtmlRaw @Text . extract') x
   where
     x :: Maybe (Section PreRenderedHtml)
-    x = fromRight Nothing $ runAssembler (lookupSection art Summary >>= traverse renderSection)
+    x = fromRight Nothing $ runAssembler (lookupSection art isSummary >>= traverse renderSection)
 
 articleStats :: Article [Text] -> Lucid.Html ()
 articleStats art = do
@@ -566,7 +565,7 @@ articleStats art = do
     wc = contentWordCount xs
 
     xs :: [Section [Text]]
-    xs = fromRight [] $ runAssembler (getSections art MainContent)
+    xs = fromRight [] $ runAssembler (getSections art isMainContent)
 
 articleImage :: Article [Text] -> Lucid.Html ()
 articleImage art = do
@@ -579,16 +578,16 @@ articleImage art = do
         Right x -> x
 
     getLink :: Assembler (Maybe Text)
-    getLink = f <$> jsonm @() @TopicData art Topic
+    getLink = f <$> jsonm @() @TopicData art isTopic
 
     f :: Maybe (Section TopicData) -> Maybe Text
     f sec = imageLink . extract =<< sec
 
 assembleAtomEntry :: MetaData -> DestinationLocation -> Article [Text] -> Assembler (Atom.Entry)
 assembleAtomEntry extra dloc art = do
-    summary <- fmap (compactSummary . extract) <$> lookupSection art Summary
+    summary <- fmap (compactSummary . extract) <$> lookupSection art isSummary
     r
-        <$> (extract <$> json @() @PreambleData art Preamble)
+        <$> (extract <$> json @() @PreambleData art isPreamble)
         <*> pure summary
   where
     r :: PreambleData -> Maybe Text -> Atom.Entry
@@ -610,7 +609,7 @@ assembleAtomEntry extra dloc art = do
 
 assemblePreambleData :: Article [Text] -> Assembler (Maybe PreambleData)
 assemblePreambleData art = do
-    fmap extract <$> jsonm @() @PreambleData art Preamble
+    fmap extract <$> jsonm @() @PreambleData art isPreamble
 
 articlePreambleData :: Article [Text] -> Maybe PreambleData
 articlePreambleData =
@@ -618,7 +617,7 @@ articlePreambleData =
 
 assembleTopicData :: Article [Text] -> Assembler (Maybe TopicData)
 assembleTopicData art = do
-    fmap extract <$> jsonm @() @TopicData art Topic
+    fmap extract <$> jsonm @() @TopicData art isTopic
 
 articleTopicData :: Article [Text] -> Maybe TopicData
 articleTopicData =
@@ -626,7 +625,7 @@ articleTopicData =
 
 assembleGlossaryData :: Article [Text] -> Assembler (Maybe GlossaryData)
 assembleGlossaryData art = do
-    fmap extract <$> jsonm @() @GlossaryData art Glossary
+    fmap extract <$> jsonm @() @GlossaryData art isGlossary
 
 articleGlossaryData :: Article [Text] -> Maybe GlossaryData
 articleGlossaryData =
@@ -637,12 +636,12 @@ compactSummary = Text.strip . Text.intercalate " "
 
 assembleCompactSummary :: Article [Text] -> Assembler Text
 assembleCompactSummary art = do
-    summary <- fmap extract <$> lookupSection art Summary
+    summary <- fmap extract <$> lookupSection art isSummary
     pure $ maybe "" compactSummary summary
 
 assembleTitle :: Article [Text] -> Assembler (Maybe Text)
 assembleTitle art = do
-    preamble <- fmap extract <$> jsonm @() @PreambleData art Preamble
+    preamble <- fmap extract <$> jsonm @() @PreambleData art isPreamble
     pure (title <$> preamble)
 
 articleCompactSummary :: Article [Text] -> Maybe Text

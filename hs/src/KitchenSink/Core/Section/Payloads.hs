@@ -1,9 +1,12 @@
+{- | This module exposes the key payloads that allow to convey data to the Engine.
+
+JSON serialization instances exist for metadata consumption on frontend/api clients.
+-}
 module KitchenSink.Core.Section.Payloads
 where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List qualified as List
-import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import GHC.Generics (Generic)
 

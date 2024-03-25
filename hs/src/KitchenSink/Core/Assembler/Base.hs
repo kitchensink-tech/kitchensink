@@ -7,7 +7,7 @@ import KitchenSink.Core.Section
 import KitchenSink.Prelude
 
 data AssemblerError ext
-    = SectionNotFound (SectionType ext)
+    = SectionNotFound
     | UnsupportedConversionFormat Format
     | CommonMarkRenderingError Commonmark.ParseError
     | JsonDecodingError String

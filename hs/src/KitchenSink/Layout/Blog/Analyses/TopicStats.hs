@@ -9,7 +9,6 @@ module KitchenSink.Layout.Blog.Analyses.TopicStats (
 
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Text (Text)
 
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Target (Sourced (..), runAssembler)
@@ -35,9 +34,9 @@ buildTopicStats arts mkTarget =
   where
     indexByTopic =
         Map.fromListWith (<>)
-            $ [ (topic, [(mkTarget s, art)])
+            $ [ (top, [(mkTarget s, art)])
               | s@(Sourced _ art) <- arts
-              , topic <- getTopicNames art
+              , top <- getTopicNames art
               ]
 
     indexByHashTag =
@@ -51,7 +50,7 @@ buildTopicStats arts mkTarget =
     getTopicNames art = either (const []) topics . runAssembler $ (topicSection art)
 
     topicSection :: Article [Text] -> Assembler TopicData
-    topicSection art = extract <$> json @() @TopicData art Topic
+    topicSection art = extract <$> json @() @TopicData art isTopic
 
     getHashtagNames :: Article [Text] -> [HashTagInfo]
     getHashtagNames art = hashtagInfos $ analyzeArticle art

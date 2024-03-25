@@ -6,7 +6,6 @@ import Control.Exception (SomeException)
 import Data.Aeson (ToJSON)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
-import Data.Text (Text)
 import GHC.Generics (Generic)
 import Network.Wai (Request, rawPathInfo)
 import Prod.Background as Background

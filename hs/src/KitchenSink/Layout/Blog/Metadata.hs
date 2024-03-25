@@ -3,7 +3,6 @@ module KitchenSink.Layout.Blog.Metadata (
     epochUTCTime,
 ) where
 
-import Data.Text (Text)
 import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
 import Data.Time.Clock (UTCTime (..), secondsToDiffTime)
 import Lucid.Base qualified as Lucid

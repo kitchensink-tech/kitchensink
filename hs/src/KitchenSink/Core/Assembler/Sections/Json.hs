@@ -2,7 +2,6 @@ module KitchenSink.Core.Assembler.Sections.Json where
 
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as Aeson
-import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Lazy qualified as LText
 import Data.Text.Lazy.Encoding qualified as LText
@@ -21,8 +20,8 @@ jsonSection (Section ty Json lines) =
             Right a -> Assembler $ Right $ Section ty InMemory a
 jsonSection (Section _ fmt _) = Assembler $ Left (UnsupportedConversionFormat fmt)
 
-json :: (Eq ext, FromJSON a) => Article ext [Text] -> SectionType ext -> Assembler ext (Section ext a)
+json :: (Eq ext, FromJSON a) => Article ext [Text] -> SectionPredicate ext -> Assembler ext (Section ext a)
 json art k = getSection art k >>= jsonSection
 
-jsonm :: (Eq ext, FromJSON a) => Article ext [Text] -> SectionType ext -> Assembler ext (Maybe (Section ext a))
+jsonm :: (Eq ext, FromJSON a) => Article ext [Text] -> SectionPredicate ext -> Assembler ext (Maybe (Section ext a))
 jsonm art k = lookupSection art k >>= traverse jsonSection

@@ -4,7 +4,6 @@
 module KitchenSink.Engine.Api where
 
 import Data.Aeson (ToJSON)
-import Data.Text (Text)
 import GHC.Generics (Generic)
 import Prod.Status qualified as Prod
 import Servant

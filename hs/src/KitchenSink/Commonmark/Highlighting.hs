@@ -9,7 +9,6 @@ import Skylighting
 import Text.Blaze.Html qualified as Blaze
 import Text.Blaze.Renderer.Utf8 (renderMarkup)
 
-import Data.Text (Text)
 import KitchenSink.Prelude
 
 newtype CodeLanguage = CodeLanguage Text

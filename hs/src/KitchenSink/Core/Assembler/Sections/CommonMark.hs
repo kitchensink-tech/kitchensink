@@ -3,7 +3,6 @@ where
 
 import Commonmark qualified
 import Commonmark.Extensions qualified as CommonmarkE
-import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Lazy qualified as LText
 import KitchenSink.Commonmark.HashTag qualified as CommonmarkE

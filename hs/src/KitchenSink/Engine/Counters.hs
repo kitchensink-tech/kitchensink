@@ -4,7 +4,6 @@
 module KitchenSink.Engine.Counters (Counters (..), initCounters, timeItWithLabel) where
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Text (Text)
 import Data.Time.Clock (diffUTCTime, getCurrentTime)
 import GHC.Real (fromRational, toRational)
 import Prometheus qualified as Prometheus

@@ -89,7 +89,7 @@ library
                     , containers
                     , directory
                     , dhall
-                    , dhall-json
+                    , dhall-json >= 1.7
                     , either
                     , lens-family-core
                     , feed

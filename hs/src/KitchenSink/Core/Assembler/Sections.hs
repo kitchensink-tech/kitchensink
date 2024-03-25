@@ -6,7 +6,6 @@ module KitchenSink.Core.Assembler.Sections (
     renderSection,
 ) where
 
-import Data.Text (Text)
 import Data.Text qualified as Text
 
 import KitchenSink.Core.Build.Target

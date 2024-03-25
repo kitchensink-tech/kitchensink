@@ -437,26 +437,26 @@ __example__
 ::: {.section-details}
 
 Sometimes you want to ship a dataset. An option is to create one file in the
-Kitchen-Sink directory. However naming may conflict, and for very small
-examples, sometimes you just want to inline some dataset.
+Kitchen-Sink directory. However you may not want to multiply files.  Rather,
+sometimes you just want to inline some dataset in a document.
 
-The `dataset` section addresses such needs, by generating.
-:warning: The ordering of the insertion determines the resulting filename,
-for instance `/raw/data/sections.cmark__1.csv` for the first dataset in the `sections.cmark` file.
+The `dataset` section addresses such needs, by generating.  :warning: The
+ordering of the insertion determines the resulting filename, for instance
+`/raw/data/sections.cmark__<datasetname>.csv` for the first dataset in the
+`sections.cmark` file.
 
 In the future we will likely create extra metadata information:
-- finding a way to give names to datasets
 - computing sha256 signatures of datasets
 - inserting some `<meta>` tags in the HTML `head` section
 
 __example__
 
-    =base:dataset.csv
+    =base:dataset.csv some-csv-dataset
     foo;bar
     a;42
     b;51
     
-    =base:dataset.json
+    =base:dataset.json some-json-dataset
     [{"foo":"a", "bar": 42}
     ,{"foo":"b", "bar": 51}
     ]
@@ -464,12 +464,12 @@ __example__
 :::
 
 
-=base:dataset.csv
+=base:dataset.csv some-csv-dataset
 foo;bar
 a;42
 b;51
 
-=base:dataset.json
+=base:dataset.json some-json-dataset
 [{"foo":"a", "bar": 42}
 ,{"foo":"b", "bar": 51}
 ]

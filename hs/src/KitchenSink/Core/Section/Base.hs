@@ -1,3 +1,4 @@
+-- | Base types for the Kitchensink section-format.
 module KitchenSink.Core.Section.Base (SectionType (..), Format (..), Section (..))
 where
 
@@ -12,10 +13,11 @@ data SectionType ext
     | MainCss
     | TakenOff
     | Social
-    | GeneratorInstructions
     | Glossary
-    | Dataset
+    | Dataset Name
     | Extension ext
+    | --
+      GeneratorInstructions
     deriving (Show, Eq, Ord)
 
 data Format
@@ -28,6 +30,10 @@ data Format
     | InMemory
     deriving (Show, Eq, Ord)
 
-data Section ext a
-    = Section (SectionType ext) Format a
+data Section ext payload
+    = Section
+    { sectionType :: (SectionType ext)
+    , sectionFormat :: Format
+    , sectionPayload :: payload
+    }
     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)

@@ -1,6 +1,8 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
 
+-- note: a problem to adding datasets here is that we have not access to the whole URL(and-section-index)
+-- doing so would require some (more) circular references between the target-computations
 module KitchenSink.Layout.Blog.Analyses.ArticleInfos (
     analyzeArticle,
     ArticleInfos (..),
@@ -12,7 +14,6 @@ module KitchenSink.Layout.Blog.Analyses.ArticleInfos (
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List qualified as List
-import Data.Text (Text)
 import GHC.Generics (Generic)
 
 import KitchenSink.Commonmark.Free as CMark
@@ -57,7 +58,7 @@ instance FromJSON HashTagInfo
 
 articleCMarks :: Article [Text] -> [CMark.Block ()]
 articleCMarks art =
-    case runAssembler (getSections art MainContent >>= traverse dumpCMark . List.filter isCmark) of
+    case runAssembler (getSections art isMainContent >>= traverse dumpCMark . List.filter isCmark) of
         Left _ -> []
         Right xs -> fmap extract xs
   where

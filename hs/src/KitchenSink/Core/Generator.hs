@@ -9,7 +9,10 @@ data GeneratorError
     deriving (Show, Eq)
 instance Exception GeneratorError
 
-newtype Generator a = Generator {runGenerator :: IO (Either GeneratorError a)}
+newtype Generator a
+    = Generator
+    { runGenerator :: IO (Either GeneratorError a)
+    }
     deriving (Functor)
 
 instance Show (Generator a) where

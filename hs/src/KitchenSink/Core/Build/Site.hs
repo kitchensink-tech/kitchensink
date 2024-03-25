@@ -1,6 +1,5 @@
 module KitchenSink.Core.Build.Site where
 
-import Data.Text (Text)
 import Text.Megaparsec
 import Text.Megaparsec.Char (newline)
 

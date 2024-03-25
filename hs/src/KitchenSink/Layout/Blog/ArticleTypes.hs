@@ -1,7 +1,5 @@
 module KitchenSink.Layout.Blog.ArticleTypes where
 
-import Data.Text (Text)
-
 import KitchenSink.Core.Assembler (runAssembler)
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Site ()
@@ -27,7 +25,7 @@ data ArticleLayout
 
 layoutNameFor :: Article [Text] -> ArticleLayout
 layoutNameFor art =
-    case runAssembler (json @() @BuildInfoData art BuildInfo) of
+    case runAssembler (json @() @BuildInfoData art isBuildInfo) of
         Left err -> ErrorLayout err
         Right s ->
             let binfo = extract s

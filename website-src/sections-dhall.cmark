@@ -119,7 +119,24 @@ __example 2__
 
 rendered in HTML (via CommonMark)
 
+=base:dataset.json example
+{"answer": 42
+,"items": ["foo","bar","baz"]
+}
+
 =base:main-content.dhall
+
+let prelude = ./dhall/Prelude.dhall
+
+-- some imports
+let concatMap = prelude.Text.concatMap
+let map = prelude.List.map
+
+let
+  renderItem =
+    \(i : Text) -> " - ${i}\n" : Text
+
+in
     
 { contents = [
     "::: output"
@@ -129,6 +146,12 @@ rendered in HTML (via CommonMark)
   , "file=", kitchensink.file
   , "\n", "section="
   , Integer/show kitchensink.sectionNum
+  , "\n"
+  , "some number from a dataset:"
+  , Natural/show kitchensink.datasets.example.answer
+  , "\n"
+  , "some list from a dataset:"
+  , concatMap Text renderItem kitchensink.datasets.example.items
   , "\n"
   , ":::"
   ]
@@ -224,7 +247,7 @@ __example 4__
 You can also generate JSON datasets if for some reason writing them in JSON is
 not immediate enough .
 
-    =base:dataset.dhall
+    =base:dataset.dhall alice-bob
     { contents =
         [ {name = "Alice", posts = 22.0}
         , {name = "Bob", posts = 7.0}
@@ -234,7 +257,7 @@ not immediate enough .
 
 [rendered](/raw/data/sections-dhall.cmark__1.json)
 
-=base:dataset.dhall
+=base:dataset.dhall alice-bob
 { contents =
     [ {name = "Alice", posts = 22.0}
     , {name = "Bob", posts = 7.0}
@@ -252,7 +275,18 @@ The following notes are more useful for myself and for people curious about modi
 
 ### The evaluation chain
 
-Today SiteLoader locates all `.dhall` sections after loading the Article objects (i.e., mapping Article Sections to Article Sections).
+Today SiteLoader traverses all sections (i.e., after mapping Article Sections
+to Article Sections). Upon encountering a `.dhall` section, SiteLoader
+evaluates the content as a Dhall expression returning some well-known format.
+
+Further, datasets encountered during this phase are collected in a `datasets`
+object. Previous datasets are passed to Dhall sections. Thus Dhall can
+templatize an in-line dataset.
+
+Thus, unlike `generators`, Dhall sections are pre-processors. They are
+evaluated once.  When operating Kitchen-Sink as a static-site generator there
+is no much difference, however if you operate Kitchen-Sink as a live-website,
+then you cannot use Dhall as a generator-on-steroids.
 
 ### The `kitchensink` object
 
@@ -263,6 +297,7 @@ Dhall value and has the following structure:
 ```dhall
 { file : Text -- contains the source file path for the cmark
 , sectionNum : Integer -- contains the section number of this file (starting from zero)
+, datasets : <data-dependant> -- contains a record<dataset-name, json-value-to-dhall> or an error message if it failed to load
 }
 ```
 

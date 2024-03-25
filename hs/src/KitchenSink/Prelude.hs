@@ -1,5 +1,6 @@
 module KitchenSink.Prelude (
     FilePath,
+    Name,
     hush,
     module Control.Applicative,
     module Control.Monad,
@@ -19,6 +20,7 @@ module KitchenSink.Prelude (
     module Data.Ord,
     module Data.Semigroup,
     module Data.String,
+    module Data.Text,
     module System.IO,
     module Text.Show,
     module GHC.Exception,
@@ -41,6 +43,7 @@ import Data.Maybe (Maybe (..), maybe)
 import Data.Monoid (Monoid, mappend, mconcat, mempty)
 import Data.Ord (Ord, compare)
 import Data.Semigroup (Semigroup (..), (<>))
+import Data.Text (Text)
 import Data.Traversable (Traversable (..), traverse)
 import Data.Tuple (fst, snd, uncurry)
 import Text.Show (Show, show)
@@ -52,6 +55,8 @@ import GHC.IO (IO)
 import System.IO (print, putStrLn)
 
 type FilePath = String
+
+type Name = Text
 
 hush :: Either a b -> Maybe b
 hush = either (const Nothing) Just

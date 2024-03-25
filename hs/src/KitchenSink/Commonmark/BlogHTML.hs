@@ -7,7 +7,6 @@ module KitchenSink.Commonmark.BlogHTML where
 import Commonmark (HasAttributes, IsBlock (..), IsInline, Rangeable, ToPlainText, addAttribute, htmlInline)
 import Commonmark qualified
 import Commonmark.Extensions (HasDiv, HasEmoji, HasQuoted, HasSpan)
-import Data.Text (Text)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding (decodeUtf8)

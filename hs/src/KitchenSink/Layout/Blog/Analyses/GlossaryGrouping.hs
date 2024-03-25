@@ -7,7 +7,6 @@ module KitchenSink.Layout.Blog.Analyses.GlossaryGrouping (
 
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Text (Text)
 
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Target (Sourced (..), runAssembler)
@@ -55,4 +54,4 @@ buildWholeGlossary arts mkTarget =
         either (const []) glossary
             $ runAssembler
             $ fmap extract
-            $ json @() @GlossaryData art Glossary
+            $ json @() @GlossaryData art isGlossary

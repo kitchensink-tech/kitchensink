@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -16,7 +17,6 @@ import Data.ByteString.Lazy qualified as LByteString
 import Data.List qualified as List
 import Data.Map.Strict qualified as Map
 import Data.Maybe (catMaybes, fromJust, fromMaybe, listToMaybe)
-import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Text.Lazy qualified as LText
@@ -52,7 +52,8 @@ target :: TargetSummary -> DestinationLocation -> ProductionRule -> Target
 target z x y = Core.Target x y z
 
 simpleTarget :: TargetType -> DestinationLocation -> ProductionRule -> Target
-simpleTarget z x y = target (TargetSummary z Nothing Nothing Nothing Nothing Nothing (HashTagSummary [])) x y
+simpleTarget z x y =
+    target (TargetSummary z Nothing Nothing Nothing Nothing Nothing (HashTagSummary [])) x y
 
 imageTargets :: OutputPrefix -> Site -> [Target]
 imageTargets prefix site =
@@ -60,7 +61,12 @@ imageTargets prefix site =
 
 dotimageTargets :: OutputPrefix -> Site -> [Target]
 dotimageTargets prefix site =
-    [simpleTarget GraphVizImageTarget (destGenImage prefix loc GenPngFile) (execCmd root "dot" ["-Tpng", "-o", "/dev/stdout", path] "") | Sourced loc@(FileSource path) _ <- dotSourceFiles site]
+    [ simpleTarget
+        GraphVizImageTarget
+        (destGenImage prefix loc GenPngFile)
+        (execCmd root "dot" ["-Tpng", "-o", "/dev/stdout", path] "")
+    | Sourced loc@(FileSource path) _ <- dotSourceFiles site
+    ]
   where
     root :: ExecRoot
     root = Nothing
@@ -212,12 +218,17 @@ siteTargets execRoot prefix extra site = allTargets
 
         generatorTarget :: SourceLocation -> GeneratorInstructionsData -> Target
         generatorTarget loc g =
-            let rule = execCmd execRoot (Text.unpack $ cmd g) (fmap Text.unpack $ args g) (maybe "" Text.encodeUtf8 $ stdin g)
+            let rule =
+                    execCmd
+                        execRoot
+                        (Text.unpack g.cmd)
+                        (fmap Text.unpack g.args)
+                        (maybe "" Text.encodeUtf8 g.stdin)
              in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
 
         generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]
         generatorInstructions art =
-            getSections art GeneratorInstructions
+            getSections art isGeneratorInstructions
                 >>= traverse (fmap extract . jsonSection)
 
     embeddedDataTargets :: [Target]
@@ -229,21 +240,22 @@ siteTargets execRoot prefix extra site = allTargets
       where
         getTargets :: SourceLocation -> Article [Text] -> [Target]
         getTargets loc art =
-            either (error . show) (fmap (dataTarget loc))
+            catMaybes
+                $ either (error . show) (fmap (dataTarget loc)) -- note catMaybes won't swallow errors as `datasets` is a morally-correct filter for valid `dataTarget` arguments
                 $ runAssembler
                 $ datasets art
 
-        dataTarget :: SourceLocation -> (Int, Section () [Text]) -> Target
-        dataTarget loc (index, (Section _ format contents)) =
+        dataTarget :: SourceLocation -> (Int, Section () [Text]) -> Maybe Target
+        dataTarget loc (index, (Section (Dataset name) format contents)) =
             let
-                dataDestination = destEmbeddedData prefix loc (destinationExtension format) index
+                dataDestination = destEmbeddedData prefix loc (destinationExtension format) name index
                 rule = Core.ProduceAssembler (pure $ LText.fromStrict $ Text.unlines contents)
              in
-                simpleTarget DatasetTarget dataDestination rule
-
+                Just $ simpleTarget DatasetTarget dataDestination rule
+        dataTarget _ _ = Nothing -- return Nothing on non-Data item only
         datasets :: Article [Text] -> Assembler [(Int, Section () [Text])]
         datasets art = do
-            sections <- getSections art Dataset
+            sections <- getSections art isDataset
             pure $ List.zip [1 ..] sections
 
     topicIndexesTargets :: Maybe (Article [Text]) -> [Target]

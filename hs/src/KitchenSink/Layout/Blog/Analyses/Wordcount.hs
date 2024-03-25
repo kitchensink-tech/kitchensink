@@ -1,7 +1,6 @@
 module KitchenSink.Layout.Blog.Analyses.Wordcount where
 
 import Commonmark qualified
-import Data.Text (Text)
 import Data.Text qualified as Text
 
 import KitchenSink.Core.Assembler.Sections

@@ -9,7 +9,6 @@ import Control.Monad.IO.Class (liftIO)
 import Data.IORef (atomicModifyIORef', newIORef, readIORef)
 import Data.List qualified as List
 import Data.Maybe (isJust)
-import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Typeable (Typeable)

@@ -3,7 +3,6 @@ where
 
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as ByteString
-import Data.Text (Text)
 import Data.Text.Lazy qualified as LText
 import System.Exit (ExitCode (..))
 import System.Process qualified as Process
@@ -51,7 +50,8 @@ copyFrom path = ProduceFileCopy (Sourced path ())
 type ExecRoot = Maybe FilePath
 
 execCmd :: ExecRoot -> FilePath -> [String] -> ByteString -> ProductionRule ext
-execCmd root path args input = ProduceGenerator f
+execCmd root path args input =
+    ProduceGenerator f
   where
     f trace = Generator $ do
         _ <- trace $ Executing path args

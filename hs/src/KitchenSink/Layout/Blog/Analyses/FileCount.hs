@@ -6,7 +6,6 @@ module KitchenSink.Layout.Blog.Analyses.FileCount (
 ) where
 
 import Data.Aeson (ToJSON)
-import Data.Text (Text)
 import GHC.Generics (Generic)
 
 import KitchenSink.Core.Build.Site (articles, audioFiles, cssFiles, dotSourceFiles, images, jsFiles, rawFiles, videoFiles)

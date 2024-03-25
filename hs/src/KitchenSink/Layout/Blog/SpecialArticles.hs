@@ -1,7 +1,6 @@
 module KitchenSink.Layout.Blog.SpecialArticles (SpecialArticle (..), lookupSpecialArticle, lookupSpecialArticleSource) where
 
 import Data.List qualified as List
-import Data.Text (Text)
 import Data.Text qualified as Text
 import System.FilePath.Posix (takeFileName)
 

@@ -78,11 +78,11 @@ destinationExtension fmt = FileExtension $ case fmt of
     Core.Csv -> "csv"
     Core.InMemory -> "mem"
 
-destEmbeddedData :: OutputPrefix -> SourceLocation -> FileExtension -> Int -> DestinationLocation
-destEmbeddedData prefix (FileSource path) (FileExtension ext) index =
+destEmbeddedData :: OutputPrefix -> SourceLocation -> FileExtension -> Name -> Int -> DestinationLocation
+destEmbeddedData prefix (FileSource path) (FileExtension ext) name index =
     StaticFileDestination
-        (Text.pack $ "/raw/data/" <> takeFileName path <> "__" <> show index <> "." <> ext)
-        (prefix </> "raw/data" </> takeFileName path <> "__" <> show index <> "." <> ext)
+        (Text.pack $ "/raw/data/" <> takeFileName path <> "__" <> Text.unpack name <> show index <> "." <> ext)
+        (prefix </> "raw/data" </> takeFileName path <> "__" <> Text.unpack name <> show index <> "." <> ext)
 
 destVideoFile :: OutputPrefix -> SourceLocation -> DestinationLocation
 destVideoFile prefix (FileSource path) =

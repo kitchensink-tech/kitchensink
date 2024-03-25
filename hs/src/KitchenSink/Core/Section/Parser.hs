@@ -3,17 +3,16 @@ module KitchenSink.Core.Section.Parser (
     extract,
     extract',
     section,
-    sectionType,
     ExtraSectionType (..),
     Parser,
 )
 where
 
+import Data.Char (isAlphaNum)
 import Data.Foldable (asum)
-import Data.Text (Text)
 import Data.Void (Void)
 import Text.Megaparsec
-import Text.Megaparsec.Char (newline, string)
+import Text.Megaparsec.Char (newline, space, string)
 
 import KitchenSink.Core.Section.Base
 import KitchenSink.Prelude
@@ -32,14 +31,19 @@ data ExtraSectionType userdef
     , val :: userdef
     }
 
-sectionType :: [ExtraSectionType ext] -> Parser (SectionType ext)
-sectionType extras =
-    asum (basics <> dangerous <> extensions)
+headers :: [ExtraSectionType ext] -> Parser (SectionType ext, Format)
+headers extras =
+    asum (basics <> complicated <> dangerous <> extensions)
   where
-    mkSectionType ns k v = string (ns <> ":" <> k) *> pure v
-    base = mkSectionType "base"
-    gen = mkSectionType "generator"
-    ext = mkSectionType "ext"
+    dotFormat :: Parser Format
+    dotFormat = string "." *> format
+
+    nsKeyVal :: forall value. Text -> Text -> value -> Parser value
+    nsKeyVal ns k v = string ("=" <> ns <> ":" <> k) *> pure v
+
+    base k v = (,) <$> nsKeyVal "base" k v <*> dotFormat
+    gen k v = (,) <$> nsKeyVal "generator" k v <*> dotFormat
+    ext k v = (,) <$> nsKeyVal "ext" k v <*> dotFormat
 
     basics =
         [ base "build-info" BuildInfo
@@ -51,8 +55,15 @@ sectionType extras =
         , base "taken-off" TakenOff
         , base "social" Social
         , base "glossary" Glossary
-        , base "dataset" Dataset
         ]
+
+    -- for dataset the format is before the dataset
+    complicated =
+        [ adaptDataset <$> (nsKeyVal "base" "dataset" Dataset) <*> dotFormat <*> (space *> kebabString)
+        ]
+      where
+        adaptDataset :: (Name -> SectionType ext) -> Format -> Text -> (SectionType ext, Format)
+        adaptDataset f fmt name = (f name, fmt)
 
     dangerous =
         [ gen "cmd" GeneratorInstructions
@@ -71,18 +82,25 @@ format = cmark <|> json <|> css <|> csv <|> dhall
     dhall = string "dhall" *> pure Dhall
 
 section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])
-section extras = f <$> (headers <?> "section-headers") <*> body
+section extras = f <$> (hdrs <?> "section-headers") <*> body
   where
     f (ty, fmt) b = Section ty fmt b
 
-    headers :: Parser (SectionType ext, Format)
-    headers = (,) <$> (string "=" *> sectionType extras) <*> (string "." *> format)
+    hdrs :: Parser (SectionType ext, Format)
+    hdrs = headers extras
 
     body :: Parser [Text]
     body = many (try emptyline <|> try contentLine)
 
     emptyline :: Parser Text
-    emptyline = newline >> notFollowedBy headers >> pure ""
+    emptyline = newline >> notFollowedBy hdrs >> pure ""
 
     contentLine :: Parser Text
     contentLine = takeWhile1P Nothing ((/=) '\n') <* newline
+
+kebabString :: Parser Text
+kebabString = takeWhile1P (Just "kebab-cased-char") isKebabChar
+
+isKebabChar :: Token Text -> Bool
+isKebabChar '-' = True
+isKebabChar x = isAlphaNum x
