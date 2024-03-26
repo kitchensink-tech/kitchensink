@@ -36,13 +36,11 @@ A whishlist, which actually is a todolist.
 - port all .js to a single PureScript lib, deprecate histogram
 - constellation mode/app to search/graph multiple kitchen-sinks
 - load from elsewhere than disk
-- support serving multiple sites from a single server with some minimal routing
-- support some chaining in section-loader to carry-over information
 - support citation references
 - consider listing/index of all code snippets,images,etc.
 - hide zero-counts of links etc.
 
 =base:taken-off.cmark
 - diffing lib
-- analysis: DAG
+- analysis: dependencies to sections and DAG
 - more routes to serve analytics query on the site

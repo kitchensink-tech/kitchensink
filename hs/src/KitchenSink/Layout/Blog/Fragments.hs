@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedRecordDot #-}
+
 module KitchenSink.Layout.Blog.Fragments where
 
 import Control.Monad (when)
@@ -14,11 +16,7 @@ import Lucid as Lucid
 import Lucid.Base qualified as Lucid
 import Prelude ((+))
 
--- import Text.Feed.Types (Feed(AtomFeed))
--- import Text.XML (def, rsPretty)
 import Text.Atom.Feed qualified as Atom
-
--- import qualified Text.Feed.Export as Export (textFeedWith)
 
 import KitchenSink.Core.Assembler (runAssembler)
 import KitchenSink.Core.Build.Site ()
@@ -64,9 +62,9 @@ assembleHeader prefix stats currentDestination art =
                     $ contentWordCount
                     <$> runAssembler (getSections art isMainContent)
         let infos = analyzeArticle art
-        let lc = toHtml . show . length . linkInfos $ infos
-        let ic = toHtml . show . length . imageInfos $ infos
-        let bc = toHtml . show . length . snippetInfos $ infos
+        let lc = toHtml . show . length $ infos.linkInfos
+        let ic = toHtml . show . length $ infos.imageInfos
+        let bc = toHtml . show . length $ infos.snippetInfos
         let headersentence pr =
                 case preambleDateText pr of
                     Just txt ->
@@ -583,26 +581,33 @@ articleImage art = do
     f :: Maybe (Section TopicData) -> Maybe Text
     f sec = imageLink . extract =<< sec
 
-assembleAtomEntry :: MetaData -> DestinationLocation -> Article [Text] -> Assembler (Atom.Entry)
+assembleAtomEntry ::
+    MetaData ->
+    DestinationLocation ->
+    Article [Text] ->
+    Assembler (Atom.Entry)
 assembleAtomEntry extra dloc art = do
     summary <- fmap (compactSummary . extract) <$> lookupSection art isSummary
+    contents <- assembleMain art
     r
         <$> (extract <$> json @() @PreambleData art isPreamble)
         <*> pure summary
+        <*> pure contents
   where
-    r :: PreambleData -> Maybe Text -> Atom.Entry
-    r preamble summary =
+    r :: PreambleData -> Maybe Text -> Html () -> Atom.Entry
+    r preamble summary htmlContents =
         let url = publishBaseURL extra <> destinationUrl dloc
             selfLink = (Atom.nullLink url){Atom.linkRel = Just $ Left "alternate"}
             base =
                 Atom.nullEntry
                     (url)
-                    (Atom.TextString $ title preamble)
-                    (fmtUTC $ fromMaybe epochUTCTime $ date preamble)
+                    (Atom.TextString preamble.title)
+                    (fmtUTC $ fromMaybe epochUTCTime preamble.date)
          in base
                 { Atom.entrySummary = fmap Atom.TextString summary
                 , Atom.entryAuthors = [Atom.nullPerson{Atom.personName = author preamble}]
                 , Atom.entryLinks = [selfLink]
+                , Atom.entryContent = Just (Atom.HTMLContent $ LText.toStrict $ Lucid.renderText htmlContents)
                 }
 
     fmtUTC = Text.pack . iso8601Show
