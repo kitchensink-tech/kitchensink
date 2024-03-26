@@ -105,6 +105,7 @@ library
                     , lucid
                     , megaparsec
                     , mtl
+                    , mustache
                     , optparse-generic
                     , parsec
                     , prometheus-client

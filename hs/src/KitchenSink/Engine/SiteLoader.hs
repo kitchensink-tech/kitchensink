@@ -26,6 +26,8 @@ import Lens.Family
 import System.Directory (listDirectory)
 import System.FilePath.Posix (takeExtension, takeFileName, (</>))
 import Text.Megaparsec (runParser)
+import Text.Mustache qualified as Mustache
+import Text.Parsec qualified as Parsec
 import Prelude (Integer, succ)
 
 import Control.Monad.State
@@ -92,6 +94,7 @@ data EvalError
     | DhallRuntimeError CompileError
     | DhallResultJsonDecodeError String
     | MalformedJSONDataset Name String
+    | MustacheCompileError Parsec.ParseError
     deriving (Show, Exception)
 
 type DatasetCells =
@@ -131,9 +134,17 @@ sectionStep env x@(Section t fmt body) = do
   where
     exec :: EvalState -> Eval (Section ext [Text])
     exec st0 = case (t, fmt) of
-        (_, Dhall) -> do
-            -- prepare kitchensink expression
+        (_, Mustache) -> do
             let jsonDataset = Aeson.toJSON st0.datasets
+            let template = Mustache.compileTemplate "(section)" (Text.unlines body)
+            case template of
+                Left err -> liftIO $ throwIO $ MustacheCompileError err
+                Right tpl -> do
+                    let contents = Mustache.substitute tpl jsonDataset
+                    pure $ Section t Cmark [contents]
+        (_, Dhall) -> do
+            let jsonDataset = Aeson.toJSON st0.datasets
+            -- prepare kitchensink expression
             let dhallDataset = dhallFromJSON defaultConversion (schemaToDhallType $ inferSchema jsonDataset) jsonDataset
             let sectionNumExpr = Core.Annot (Core.IntegerLit st0.sectionNumber) (Core.Integer)
             let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack env.path)) (Core.Text)
@@ -177,7 +188,8 @@ sectionStep env x@(Section t fmt body) = do
                 Right v -> insertDatasetContents name v
                 Left err -> liftIO $ throwIO $ MalformedJSONDataset name err
             pure x
-        _ -> pure x
+        _ ->
+            pure x
 
 loadImage :: Loader a Image
 loadImage trace path = do

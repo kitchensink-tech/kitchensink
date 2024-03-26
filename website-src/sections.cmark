@@ -440,10 +440,16 @@ Sometimes you want to ship a dataset. An option is to create one file in the
 Kitchen-Sink directory. However you may not want to multiply files.  Rather,
 sometimes you just want to inline some dataset in a document.
 
+Datasets are useful if you write a small JavaScript demo tool. Datasets also
+are useful as templating mechanisms as JSON datasets are input of Dhall and
+Mustache sections.
+
 The `dataset` section addresses such needs, by generating.  :warning: The
 ordering of the insertion determines the resulting filename, for instance
-`/raw/data/sections.cmark__<datasetname>.csv` for the first dataset in the
-`sections.cmark` file.
+`/raw/data/sections.cmark__<datasetname><index>.csv` for the first dataset in the
+`sections.cmark` file. With <datasetname> a name given on the section marker
+(cf. example) and <index> a Kitchen-Sink chosen value (for now a numeric index
+but it could become a hash)
 
 In the future we will likely create extra metadata information:
 - computing sha256 signatures of datasets
@@ -474,3 +480,58 @@ b;51
 ,{"foo":"b", "bar": 51}
 ]
 
+=base:main-content.cmark
+
+## Mustache templates [experimental]
+
+::: {.section-details}
+
+A well-known templating language for substituting a few variables in text
+objects is the [Mustache](http://mustache.github.io/mustache.5.html) template language.
+
+As of today the implementation is as follows:
+
+- Evaluation occurs at Site-Loading time (i.e., once for a running blog in server mode).
+- There are no partials.
+- The value available to templates is a object-collection of available datasets. Use `{{ . }}` to "debug" the contents.
+- The content must return `.cmark` contents (which in turns get turned into HTML).
+
+I'll likely change all of the above (for more control) but I've yet to
+fully-form ideas about the details. In particular, I have some PHP-envy to turn server-mode KitchenSink in a light webapp framework: after all, it's a kitchen-sink.
+
+
+__example__
+
+    
+    =base:dataset.json users
+    [{"name":"Albert", "color": "darksalmon"}
+    ,{"name":"Barbara", "color": "rebeccapurple"}
+    ]
+    
+    =base:main-content.mustache
+    
+    ### hello from a Mustache template
+    
+    {{# users }}
+      - {{ name }} : <span style="color: {{ color }}">Preferred Color</span>
+    {{/ users }}
+
+
+:::
+
+=base:dataset.json users
+[{"name":"Albert", "color": "darksalmon"}
+,{"name":"Barbara", "color": "rebeccapurple"}
+]
+
+=base:main-content.mustache
+
+### hello from a Mustache template
+
+{{# users }}
+  - {{ name }} : <span style="color: {{ color }}">Preferred Color</span>
+{{/ users }}
+
+=base:main-content.cmark
+
+----

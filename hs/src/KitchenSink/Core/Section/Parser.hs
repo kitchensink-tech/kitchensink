@@ -73,13 +73,14 @@ headers extras =
         [ext k (Extension v) | ExtraSectionType k v <- extras]
 
 format :: Parser Format
-format = cmark <|> json <|> css <|> csv <|> dhall
+format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache
   where
     cmark = string "cmark" *> pure Cmark
     json = string "json" *> pure Json
     css = string "css" *> pure Css
     csv = string "csv" *> pure Csv
     dhall = string "dhall" *> pure Dhall
+    mustache = string "mustache" *> pure Mustache
 
 section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])
 section extras = f <$> (hdrs <?> "section-headers") <*> body

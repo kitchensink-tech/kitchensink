@@ -23,6 +23,7 @@ data SectionType ext
 data Format
     = Cmark
     | Dhall
+    | Mustache
     | Json
     | TextHtml
     | Css
