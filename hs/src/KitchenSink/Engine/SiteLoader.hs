@@ -289,7 +289,7 @@ loadSite dhallRoot extras trace dir = do
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".webm", ".mp4"]]
     audiosM paths =
         traverse (loadAudio trace)
-            $ [dir </> p | p <- paths, takeExtension p `List.elem` [".ogg", ".mp3", ".wav"]]
+            $ [dir </> p | p <- paths, takeExtension p `List.elem` [".ogg", ".mp3", ".wav", ".midi", ".flac"]]
     rawsM paths =
         traverse (loadRaw trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".txt", ".csv", ".json", ".dhall"], takeFileName p /= "kitchen-sink.json"]

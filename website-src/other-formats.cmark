@@ -41,6 +41,10 @@ generators for very specific formats.
 
 KitchenSink copies `.webm` and `.mp4` files under `/videos`.
 
+## sounds
+
+KitchenSink copies `.ogg`, `flac`, `.wav`, `.midi`, and `.mp3` files under `/videos`.
+
 ## images
 
 KitchenSink copies `.jpg`, `.jpeg`, and `.png` files under `/images`.
