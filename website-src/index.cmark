@@ -38,3 +38,8 @@ just want to generate web pages from content and move on.
 ,"target":"gen-git-head-sha.txt"
 }
 
+=generator:cmd.json
+{ "cmd": "bash"
+, "args": ["./website-scripts/trivia.sh"]
+, "target": "trivia"
+}
