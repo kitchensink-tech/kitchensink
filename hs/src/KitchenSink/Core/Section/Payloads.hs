@@ -5,7 +5,7 @@ JSON serialization instances exist for metadata consumption on frontend/api clie
 module KitchenSink.Core.Section.Payloads
 where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.List qualified as List
 import Data.Time.Clock (UTCTime)
 import GHC.Generics (Generic)
@@ -68,6 +68,7 @@ data GeneratorInstructionsData = GeneratorInstructionsData
     { cmd :: Text
     , args :: [Text]
     , stdin :: Maybe Text
+    , stdin_json :: Maybe Value
     , target :: FilePath
     }
     deriving (Show, Eq, Generic)

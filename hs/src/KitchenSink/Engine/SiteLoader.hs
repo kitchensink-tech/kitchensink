@@ -11,6 +11,7 @@ import Data.Either (fromRight)
 import Data.List qualified as List
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Data.Maybe (isJust)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Text.IO qualified as Text
@@ -28,7 +29,7 @@ import System.FilePath.Posix (takeExtension, takeFileName, (</>))
 import Text.Megaparsec (runParser)
 import Text.Mustache qualified as Mustache
 import Text.Parsec qualified as Parsec
-import Prelude (Integer, succ)
+import Prelude (Integer, succ, (||))
 
 import Control.Monad.State
 
@@ -94,6 +95,7 @@ data EvalError
     | DhallRuntimeError CompileError
     | DhallResultJsonDecodeError String
     | MalformedJSONDataset Name String
+    | MalformedJSONGeneratorInstructions String
     | MustacheCompileError Parsec.ParseError
     deriving (Show, Exception)
 
@@ -188,6 +190,19 @@ sectionStep env x@(Section t fmt body) = do
                 Right v -> insertDatasetContents name v
                 Left err -> liftIO $ throwIO $ MalformedJSONDataset name err
             pure x
+        (GeneratorInstructions, Json) -> do
+            let jsonDataset = Aeson.toJSON st0.datasets
+            case (Aeson.eitherDecode @GeneratorInstructionsData $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
+                Left err -> liftIO $ throwIO $ MalformedJSONGeneratorInstructions err
+                Right gen ->
+                    if isJust gen.stdin_json || isJust gen.stdin
+                        then pure x
+                        else
+                            pure
+                                $ Section
+                                    GeneratorInstructions
+                                    Json
+                                    [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode $ gen{stdin_json = Just jsonDataset}]
         _ ->
             pure x
 

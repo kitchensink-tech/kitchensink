@@ -57,7 +57,7 @@ simpleTarget z x y =
 
 imageTargets :: OutputPrefix -> Site -> [Target]
 imageTargets prefix site =
-    [simpleTarget ImageTarget (destImage prefix loc) (copyFrom loc) | Sourced loc _ <- images site]
+    [simpleTarget ImageTarget (destImage prefix loc) (copyFrom loc) | Sourced loc _ <- site.images]
 
 dotimageTargets :: OutputPrefix -> Site -> [Target]
 dotimageTargets prefix site =
@@ -65,7 +65,7 @@ dotimageTargets prefix site =
         GraphVizImageTarget
         (destGenImage prefix loc GenPngFile)
         (execCmd root "dot" ["-Tpng", "-o", "/dev/stdout", path] "")
-    | Sourced loc@(FileSource path) _ <- dotSourceFiles site
+    | Sourced loc@(FileSource path) _ <- site.dotSourceFiles
     ]
   where
     root :: ExecRoot
@@ -73,31 +73,31 @@ dotimageTargets prefix site =
 
 videoTargets :: OutputPrefix -> Site -> [Target]
 videoTargets prefix site =
-    [simpleTarget VideoTarget (destVideoFile prefix loc) (copyFrom loc) | Sourced loc _ <- videoFiles site]
+    [simpleTarget VideoTarget (destVideoFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.videoFiles]
 
 audioTargets :: OutputPrefix -> Site -> [Target]
 audioTargets prefix site =
-    [simpleTarget AudioTarget (destAudioFile prefix loc) (copyFrom loc) | Sourced loc _ <- audioFiles site]
+    [simpleTarget AudioTarget (destAudioFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.audioFiles]
 
 rawTargets :: OutputPrefix -> Site -> [Target]
 rawTargets prefix site =
-    [simpleTarget RawTarget (destRawFile prefix loc) (copyFrom loc) | Sourced loc _ <- rawFiles site]
+    [simpleTarget RawTarget (destRawFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.rawFiles]
 
 documentTargets :: OutputPrefix -> Site -> [Target]
 documentTargets prefix site =
-    [simpleTarget DocumentTarget (destDocumentFile prefix loc) (copyFrom loc) | Sourced loc _ <- docFiles site]
+    [simpleTarget DocumentTarget (destDocumentFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.docFiles]
 
 cssTargets :: OutputPrefix -> Site -> [Target]
 cssTargets prefix site =
-    [simpleTarget CssTarget (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- cssFiles site]
+    [simpleTarget CssTarget (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.cssFiles]
 
 jsTargets :: OutputPrefix -> Site -> [Target]
 jsTargets prefix site =
-    [simpleTarget JavaScriptSourceTarget (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- jsFiles site]
+    [simpleTarget JavaScriptSourceTarget (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.jsFiles]
 
 htmlTargets :: OutputPrefix -> Site -> [Target]
 htmlTargets prefix site =
-    [simpleTarget HtmlSourceTarget (destHtml prefix loc) (copyFrom loc) | Sourced loc _ <- htmlFiles site]
+    [simpleTarget HtmlSourceTarget (destHtml prefix loc) (copyFrom loc) | Sourced loc _ <- site.htmlFiles]
 
 jsonDataTarget :: (ToJSON a) => OutputPrefix -> a -> FilePath -> Target
 jsonDataTarget prefix v loc =
@@ -146,7 +146,7 @@ siteTargets execRoot prefix extra site = allTargets
         , jsonDataTarget prefix (filecounts site) "filecounts.json"
         , jsonDataTarget prefix (topicsgraph (ExternalSitesInfo $ externalKitchenSinkURLs extra) stats) "topicsgraph.json"
         ]
-            <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- articles site
+            <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- site.articles
                ]
 
     seoTargets :: [Target]
@@ -197,16 +197,16 @@ siteTargets execRoot prefix extra site = allTargets
 
     articleTargets :: [(Target, Article [Text])]
     articleTargets =
-        [ (articleTarget srca, obj srca)
-        | srca <- articles site
-        , isConcreteTarget $ obj srca
+        [ (articleTarget srca, srca.obj)
+        | srca <- site.articles
+        , isConcreteTarget srca.obj
         ]
 
     -- TODO: raise errors here
     embeddedGeneratorTargets :: [Target]
     embeddedGeneratorTargets =
         [ tgt
-        | Sourced loc art <- articles site
+        | Sourced loc art <- site.articles
         , tgt <- getTargets loc art
         ]
       where
@@ -223,7 +223,7 @@ siteTargets execRoot prefix extra site = allTargets
                         execRoot
                         (Text.unpack g.cmd)
                         (fmap Text.unpack g.args)
-                        (maybe "" Text.encodeUtf8 g.stdin)
+                        (fromMaybe "" $ (fmap Text.encodeUtf8 g.stdin) <|> (fmap (LByteString.toStrict . encode) g.stdin_json))
              in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
 
         generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]
@@ -234,7 +234,7 @@ siteTargets execRoot prefix extra site = allTargets
     embeddedDataTargets :: [Target]
     embeddedDataTargets =
         [ tgt
-        | Sourced loc art <- articles site
+        | Sourced loc art <- site.articles
         , tgt <- getTargets loc art
         ]
       where
@@ -319,10 +319,10 @@ siteTargets execRoot prefix extra site = allTargets
         ]
 
     stats :: TopicStats
-    stats = buildTopicStats (articles site) (fmap (const ()) . articleTarget)
+    stats = buildTopicStats site.articles (fmap (const ()) . articleTarget)
 
     wholeGlossary :: WholeGlossary
-    wholeGlossary = buildWholeGlossary (articles site) (fmap (const ()) . articleTarget)
+    wholeGlossary = buildWholeGlossary site.articles (fmap (const ()) . articleTarget)
 
     rootAtomDLoc :: DestinationLocation
     rootAtomDLoc = destRootDataFile prefix "atom.xml"

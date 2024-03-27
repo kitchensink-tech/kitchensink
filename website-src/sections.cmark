@@ -165,7 +165,7 @@ __example__
 Contains bibliographical information such as the title and author of the
 article. Optionally, you can add some link to a representative image.
 
-Titles and authors are used throughout where it makes sense. 
+Titles and authors are used throughout where it makes sense.
 
 You can also overload the [favicon](https://www.w3.org/2005/10/howto-favicon)
 using the `faviconUrl` JSON key.
@@ -278,7 +278,7 @@ __example__
     some content that will not show up in the article
 
 :::
-    
+
 ## CSS [recommended]
 
 ::: {.section-details}
@@ -349,7 +349,47 @@ __example__
     ,"target":"latency_to_best_ip"
     }
 
+__example with datasets__
+
+    =base:dataset.json items2
+    [ {"name": "foo"}
+    , {"name": "bar"}
+    , {"name": "baz"}
+    ]
+    
+    =base:dataset.json items1
+    [ {"letter": "alpha"}
+    , {"letter": "beta"}
+    , {"letter": "gamma"}
+    ]
+
+    =generator:cmd.json
+    {"cmd": "jq"
+    ,"args": ["."]
+    ,"target":"jqified-dataset"
+    }
+
 :::
+
+=base:dataset.json items2
+[ {"name": "foo"}
+, {"name": "bar"}
+, {"name": "baz"}
+]
+
+=base:dataset.json items1
+[ {"letter": "alpha"}
+, {"letter": "beta"}
+, {"letter": "gamma"}
+]
+
+=generator:cmd.json
+{"cmd": "jq"
+,"args": ["."]
+,"target":"jqified-datasets"
+}
+
+=base:main-content.cmark
 
 ## dhall [advanced]
 
@@ -502,7 +542,7 @@ fully-form ideas about the details. In particular, I have some PHP-envy to turn 
 
 __example__
 
-    
+
     =base:dataset.json users
     [{"name":"Albert", "color": "darksalmon"}
     ,{"name":"Barbara", "color": "rebeccapurple"}
