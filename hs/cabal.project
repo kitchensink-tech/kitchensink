@@ -3,13 +3,13 @@ packages: .
 source-repository-package
     type: git
     location: https://github.com/lucasdicioccio/prodapi.git
-    tag: 4504110a6a58d154bd3984b049e5d8121427311b
+    tag: 96f6cd9cb8635d269756bdf29a7ecb2aeefdcd4e
     subdir: prodapi
 
 source-repository-package
     type: git
     location: https://github.com/lucasdicioccio/prodapi.git
-    tag: 4504110a6a58d154bd3984b049e5d8121427311b
+    tag: 96f6cd9cb8635d269756bdf29a7ecb2aeefdcd4e
     subdir: prodapi-proxy
 
 source-repository-package

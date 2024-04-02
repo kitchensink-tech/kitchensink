@@ -3,20 +3,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
+
 module Bridge where
 
-import GHC.Generics (Generic)
-import Data.Aeson (ToJSON,FromJSON)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
-import KitchenSink.Layout.Blog.Analyses (Node, TopicGraph, LinkInfo, ImageInfo, SnippetInfo, HashTagInfo)
+import GHC.Generics (Generic)
+import KitchenSink.Layout.Blog.Analyses (HashTagInfo, ImageInfo, LinkInfo, Node, SnippetInfo, TopicGraph)
 import KitchenSink.Layout.Blog.Analyses.SkyLine (SkyLine, SkyLineItem)
 
-data ArticleInfos = ArticleInfos {
-    linkInfos :: [LinkInfo]
-  , imageInfos :: [ImageInfo]
-  , hashtagInfos :: [HashTagInfo]
-  , snippetInfos :: [SnippetInfo]
-  , skyline :: SkyLine
-  } deriving (Show, Generic)
+data ArticleInfos = ArticleInfos
+    { linkInfos :: [LinkInfo]
+    , imageInfos :: [ImageInfo]
+    , hashtagInfos :: [HashTagInfo]
+    , snippetInfos :: [SnippetInfo]
+    , skyline :: SkyLine
+    }
+    deriving (Show, Generic)
 instance ToJSON ArticleInfos
 instance FromJSON ArticleInfos
