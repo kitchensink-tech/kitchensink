@@ -105,7 +105,7 @@ let upstream =
     { dependencies =
         [ "argonaut" ]
     , repo =
-       "https://github.com/bentongxyz/purescript-argonaut-aeson-generic.git"
+       "https://github.com/coot/purescript-argonaut-aeson-generic.git"
     , version =
         "master"
     }
