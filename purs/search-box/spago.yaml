@@ -1,0 +1,29 @@
+package:
+  name: search-box
+  dependencies:
+    - aff
+    - affjax-web
+    - arrays
+    - console
+    - effect
+    - either
+    - foldable-traversable
+    - halogen
+    - kitchen-sink-compat
+    - maybe
+    - prelude
+    - profunctor-lenses
+    - strings
+    - tuples
+    - web-dom
+    - web-events
+    - web-uievents
+  test:
+    main: Test.Main
+    dependencies: []
+workspace:
+  packageSet:
+    registry: 50.11.0
+  extraPackages:
+    kitchen-sink-compat:
+      path: ../kitchen-sink-compat
