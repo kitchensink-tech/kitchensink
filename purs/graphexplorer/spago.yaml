@@ -1,0 +1,33 @@
+package:
+  name: graphexplorer
+  dependencies:
+    - aff
+    - affjax-web
+    - arrays
+    - console
+    - effect
+    - either
+    - foldable-traversable
+    - foreign
+    - halogen
+    - halogen-echarts-simple
+    - integers
+    - kitchen-sink-compat
+    - lists
+    - maybe
+    - numbers
+    - prelude
+    - profunctor-lenses
+    - transformers
+    - tuples
+    - web-dom
+    - web-html
+  test:
+    main: Test.Main
+    dependencies: []
+workspace:
+  packageSet:
+    registry: 50.11.0
+  extraPackages:
+    kitchen-sink-compat:
+      path: ../kitchen-sink-compat
