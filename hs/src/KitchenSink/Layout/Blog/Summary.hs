@@ -29,6 +29,7 @@ import KitchenSink.Prelude
 
 data TargetType
     = CssTarget
+    | WebfontTarget
     | ImageTarget
     | GraphVizImageTarget
     | VideoTarget

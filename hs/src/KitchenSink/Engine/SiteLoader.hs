@@ -45,6 +45,7 @@ data LogMsg ext
     | LoadRaw FilePath
     | LoadDocument FilePath
     | LoadCss FilePath
+    | LoadWebfont FilePath
     | LoadJs FilePath
     | LoadHtml FilePath
     | LoadDotSource FilePath
@@ -236,6 +237,11 @@ loadCss trace path = do
     trace $ LoadCss path
     pure $ (Sourced (FileSource path) CssFile)
 
+loadFont :: Loader a WebfontFile
+loadFont trace path = do
+    trace $ LoadWebfont path
+    pure $ (Sourced (FileSource path) WebfontFile)
+
 loadJs :: Loader a JsFile
 loadJs trace path = do
     trace $ LoadJs path
@@ -260,6 +266,7 @@ loadSite dhallRoot extras trace dir = do
         <*> videosM paths
         <*> audiosM paths
         <*> cssM paths
+        <*> fontsM paths
         <*> jsM paths
         <*> htmlM paths
         <*> dotsM paths
@@ -275,6 +282,9 @@ loadSite dhallRoot extras trace dir = do
     cssM paths =
         traverse (loadCss trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".css"]]
+    fontsM paths =
+        traverse (loadFont trace)
+            $ [dir </> p | p <- paths, takeExtension p `List.elem` [".ttf", ".woff2"]]
     jsM paths =
         traverse (loadJs trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".js"]]
