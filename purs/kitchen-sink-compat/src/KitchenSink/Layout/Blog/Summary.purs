@@ -112,6 +112,7 @@ _HashTagSummary = _Newtype
 --------------------------------------------------------------------------------
 data TargetType =
     CssTarget
+  | WebfontTarget
   | ImageTarget
   | GraphVizImageTarget
   | VideoTarget
@@ -140,6 +141,12 @@ _CssTarget :: Prism' TargetType Unit
 _CssTarget = prism' (\_ -> CssTarget) f
   where
     f CssTarget = Just unit
+    f _ = Nothing
+
+_WebfontTarget :: Prism' TargetType Unit
+_WebfontTarget = prism' (\_ -> WebfontTarget) f
+  where
+    f WebfontTarget = Just unit
     f _ = Nothing
 
 _ImageTarget :: Prism' TargetType Unit
