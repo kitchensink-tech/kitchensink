@@ -34,6 +34,9 @@ data DocumentFile = DocumentFile
 data CssFile = CssFile
     deriving (Show, Eq, Ord)
 
+data WebfontFile = WebfontFile
+    deriving (Show, Eq, Ord)
+
 data JsFile = JsFile
     deriving (Show, Eq, Ord)
 
@@ -52,6 +55,7 @@ data Site ext = Site
     , videoFiles :: [Sourced VideoFile]
     , audioFiles :: [Sourced AudioFile]
     , cssFiles :: [Sourced CssFile]
+    , webfontFiles :: [Sourced WebfontFile]
     , jsFiles :: [Sourced JsFile]
     , htmlFiles :: [Sourced HtmlFile]
     , dotSourceFiles :: [Sourced DotSourceFile]

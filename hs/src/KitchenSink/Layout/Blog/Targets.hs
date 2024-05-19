@@ -30,7 +30,7 @@ import Text.Feed.Types (Feed (AtomFeed))
 import Text.XML (def, rsPretty)
 
 import KitchenSink.Core.Assembler.Sections
-import KitchenSink.Core.Build.Site (articles, audioFiles, cssFiles, docFiles, dotSourceFiles, htmlFiles, images, jsFiles, rawFiles, videoFiles)
+import KitchenSink.Core.Build.Site (articles, audioFiles, cssFiles, docFiles, dotSourceFiles, htmlFiles, images, jsFiles, rawFiles, videoFiles, webfontFiles)
 import KitchenSink.Core.Build.Target (DestinationLocation, ExecRoot, OutputPrefix, SourceLocation (..), Sourced (..), copyFrom, destination, destinationUrl, execCmd, runAssembler, summary)
 import KitchenSink.Core.Build.Target qualified as Core
 import KitchenSink.Core.Generator
@@ -91,6 +91,10 @@ cssTargets :: OutputPrefix -> Site -> [Target]
 cssTargets prefix site =
     [simpleTarget CssTarget (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.cssFiles]
 
+webfontTargets :: OutputPrefix -> Site -> [Target]
+webfontTargets prefix site =
+    [simpleTarget WebfontTarget (destWebfontFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.webfontFiles]
+
 jsTargets :: OutputPrefix -> Site -> [Target]
 jsTargets prefix site =
     [simpleTarget JavaScriptSourceTarget (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.jsFiles]
@@ -126,6 +130,7 @@ siteTargets execRoot prefix extra site = allTargets
             , rawTargets prefix site
             , documentTargets prefix site
             , cssTargets prefix site
+            , webfontTargets prefix site
             , jsTargets prefix site
             , htmlTargets prefix site
             , topicIndexesTargets (lookupSpecialArticle SpecialArticles.Topics site)

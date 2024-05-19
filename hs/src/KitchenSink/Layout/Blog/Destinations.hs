@@ -126,6 +126,12 @@ destCssFile prefix (FileSource path) =
         (Text.pack $ "/css/" <> takeFileName path)
         (prefix </> "css" </> takeFileName path)
 
+destWebfontFile :: OutputPrefix -> SourceLocation -> DestinationLocation
+destWebfontFile prefix (FileSource path) =
+    StaticFileDestination
+        (Text.pack $ "/webfonts/" <> takeFileName path)
+        (prefix </> "webfonts" </> takeFileName path)
+
 destJsFile :: OutputPrefix -> SourceLocation -> DestinationLocation
 destJsFile prefix (FileSource path) =
     StaticFileDestination
