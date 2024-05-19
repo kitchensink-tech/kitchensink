@@ -166,6 +166,7 @@ showTargetType = case _ of
   GlossaryTarget -> "The glossary"
   DocumentTarget -> "Some document file"
   HashTagsIndexTarget -> "Hashtags index"
+  WebfontTarget -> "Some web font"
 
 renderMediaEmbed :: forall w i. Route -> TargetType -> Maybe (HH.HTML w i)
 renderMediaEmbed r =
