@@ -1,3 +1,19 @@
+=generator:cmd.dhall
+
+let cmdcontent =
+  { cmd = "/opt/bin/ollama.sh"
+  , args =
+    [ "task-file", "you are given a source file of a blog post, the content resides below a =base:main-content.cmark marker. comment on the article by giving honest feedback in a sarcastic manner"
+    , kitchensink.file
+    ]
+  , target = "roast-me"
+  }
+
+in 
+{ contents = cmdcontent
+, format = "json"
+}
+
 =base:build-info.json
 {"layout":"article"
 ,"publicationStatus":"Public"
