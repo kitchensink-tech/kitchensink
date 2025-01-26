@@ -7,6 +7,7 @@ module KitchenSink.Engine.MultiSite where
 
 import Control.Concurrent.Async (Concurrently (..))
 import Data.ByteString qualified as ByteString
+import Data.Function ((&))
 import Data.List (concatMap)
 import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty ((:|)))
@@ -16,8 +17,8 @@ import Data.Maybe (catMaybes, fromMaybe)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Time.Clock (getCurrentTime)
-import Network.HTTP.Client as HTTP (Manager)
-import Network.HTTP.Client.TLS as HTTP (newTlsManager)
+import Network.HTTP.Client qualified as Http
+import Network.HTTP.Client.TLS (newTlsManagerWith)
 import Network.HTTP.ReverseProxy qualified as WaiProxy
 import Network.HTTP.Types.Status (status404)
 import Network.TLS qualified as TLS
@@ -34,6 +35,7 @@ import Prod.Status
 import Prod.Tracer
 import Prometheus qualified as Prometheus
 import Servant
+import Prelude (id)
 
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.Config (ApiProxyConfig (..), Prefix, RewriteRule (..), SlashApiProxyDirective (..), TransportSecurity (..))
@@ -56,6 +58,7 @@ data Args
     , httpsPort :: Maybe Int <?> "port-num"
     , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
     , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
+    , proxyingTimeout :: Maybe Int <?> "proxy-timeout-microsecs"
     }
     deriving (Generic, Show)
 
@@ -91,21 +94,29 @@ ontheflyCounters a cntrs =
 data Runtime
     = Runtime
     { counters :: Counters
-    , httpManager :: HTTP.Manager
+    , httpManager :: Http.Manager
     , proxyCounters :: ProdProxy.Counters
     }
 
-initRuntime :: IO Runtime
-initRuntime =
+initRuntime :: Args -> IO Runtime
+initRuntime args =
     Runtime
         <$> initCounters
-        <*> newTlsManager
+        <*> newTlsManagerWith managersettings
         <*> ProdProxy.initCounters
+  where
+    managersettings :: Http.ManagerSettings
+    managersettings =
+        Http.defaultManagerSettings
+            & maybe id (\t setts -> setts{Http.managerResponseTimeout = Http.responseTimeoutMicro t}) timeout
+
+    timeout :: Maybe Int
+    timeout = coerce args.proxyingTimeout
 
 run :: Args -> IO ()
 run cmd = do
     mcfg <- loadConfigFile @MultiSiteConfig (coerce $ configFile cmd)
-    rt <- initRuntime
+    rt <- initRuntime cmd
     case mcfg of
         Nothing -> print ("could not load config app" :: Text)
         Just cfg -> do

@@ -199,14 +199,20 @@ In addition to the above auto-reload script. The default executable's layout ins
 </video>
 
 ### API-proxy mode
-This feature is activated in development mode only: KitchenSink dev server will
-proxy calls on the `/api` route to a web backend of your choice (configured in
+
+KitchenSink, when acting as a server, will proxy calls on the `/api` route to a
+web backend of your choice (configured in
 [kitchen-sink.json](/kitchen-sink-dot-json.html)). This setup allows you to run
 local development of single-page-apps against an API-server running aside. A
 goal of this feature is to allow devs to build web-app without CORS or
 HTTP-routing complications (concerns that should matter in production,
 however). The only requirement (as of now) is that the proxified API uses the
 `/api` route prefix.
+
+When acting as a "multi-site" server, KitchenSink will furthermore allow you to
+tune the default (30seconds) proxying timeout with the
+`--proxy-timeout-microsecs <delay-in-microseconds>` command line argument. The
+default timeout is 30 seconds.
 
 ### it's just a webserver library
 I've not really explored this avenue, but it should be possible to incorporate

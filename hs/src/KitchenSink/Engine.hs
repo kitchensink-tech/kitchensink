@@ -34,6 +34,7 @@ data Action
         , httpsPort :: Maybe Int <?> "port-num"
         , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
         , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
+        , proxyingTimeout :: Maybe Int <?> "proxy-timeout-microsecs"
         }
     deriving (Generic, Show)
 
@@ -45,4 +46,4 @@ defaultMain = do
     case cmd of
         Produce a b c -> Produce.run (Produce.Args a b c)
         Serve a b c d e f g h -> Serve.run (Serve.Args a b c d e f g h)
-        MultiSite a b c d e -> MultiSite.run (MultiSite.Args a b c d e)
+        MultiSite a b c d e f -> MultiSite.run (MultiSite.Args a b c d e f)
