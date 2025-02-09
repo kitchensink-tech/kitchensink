@@ -191,6 +191,9 @@ sectionStep env x@(Section t fmt body) = do
                 Right v -> insertDatasetContents name v
                 Left err -> liftIO $ throwIO $ MalformedJSONDataset name err
             pure x
+        (Dataset name, _) -> do
+            insertDatasetContents name (Aeson.String $ Text.unlines body)
+            pure x
         (GeneratorInstructions, Json) -> do
             let jsonDataset = Aeson.toJSON st0.datasets
             case (Aeson.eitherDecode @GeneratorInstructionsData $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
