@@ -16,10 +16,16 @@ import KitchenSink.Core.Build.Trace
 import KitchenSink.Core.Generator
 import KitchenSink.Prelude
 
-outputTarget :: (Typeable ext, Show ext) => Tracer -> Target ext a -> IO ByteString
+-- | Outputs a target by generating its contents.
+outputTarget ::
+    (Typeable ext, Show ext) =>
+    Tracer ->
+    Target ext a ->
+    IO ByteString
 outputTarget trace t = do
     case productionRule t of
         ProduceAssembler assembler -> do
+            trace $ Assembling dest
             let ret = LByteString.toStrict . LText.encodeUtf8 <$> runAssembler assembler
             either throwIO pure ret
         ProduceGenerator fgenerator -> do
@@ -27,8 +33,17 @@ outputTarget trace t = do
             either throwIO pure ret
         ProduceFileCopy (Sourced (FileSource src) _) -> do
             ByteString.readFile src
+  where
+    dest = case destination t of
+        (StaticFileDestination _ d) -> d
+        (VirtualFileDestination _ d) -> d
 
-produceTarget :: (Typeable ext, Show ext) => Tracer -> Target ext a -> IO ()
+-- | Outputs a target by storing its contents in a given file.
+produceTarget ::
+    (Typeable ext, Show ext) =>
+    Tracer ->
+    Target ext a ->
+    IO ()
 produceTarget trace t = do
     case productionRule t of
         ProduceAssembler assembler -> do
