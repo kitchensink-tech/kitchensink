@@ -7,7 +7,6 @@ module KitchenSink.Engine.Produce where
 
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock (getCurrentTime)
-import Options.Generic
 import Prod.Tracer
 
 import KitchenSink.Engine.Runtime
@@ -21,21 +20,29 @@ import KitchenSink.Prelude
 
 data Args
     = Args
-    { srcDir :: FilePath <?> "source directory"
-    , outDir :: FilePath <?> "output directory"
-    , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
+    { srcDir :: FilePath
+    , outDir :: FilePath
+    , ksFile :: Maybe FilePath
+    , variables :: [(Text, Text)]
     }
 
 run :: Args -> IO ()
 run cmd = do
-    let srcPath = coerce $ srcDir cmd
-    let kitchensinkFilePath = ksPath (srcDir cmd) (ksFile cmd)
+    let srcPath = cmd.srcDir
+    let kitchensinkFilePath = kitshenSinkJsonFilePath cmd.srcDir cmd.ksFile
     serveMetadata <- loadMetadata kitchensinkFilePath
+    let handleLoadSite =
+            loadSite
+                "."
+                cmd.variables
+                (extraSectiontypes Blog.layout)
+                (runTracer $ contramap Loading $ tracePrint)
+                srcPath
     let prodengine =
             Engine
-                (loadSite "." (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
+                (handleLoadSite)
                 (pure serveMetadata)
-                (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing (coerce $ outDir cmd) med site)
+                (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing cmd.outDir med site)
                 (produceTarget print)
     site <- execLoadSite prodengine
     meta <- execLoadMetaExtradata prodengine

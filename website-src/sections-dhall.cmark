@@ -1,6 +1,6 @@
 =base:build-info.json
 {"layout":"article"
-,"publicationStatus":"Published"
+,"publicationStatus":"Public"
 }
 
 =base:preamble.json
@@ -297,9 +297,13 @@ Dhall value and has the following structure:
 ```dhall
 { file : Text -- contains the source file path for the cmark
 , sectionNum : Integer -- contains the section number of this file (starting from zero)
-, datasets : <data-dependant> -- contains a record<dataset-name, json-value-to-dhall> or an error message if it failed to load
+, datasets : <data-dependant> -- contains a record<dataset-name, (json-value-to-dhall|text-value)> or an error message if it failed to load
+, vars : <data-dependant> -- contains a record<key, value: Text> depending on the --var foo=bar command line arguments
 }
 ```
+
+Note that missing data-dependant bindings will prevent the site from loading,
+so be sure to not rely too much on these values.
 
 ## future work
 

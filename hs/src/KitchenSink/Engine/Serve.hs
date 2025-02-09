@@ -43,35 +43,44 @@ instance ParseRecord ServMode
 
 data Args
     = Args
-    { srcDir :: FilePath <?> "source directory"
-    , outDir :: FilePath <?> "output directory"
-    , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
-    , servMode :: ServMode <?> "SERVE|DEV"
-    , httpPort :: Maybe Int <?> "port-num"
-    , httpsPort :: Maybe Int <?> "port-num"
-    , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
-    , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
+    { srcDir :: FilePath
+    , outDir :: Maybe FilePath
+    , ksFile :: Maybe FilePath
+    , servMode :: ServMode
+    , variables :: [(Text, Text)]
+    , httpPort :: Maybe Int
+    , httpsPort :: Maybe Int
+    , tlsKeyFile :: Maybe FilePath
+    , tlsCertFile :: Maybe FilePath
     }
 
 run :: Args -> IO ()
 run cmd = do
-    let srcPath = coerce $ srcDir cmd
-    let kitchensinkFilePath = ksPath (srcDir cmd) (ksFile cmd)
+    let srcPath = cmd.srcDir
+    let kitchensinkFilePath = kitshenSinkJsonFilePath cmd.srcDir cmd.ksFile
     serveMetadata <- loadServeModeExtraData kitchensinkFilePath
+    let adaptTargets = fmap (fmap (const ()))
+    let handleLoadSite =
+            loadSite
+                "."
+                cmd.variables
+                (extraSectiontypes Blog.layout)
+                (runTracer $ contramap Loading $ tracePrint)
+                srcPath
     let prodengine =
             Engine
-                (loadSite "." (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) srcPath)
+                handleLoadSite
                 (pure serveMetadata)
-                (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing (coerce $ outDir cmd) med site)
+                (\med site -> adaptTargets (siteTargets Blog.layout Nothing (fromMaybe "./out" cmd.outDir) med site))
                 (produceTarget print)
     let devengine = prodengine{execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath}
     ksconfig <- loadJSONFile @Config kitchensinkFilePath >>= maybe (error "couldn't load kitchensink.json") pure
-    kswebapp <- case (coerce cmd.servMode) of
+    kswebapp <- case cmd.servMode of
         DEV -> runDev ksconfig devengine prodengine srcPath
         SERVE -> runServe ksconfig prodengine srcPath
 
     let webapp = RequestLogger.logStdoutDev kswebapp
-    let httpWarp = Warp.run <$> coerce httpPort cmd <*> pure webapp
+    let httpWarp = Warp.run <$> cmd.httpPort <*> pure webapp
     let httpsWarp = WarpTLS.runTLS <$> tlsSettings <*> tlsWarpSettings <*> pure webapp
 
     let program = (,) <$> Concurrently (mio httpWarp) <*> Concurrently (mio httpsWarp)
@@ -79,13 +88,13 @@ run cmd = do
   where
     tlsSettings :: Maybe WarpTLS.TLSSettings
     tlsSettings = do
-        cert <- coerce tlsCertFile cmd
-        key <- coerce tlsKeyFile cmd
+        cert <- cmd.tlsCertFile
+        key <- cmd.tlsKeyFile
         pure $ WarpTLS.tlsSettings cert key
 
     tlsWarpSettings :: Maybe Warp.Settings
     tlsWarpSettings = do
-        port <- coerce httpsPort cmd
+        port <- cmd.httpsPort
         pure $ Warp.setPort port Warp.defaultSettings
 
     runDev ksconfig devengine prodengine path = do

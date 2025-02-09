@@ -22,6 +22,7 @@ import Dhall.Core qualified as Core
 import Dhall.JSON (CompileError, dhallToJSON)
 import Dhall.JSONToDhall (defaultConversion, dhallFromJSON, inferSchema, schemaToDhallType)
 import Dhall.Map qualified as Dhall
+import Dhall.Map qualified as DhallMap
 import Dhall.Src (Src)
 import Lens.Family
 import System.Directory (listDirectory)
@@ -61,15 +62,15 @@ type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 --   * dependencies between sections? or between articles?
 --   * dependencies to external query widgets or params?
 --   * references to generated datasets (e.g., `curl a page, use as input to other place`)
-loadArticle :: FilePath -> [ExtraSectionType ext] -> Loader ext (Article ext [Text])
-loadArticle dhallRoot extras trace path = do
+loadArticle :: FilePath -> [(Text, Text)] -> [ExtraSectionType ext] -> Loader ext (Article ext [Text])
+loadArticle dhallRoot vars extras trace path = do
     trace $ LoadArticle path
     eart <- runParser (article extras path) path <$> Text.readFile path
     case eart of
         Left err -> throwIO err
         Right art -> Sourced (FileSource path) <$> evalSections art
   where
-    env = EvalEnv path dhallRoot trace
+    env = EvalEnv path dhallRoot vars trace
     evalSections art = evalStateT (overSections (evalSection env) art) newState
 
 data DhallResult
@@ -88,6 +89,7 @@ data EvalEnv ext
     = EvalEnv
     { path :: FilePath
     , dhallRoot :: FilePath
+    , vars :: [(Text, Text)]
     , trace :: LogMsg ext -> IO ()
     }
 
@@ -116,11 +118,11 @@ type Eval a = StateT EvalState IO a
 evalSection :: EvalEnv ext -> Section ext [Text] -> Eval (Section ext [Text])
 evalSection env s = do
     x <- sectionStep env s
-    incrementPage
+    incrementSectionNumber
     pure x
 
-incrementPage :: Eval ()
-incrementPage = modify f
+incrementSectionNumber :: Eval ()
+incrementSectionNumber = modify f
   where
     f st0 = st0{sectionNumber = succ (sectionNumber st0)}
 
@@ -150,14 +152,20 @@ sectionStep env x@(Section t fmt body) = do
             -- prepare kitchensink expression
             let dhallDataset = dhallFromJSON defaultConversion (schemaToDhallType $ inferSchema jsonDataset) jsonDataset
             let sectionNumExpr = Core.Annot (Core.IntegerLit st0.sectionNumber) (Core.Integer)
+            let textExpr v = Core.TextLit (Core.Chunks [] v)
             let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack env.path)) (Core.Text)
             let errorExpr = Core.Annot (Core.TextLit (Core.Chunks [] "could not load datasets into Dhall")) (Core.Text)
+            let varListExprs = [(k, Core.makeRecordField (textExpr v)) | (k, v) <- env.vars]
+            let varsExprc =
+                    Core.RecordLit
+                        (DhallMap.fromList varListExprs)
             let ksExpr =
                     Core.RecordLit
-                        $ Dhall.fromList
+                        $ DhallMap.fromList
                             [ ("file", Core.makeRecordField pathExpr)
                             , ("sectionNum", Core.makeRecordField sectionNumExpr)
                             , ("datasets", Core.makeRecordField $ fromRight errorExpr dhallDataset)
+                            , ("vars", Core.makeRecordField varsExprc)
                             ]
             let ctx0 =
                     Context.empty
@@ -260,8 +268,14 @@ loadDotSource trace path = do
     trace $ LoadDotSource path
     pure $ (Sourced (FileSource path) DotSourceFile)
 
-loadSite :: FilePath -> [ExtraSectionType ext] -> (LogMsg ext -> IO ()) -> FilePath -> IO (Site ext)
-loadSite dhallRoot extras trace dir = do
+loadSite ::
+    FilePath ->
+    [(Text, Text)] ->
+    [ExtraSectionType ext] ->
+    (LogMsg ext -> IO ()) ->
+    FilePath ->
+    IO (Site ext)
+loadSite dhallRoot vars extras trace dir = do
     paths <- listDirectory dir
     Site
         <$> articlesM paths
@@ -277,7 +291,7 @@ loadSite dhallRoot extras trace dir = do
         <*> docsM paths
   where
     articlesM paths =
-        traverse (loadArticle dhallRoot extras trace)
+        traverse (loadArticle dhallRoot vars extras trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark"]]
     imagesM paths =
         traverse (loadImage trace)

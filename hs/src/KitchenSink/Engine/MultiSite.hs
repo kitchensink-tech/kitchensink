@@ -53,12 +53,13 @@ import KitchenSink.Prelude
 
 data Args
     = Args
-    { configFile :: FilePath <?> "dhall config file"
-    , httpPort :: Maybe Int <?> "port-num"
-    , httpsPort :: Maybe Int <?> "port-num"
-    , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
-    , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
-    , proxyingTimeout :: Maybe Int <?> "proxy-timeout-microsecs"
+    { configFile :: FilePath
+    , variables :: [(Text, Text)]
+    , httpPort :: Maybe Int
+    , httpsPort :: Maybe Int
+    , tlsKeyFile :: Maybe FilePath
+    , tlsCertFile :: Maybe FilePath
+    , proxyingTimeout :: Maybe Int
     }
     deriving (Generic, Show)
 
@@ -96,6 +97,7 @@ data Runtime
     { counters :: Counters
     , httpManager :: Http.Manager
     , proxyCounters :: ProdProxy.Counters
+    , vars :: [(Text, Text)]
     }
 
 initRuntime :: Args -> IO Runtime
@@ -104,6 +106,7 @@ initRuntime args =
         <$> initCounters
         <*> newTlsManagerWith managersettings
         <*> ProdProxy.initCounters
+        <*> pure args.variables
   where
     managersettings :: Http.ManagerSettings
     managersettings =
@@ -111,11 +114,11 @@ initRuntime args =
             & maybe id (\t setts -> setts{Http.managerResponseTimeout = Http.responseTimeoutMicro t}) timeout
 
     timeout :: Maybe Int
-    timeout = coerce args.proxyingTimeout
+    timeout = args.proxyingTimeout
 
 run :: Args -> IO ()
 run cmd = do
-    mcfg <- loadConfigFile @MultiSiteConfig (coerce $ configFile cmd)
+    mcfg <- loadConfigFile @MultiSiteConfig cmd.configFile
     rt <- initRuntime cmd
     case mcfg of
         Nothing -> print ("could not load config app" :: Text)
@@ -141,7 +144,7 @@ run cmd = do
                                 (coerce multiapp)
                                 (Proxy @MultiSiteApi)
                     let webapp = RequestLogger.logStdoutDev prodapiapp
-                    let httpWarp = Warp.run <$> coerce cmd.httpPort <*> pure webapp
+                    let httpWarp = Warp.run <$> cmd.httpPort <*> pure webapp
                     let httpsWarp = WarpTLS.runTLS <$> tlsSettings <*> tlsWarpSettings <*> pure webapp
                     let program = (,) <$> Concurrently (mio httpWarp) <*> Concurrently (mio httpsWarp)
                     void $ runConcurrently program
@@ -161,20 +164,20 @@ run cmd = do
 
     bundleTLSSettings :: ProdProxy.CredentialMap -> TLS.Credentials -> Maybe WarpTLS.TLSSettings
     bundleTLSSettings creds fallback = do
-        cert <- coerce tlsCertFile cmd
-        key <- coerce tlsKeyFile cmd
+        cert <- cmd.tlsCertFile
+        key <- cmd.tlsKeyFile
         let base = WarpTLS.tlsSettings cert key
         pure $ ProdProxy.withTLSCredentialMap creds fallback base
 
     tlsWarpSettings :: Maybe Warp.Settings
     tlsWarpSettings = do
-        port <- coerce httpsPort cmd
+        port <- cmd.httpsPort
         pure $ Warp.setPort port Warp.defaultSettings
 
     loadDefaultCredentials :: IO (Maybe TLS.Credentials)
     loadDefaultCredentials = do
-        let cert = coerce tlsCertFile cmd
-        let key = coerce tlsKeyFile cmd
+        let cert = cmd.tlsCertFile
+        let key = cmd.tlsKeyFile
         let go = TLS.credentialLoadX509 <$> cert <*> key
         case go of
             Nothing -> pure Nothing
@@ -320,7 +323,13 @@ buildDirectorySourceApp rt src cfg = do
             $ (siteTargets Blog.layout) (src.execRoot) unusedPrefix med site
 
     loadSource :: IO (SiteLoader.Site ())
-    loadSource = SiteLoader.loadSite (fromMaybe "." src.dhallRoot) (extraSectiontypes Blog.layout) (runTracer $ contramap Loading $ tracePrint) src.path
+    loadSource =
+        SiteLoader.loadSite
+            (fromMaybe "." src.dhallRoot)
+            rt.vars
+            (extraSectiontypes Blog.layout)
+            (runTracer $ contramap Loading $ tracePrint)
+            src.path
 
 buildFallbackApp :: Runtime -> MultiSiteConfig -> IO (Maybe (TLS.HostName, Wai.Application))
 buildFallbackApp rt cfg = case cfg.fallback of

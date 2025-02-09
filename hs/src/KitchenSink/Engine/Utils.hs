@@ -7,7 +7,6 @@ import Data.ByteString.Lazy qualified as LByteString
 import Data.Maybe (fromMaybe)
 import Dhall qualified
 import KitchenSink.Prelude
-import Options.Generic
 import System.FilePath.Posix (takeExtension, (</>))
 
 loadConfigFile :: (FromJSON a, Dhall.FromDhall a) => FilePath -> IO (Maybe a)
@@ -27,10 +26,10 @@ loadDhallFile path =
 mio :: Maybe (IO ()) -> IO ()
 mio = fromMaybe (pure ())
 
-ksPath ::
-    FilePath <?> "source directory" ->
-    Maybe FilePath <?> "kitchen-sink.json file" ->
+kitshenSinkJsonFilePath ::
+    FilePath ->
+    Maybe FilePath ->
     FilePath
-ksPath base preferred =
-    let fallback = coerce base </> "kitchen-sink.json"
-     in fromMaybe fallback (coerce preferred)
+kitshenSinkJsonFilePath base preferred =
+    let fallback = base </> "kitchen-sink.json"
+     in fromMaybe fallback (preferred)
