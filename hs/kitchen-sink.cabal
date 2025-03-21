@@ -92,7 +92,7 @@ library
                     , dhall-json >= 1.7.12
                     , either
                     , lens-family-core
-                    , feed
+                    , feed >= 1.3.2.1
                     , filepath
                     , http-reverse-proxy
                     , http-client
