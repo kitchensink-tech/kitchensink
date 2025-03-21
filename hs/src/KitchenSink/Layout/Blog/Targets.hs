@@ -27,7 +27,7 @@ import Lucid (article_, class_, div_, id_, nav_)
 import Text.Atom.Feed qualified as Atom
 import Text.Feed.Export qualified as Export (textFeedWith)
 import Text.Feed.Types (Feed (AtomFeed))
-import Text.XML (def, rsPretty)
+import Text.XML (def)
 
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Site (articles, audioFiles, cssFiles, docFiles, dotSourceFiles, htmlFiles, images, jsFiles, rawFiles, videoFiles, webfontFiles)
@@ -162,7 +162,7 @@ siteTargets execRoot prefix extra site = allTargets
 
     atomFeedContent :: [(Ext.Target z, Article [Text])] -> Text
     atomFeedContent targets =
-        let render = LText.toStrict . fromJust . Export.textFeedWith def{rsPretty = True} . AtomFeed
+        let render = LText.toStrict . fromJust . Export.textFeedWith def . AtomFeed
             uri = publishBaseURL extra <> (destinationUrl $ destRootDataFile prefix "atom.xml")
          in render
                 $ feedForArticles uri
