@@ -36,6 +36,7 @@ import KitchenSink.Core.Build.Target qualified as Core
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)
 import KitchenSink.Layout.Blog.Analyses
+import KitchenSink.Layout.Blog.Analyses.TextRender qualified as TextRender
 import KitchenSink.Layout.Blog.ArticleTypes
 import KitchenSink.Layout.Blog.Destinations
 import KitchenSink.Layout.Blog.Extensions (Article, Assembler, ProductionRule, Site)
@@ -109,6 +110,12 @@ jsonDataTarget prefix v loc =
   where
     f _ = Generator $ pure $ Right $ LByteString.toStrict $ encode v
 
+textDataTarget :: OutputPrefix -> Article [Text] -> FilePath -> Target
+textDataTarget prefix v loc =
+    simpleTarget JSONTarget (destTextDataFile prefix loc) (Core.ProduceGenerator f)
+  where
+    f _ = Generator $ pure $ Right $ Text.encodeUtf8 $ TextRender.textRender v
+
 rootDataTarget :: OutputPrefix -> Text -> FilePath -> Target
 rootDataTarget prefix v loc =
     simpleTarget RootFileTarget (destRootDataFile prefix loc) (Core.ProduceGenerator f)
@@ -139,6 +146,7 @@ siteTargets execRoot prefix extra site = allTargets
             , hashtagAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
             , glossaryTargets (lookupSpecialArticleSource SpecialArticles.Glossary site)
             , jsonDataTargets
+            , textDataTargets
             , seoTargets
             ]
 
@@ -153,6 +161,11 @@ siteTargets execRoot prefix extra site = allTargets
         ]
             <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- site.articles
                ]
+
+    textDataTargets :: [Target]
+    textDataTargets =
+        [ textDataTarget prefix art (p <> ".text") | (Sourced (FileSource p) art) <- site.articles
+        ]
 
     seoTargets :: [Target]
     seoTargets =
@@ -197,8 +210,9 @@ siteTargets execRoot prefix extra site = allTargets
     articleTarget (Sourced loc@(FileSource path) art) =
         let u = destHtml prefix loc
             j = destJsonDataFile prefix (path <> ".json") -- todo:unify
+            t = destTextDataFile prefix (path <> ".text") -- todo:unify
             tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art) (summarizeHashTags $ analyzeArticle art)
-         in target tgtSummary u (Core.ProduceAssembler $ layoutFor u j art)
+         in target tgtSummary u (Core.ProduceAssembler $ layoutFor u j t art)
 
     articleTargets :: [(Target, Article [Text])]
     articleTargets =
@@ -267,7 +281,7 @@ siteTargets execRoot prefix extra site = allTargets
     topicIndexesTargets Nothing = []
     topicIndexesTargets (Just art) =
         [ let u = destTopic prefix topic
-           in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ topicsLayout topic articles u u art)
+           in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ topicsLayout topic articles u u u art)
         | (topic, articles) <- Map.toList (byTopic stats)
         ]
 
@@ -284,7 +298,7 @@ siteTargets execRoot prefix extra site = allTargets
     hashtagIndexesTargets Nothing = []
     hashtagIndexesTargets (Just art) =
         [ let u = destHashTag prefix (hashtagValue tag)
-           in simpleTarget HashTagsIndexTarget u (Core.ProduceAssembler $ hashtagsLayout tag articles u u art)
+           in simpleTarget HashTagsIndexTarget u (Core.ProduceAssembler $ hashtagsLayout tag articles u u u art)
         | (tag, articles) <- Map.toList (byHashTag stats)
         ]
 
@@ -301,18 +315,23 @@ siteTargets execRoot prefix extra site = allTargets
     glossaryTargets Nothing = []
     glossaryTargets (Just (Sourced loc art)) =
         let u = destHtml prefix loc
-         in [ simpleTarget GlossaryTarget u (Core.ProduceAssembler $ glossaryListingLayout articleTargets u u art)
+         in [ simpleTarget GlossaryTarget u (Core.ProduceAssembler $ glossaryListingLayout articleTargets u u u art)
             ]
 
-    layoutFor :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    layoutFor dloc jsondloc art =
+    layoutFor ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    layoutFor dloc jsondloc txtdloc art =
         let go =
                 fromMaybe defaultLayout
                     $ flip List.lookup layoutMap
                     $ layoutNameFor art
-         in go dloc jsondloc art
+         in go dloc jsondloc txtdloc art
 
-    layoutMap :: [(ArticleLayout, DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text)]
+    layoutMap :: [(ArticleLayout, DestinationLocation -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text)]
     layoutMap =
         [ (SinglePageApp, spaLayout)
         , (VariousListing, variousListingLayout)
@@ -332,11 +351,16 @@ siteTargets execRoot prefix extra site = allTargets
     rootAtomDLoc :: DestinationLocation
     rootAtomDLoc = destRootDataFile prefix "atom.xml"
 
-    indexLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    indexLayout dloc jsondloc =
+    indexLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    indexLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (div_ [class_ "main"])
@@ -351,11 +375,16 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    archivedArticleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    archivedArticleLayout dloc jsondloc =
+    archivedArticleLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    archivedArticleLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
@@ -373,11 +402,16 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    upcomingArticleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    upcomingArticleLayout dloc jsondloc =
+    upcomingArticleLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    upcomingArticleLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
@@ -395,11 +429,16 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    articleLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    articleLayout dloc jsondloc =
+    articleLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    articleLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
@@ -418,11 +457,16 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    spaLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    spaLayout dloc jsondloc =
+    spaLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    spaLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (div_ [id_ "spa", class_ "application"]) mempty
@@ -434,11 +478,16 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    imageGalleryLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    imageGalleryLayout dloc jsondloc =
+    imageGalleryLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    imageGalleryLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (div_ [id_ "gallery", class_ "photos"])
@@ -448,11 +497,16 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    variousListingLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    variousListingLayout dloc jsondloc =
+    variousListingLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    variousListingLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (div_ [id_ "listing"])
@@ -462,12 +516,19 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    topicsLayout :: TopicName -> [(Ext.Target a, Article [Text])] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    topicsLayout topic articles dloc jsondloc =
+    topicsLayout ::
+        TopicName ->
+        [(Ext.Target a, Article [Text])] ->
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    topicsLayout topic articles dloc jsondloc txtdloc =
         let atomDLoc = destTopicAtom prefix topic
          in htmldoc
                 $ mconcat
-                    [ htmlhead (MetaHeaders extra dloc jsondloc atomDLoc) assembleStyle
+                    [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc atomDLoc) assembleStyle
                     , htmlbody
                         $ mconcat
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
@@ -483,12 +544,19 @@ siteTargets execRoot prefix extra site = allTargets
                             ]
                     ]
 
-    hashtagsLayout :: HashTagInfo -> [(Ext.Target a, Article [Text])] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    hashtagsLayout tag articles dloc jsondloc =
+    hashtagsLayout ::
+        HashTagInfo ->
+        [(Ext.Target a, Article [Text])] ->
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    hashtagsLayout tag articles dloc jsondloc txtdloc =
         let atomDLoc = destHashTagAtom prefix (hashtagValue tag)
          in htmldoc
                 $ mconcat
-                    [ htmlhead (MetaHeaders extra dloc jsondloc atomDLoc) assembleStyle
+                    [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc atomDLoc) assembleStyle
                     , htmlbody
                         $ mconcat
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
@@ -504,11 +572,17 @@ siteTargets execRoot prefix extra site = allTargets
                             ]
                     ]
 
-    glossaryListingLayout :: [(Ext.Target a, Article [Text])] -> DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    glossaryListingLayout articles dloc jsondloc =
+    glossaryListingLayout ::
+        [(Ext.Target a, Article [Text])] ->
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    glossaryListingLayout articles dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
@@ -525,11 +599,16 @@ siteTargets execRoot prefix extra site = allTargets
                 ]
 
     -- TODO: add warning on default layout
-    defaultLayout :: DestinationLocation -> DestinationLocation -> Article [Text] -> Assembler LText.Text
-    defaultLayout dloc jsondloc =
+    defaultLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    defaultLayout dloc jsondloc txtdloc =
         htmldoc
             $ mconcat
-                [ htmlhead (MetaHeaders extra dloc jsondloc rootAtomDLoc) assembleStyle
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])

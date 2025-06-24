@@ -253,9 +253,10 @@ htmlbody ::
 htmlbody = wrap body_
 
 data MetaHeaders = MetaHeaders
-    { extra :: MetaData
+    { extraMeta :: MetaData
     , destinationHTML :: DestinationLocation
     , destinationJSON :: DestinationLocation
+    , destinationText :: DestinationLocation
     , destinationAtom :: DestinationLocation
     }
 
@@ -266,7 +267,7 @@ htmlhead ::
 htmlhead mh f = \art -> do
     hdrs1 <- metaheaders mh art
     hdrs2 <- f art
-    hdrs3 <- (extraHeaders $ extra $ mh) art
+    hdrs3 <- (extraHeaders mh.extraMeta) art
     pure $ head_ (hdrs1 >> hdrs2 >> hdrs3)
 
 -- see https://ogp.me/#types
@@ -274,7 +275,7 @@ htmlhead mh f = \art -> do
 -- see https://developer.twitter.com/en/docs/twitter-for-websites/cards/guides/getting-started
 -- see https://www.linkedin.com/post-inspector/inspect/
 metaheaders :: MetaHeaders -> Article [Text] -> Assembler (Lucid.Html ())
-metaheaders (MetaHeaders extra dloc jsondloc atomLoc) art = do
+metaheaders mh art = do
     topic <- fmap extract <$> jsonm @() @TopicData art isTopic
     social <- fmap extract <$> jsonm @() @SocialData art isSocial
     summary <- fmap extract <$> lookupSection art isSummary
@@ -305,14 +306,21 @@ metaheaders (MetaHeaders extra dloc jsondloc atomLoc) art = do
             , fmap (\x -> meta_ [property_ "og:description", content_ $ compactSummary x]) summary
             , fmap (\x -> meta_ [name_ "article:published_time", content_ $ fmtUTC x]) $ preamble >>= date
             , Just $ meta_ [name_ "ks:article_json", content_ $ urlForJSONPage]
+            , Just $ meta_ [name_ "ks:article_text", content_ $ urlForTextPage]
             ]
         <> [meta_ [name_ "article:tag", content_ k] | k <- maybe [] topicKeywords topic]
   where
+    extra = mh.extraMeta
+    dloc = mh.destinationHTML
+    jsondloc = mh.destinationJSON
+    textdloc = mh.destinationText
+    atomLoc = mh.destinationAtom
     fmtUTC = Text.pack . iso8601Show
     property_ = Lucid.makeAttribute "property"
     urlForPage = publishBaseURL extra <> destinationUrl dloc
     urlForAtom = publishBaseURL extra <> destinationUrl atomLoc
     urlForJSONPage = destinationUrl jsondloc
+    urlForTextPage = destinationUrl textdloc
     urlForImage imgpath = publishBaseURL extra <> imgpath
 
     defaultTitle :: Text
