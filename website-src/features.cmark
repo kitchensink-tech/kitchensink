@@ -388,11 +388,20 @@ provide extra features.
 Kitchen-Sink generate a host of data while assembling targets from input files.
 Intermediary-representations. In particular, there is a `json` file generated
 with each HTML article and is linked in the HTML `meta` tag with name
-`ks:article_json`. So that individual scripts can then locate these
+`ks:article_json` (generally at the special location `/json/<my-article>.cmark.json`). So that individual scripts can then locate these
 information. As we get more mileage, we'll likely add more of such paths and
 formalize a bit their expected content.  However, keep in mind that
 Kitchen-Sink generates more than just the static aspects of the HTML: it
 provides a bunch of extra information which can be useful for [creative and advanced analyses](#content-analysis).
+
+### [experimental] textual output for AI agents
+
+In this day and age of AI agents, providing a textual output can help reduce
+tokenization and processing costs.  Kitchen-Sink generates a `text` file for
+each HTML article. This text-file is linked in the HTML `meta` tage with name
+`ks:article_text` (generally at the special location
+`/text/<my-article>.cmark.text`). Since some amount of text can be generated at
+load time, we cannot just serve the source code. This renderer is experimental.
 
 ### command-based generators
 
@@ -583,3 +592,31 @@ defined an entry for WikiPedia.
 Think of this feature like a revisit of the good-old webrings.
 
 <script src="js/copy-snippets.js"></script>
+
+=base:taken-off.cmark
+
+    =base:main-content.dhall
+    
+    let
+        prelude = ./dhall/Prelude.dhall
+    let
+        cat = prelude.Text.concat
+    let
+        bracketz =
+          \(x : Text) -> cat [ "[", x, "]" ]
+    let
+        parenz =
+          \(x : Text) -> cat [ "(", x, ")" ]
+    let
+        linkz =
+          \(x : Text) -> \(y : Text) -> cat [ bracketz x, parenz y ]
+    let
+        body =
+         [ linkz "text file for AI" (cat ["/text/" , kitchensink.file , ".text" ])
+         , linkz "JSON file for scripts" (cat ["/text/" , kitchensink.file , ".text" ])
+         ]
+    in
+    { contents = body
+    , format = "cmark"
+    }
+    
