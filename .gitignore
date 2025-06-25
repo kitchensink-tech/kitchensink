@@ -1,2 +1,6 @@
 **.swp
 website-www/
+agent.json
+agents-exe.keys
+agents-exe.hist
+agents-logfile
