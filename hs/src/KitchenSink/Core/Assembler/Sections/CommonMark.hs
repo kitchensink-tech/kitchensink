@@ -26,9 +26,12 @@ dumpCMark (Section ty Cmark lines) = do
                 ]
     res <- Commonmark.commonmarkWith customSyntax "inline" (Text.unlines lines)
     case res of
-        Left err -> Assembler $ Left (CommonMarkRenderingError err)
-        Right (blk :: FreeCommonmark.Block ()) -> Assembler $ Right $ Section ty InMemory blk
-dumpCMark (Section _ fmt _) = Assembler $ Left (UnsupportedConversionFormat fmt)
+        Left err ->
+            Assembler $ Left (CommonMarkRenderingError err)
+        Right (blk :: FreeCommonmark.Block ()) ->
+            Assembler $ Right $ Section ty InMemory blk
+dumpCMark (Section _ fmt _) =
+    Assembler $ Left (UnsupportedConversionFormat fmt)
 
 parseCMark :: Section ext [Text] -> Assembler ext (Section ext Html)
 parseCMark (Section ty Cmark lines) = do
