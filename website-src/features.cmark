@@ -394,9 +394,14 @@ formalize a bit their expected content.  However, keep in mind that
 Kitchen-Sink generates more than just the static aspects of the HTML: it
 provides a bunch of extra information which can be useful for [creative and advanced analyses](#content-analysis).
 
-### textual output for AI agents
+### [experimental] textual output for AI agents
 
-In this day and age of AI agents, providing a textual output can help reduce tokenization and processing costs.  Kitchen-Sink generates a `text` file for each HTML article. This text-file is linked in the HTML `meta` tage with name `ks:article_text` (generally at the special location `/text/<my-article>.cmark.text`).
+In this day and age of AI agents, providing a textual output can help reduce
+tokenization and processing costs.  Kitchen-Sink generates a `text` file for
+each HTML article. This text-file is linked in the HTML `meta` tage with name
+`ks:article_text` (generally at the special location
+`/text/<my-article>.cmark.text`). Since some amount of text can be generated at
+load time, we cannot just serve the source code. This renderer is experimental.
 
 ### command-based generators
 
