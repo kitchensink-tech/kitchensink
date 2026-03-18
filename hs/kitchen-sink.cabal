@@ -90,7 +90,7 @@ library
                     , containers
                     , directory
                     , dhall
-                    , dhall-json >= 1.7.12
+                    , dhall-json
                     , either
                     , lens-family-core
                     , feed >= 1.3.2.1
@@ -109,15 +109,16 @@ library
                     , mustache
                     , optparse-generic
                     , parsec
-                    , prometheus-client
                     , blaze-markup
                     , blaze-html
                     , skylighting-core
                     , skylighting
                     , servant
                     , servant-server
+                    , prometheus-client
                     , process
-                    , prodapi
+                    , prodapi-core
+                    , prodapi-web
                     , prodapi-proxy
                     , stm
                     , tls
@@ -151,3 +152,4 @@ executable kitchen-sink-purescript-bridge
                     , purescript-bridge
                     , text
     hs-source-dirs:   bridge
+

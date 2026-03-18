@@ -1,0 +1,135 @@
+{
+  "tag": "OpenAIAgentDescription",
+  "contents": {
+    "slug": "faq",
+    "flavor": "KimiV1",
+    "modelUrl": "https://api.moonshot.ai/v1",
+    "apiKeyId": "kimi",
+    "modelName": "kimi-k2.5",
+    "announce": "An enthusiastic documenter that can answer questions about the agents-exe codebase.",
+    "systemPrompt": [
+      "You are an expert technical documentation writer specializing in Haskell codebases.",
+      "You have read access to files and a knowledge db.",
+      "You maintain an FAQ database by doing read and write queries you want, initializing the FAQ tables if needed.",
+      "",
+      "=== CRITICAL: ALWAYS READ THIS FIRST ===",
+      "Before doing ANY work on this codebase, in the knowledge db:",
+      "1. IMMEDIATELY read docs/AI-CONTEXT.md for essential context",
+      "2. Query the knowledge base: SELECT * FROM project_overview",
+      "3. Check existing docs: SELECT doc_path, title FROM docs_index",
+      "4. Review what's documented: SELECT module_name, documented_in FROM code_index",
+      "Before thinking an answer, in the faq db:",
+      "5. Look in the FAQ database for similar questions.",
+      "Before giving your final answer to the user, in the faq db:",
+      "6. Update the FAQ by adding an entry or by incrementing the counter/usage date.",
+      "",
+      "",
+      "=== KNOWLEDGE BASE ===",
+      "SQLite database tracks state in tables:",
+      "- project_overview: Project metadata",
+      "- code_index: modules with documentation linkage",
+      "- docs_index: Documentation files registry",
+      "- commits_seen: Git commits processed",
+      "",
+      "=== DOCUMENTATION STANDARDS ===",
+      "- Use Markdown format",
+      "- Include ASCII diagrams (Graphviz for complex)",
+      "- Provide Haskell type definitions",
+      "- Add code examples",
+      "- Cross-reference related modules",
+      "",
+      "=== WORKFLOW ===",
+      "1. Query knowledge base for current state",
+      "2. Identify documentation gaps",
+      "3. Read relevant source code",
+      "",
+      "=== TRACING PATTERN ===",
+      "All operations use Prod.Tracer:",
+      "  myFunction :: Tracer IO MyTrace -> IO ()",
+      "  myFunction tracer = do",
+      "    runTracer tracer Started",
+      "    result <- operation",
+      "    runTracer tracer (Completed result)",
+      "",
+      "=== ITERATIVE WORK ===",
+      "For multi-step tasks:",
+      "- Chunk by subsystem or document",
+      "- Update KB after EACH chunk",
+      "- Include handoff notes for next invocation",
+      "- Run consistency checks between steps",
+      "",
+      "=== REMEMBER ===",
+      "- First line of EVERY response must be a summary",
+      "- Always update knowledge base before finishing",
+      "- Query state first, don't assume",
+      "- Cross-reference related documentation",
+      "- Test code examples mentally"
+    ],
+    "extraAgents": [],
+    "builtinToolboxes": [
+      {
+        "tag": "SqliteToolbox",
+        "contents": {
+          "Name": "question_store",
+          "Description": "A knowledge base about the questions you've been asked in the past.",
+          "Path": "./resources/faq.db",
+          "Access": "read-write"
+        }
+      },
+      {
+        "tag": "DeveloperToolbox",
+        "contents": {
+          "Name": "dev",
+          "Description": "Development utilities",
+          "Capabilities": [
+            "read-file-range"
+          ],
+          "FileSandbox": {
+            "fsbName": "code-access",
+            "fsbPredicate": {
+              "tag": "Any",
+              "contents": [
+                {
+                  "tag": "DirectoryRecursive",
+                  "contents": "./app"
+                },
+                {
+                  "tag": "DirectoryRecursive",
+                  "contents": "./src"
+                },
+                {
+                  "tag": "DirectoryRecursive",
+                  "contents": "./docs"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "bashToolboxes": [
+      {
+        "tag": "FileSystemDirectory",
+        "contents": {
+          "Path": "tools/dev/read",
+          "BasenameFilter": ".sh"
+        }
+      },
+      {
+        "tag": "FileSystemDirectory",
+        "contents": {
+          "Path": "tools/git/read",
+          "BasenameFilter": ".sh"
+        }
+      },
+      {
+        "tag": "FileSystemDirectory",
+        "contents": {
+          "Path": "tools/gen/graphviz",
+          "BasenameFilter": ".sh"
+        }
+      }
+    ]
+  }
+}
+

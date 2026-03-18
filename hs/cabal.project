@@ -1,18 +1,37 @@
 packages: .
 
-source-repository-package
-    type: git
-    location: https://github.com/lucasdicioccio/prodapi.git
-    tag: 96f6cd9cb8635d269756bdf29a7ecb2aeefdcd4e
-    subdir: prodapi
+allow-newer: dhall-json:bytestring
+           , dhall-json:text
+           , dhall:text
+           , prometheus-client:*
 
 source-repository-package
     type: git
     location: https://github.com/lucasdicioccio/prodapi.git
-    tag: 96f6cd9cb8635d269756bdf29a7ecb2aeefdcd4e
+    tag: 8431beee54673b05adcbefc887410f166006f5b4
+    subdir: prodapi-core
+
+source-repository-package
+    type: git
+    location: https://github.com/lucasdicioccio/prodapi.git
+    tag: 8431beee54673b05adcbefc887410f166006f5b4
+    subdir: prodapi-web
+
+source-repository-package
+    type: git
+    location: https://github.com/lucasdicioccio/prodapi.git
+    tag: 8431beee54673b05adcbefc887410f166006f5b4
     subdir: prodapi-proxy
 
 source-repository-package
     type: git
     location: https://github.com/lucasdicioccio/purescript-bridge.git
     tag: 76d8b4c53b0bbfd609a327857b1e09657cf1fc23
+
+-- Use iand675's fork which has GHC 9.8 fixes
+source-repository-package
+    type: git
+    location: https://github.com/fimad/prometheus-haskell
+    tag: 55cae43af452a57afaafb1ced9551b716202a59a
+    subdir: prometheus-client
+
