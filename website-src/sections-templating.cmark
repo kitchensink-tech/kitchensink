@@ -276,9 +276,12 @@ That snippet is live on this page: the buttons above are wired by it, in a plain
 rather serve it as a `.js` file next to the article and reference it with
 `<script src>`; inline here only so that one file shows the whole loop.
 
-`on-click` is currently the only event type the language accepts, so the
-attribute selector above is really a "has an action" selector. Keys, on the
-other hand, are yours to invent.
+Neither the event type nor the key is a fixed vocabulary: the language requires
+both to evaluate to a string and passes them through untouched, so
+`action("on-hover", …)` or a computed `action($ctx.eventName, …)` reach the page
+just as well. That makes the two attributes a pair of dispatch dimensions —
+which browser event to bind, and what to do when it fires — and both are yours
+to define. The selector above happens to bind clicks only.
 
 <script>
 (function () {
