@@ -74,6 +74,7 @@ library
                  , KitchenSink.Engine.SiteConfig
                  , KitchenSink.Engine.SiteLoader
                  , KitchenSink.Engine.SiteBuilder
+                 , KitchenSink.Engine.Templating
                  , KitchenSink.Engine.Track
                  , KitchenSink.Engine.Utils
                  , KitchenSink.Prelude
@@ -121,6 +122,7 @@ library
                     , prodapi-web
                     , prodapi-proxy
                     , stm
+                    , templating-hs
                     , tls
                     , http-types
                     , wai

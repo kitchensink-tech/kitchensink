@@ -73,7 +73,7 @@ headers extras =
         [ext k (Extension v) | ExtraSectionType k v <- extras]
 
 format :: Parser Format
-format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache
+format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> templatingDoc <|> templating
   where
     cmark = string "cmark" *> pure Cmark
     json = string "json" *> pure Json
@@ -81,6 +81,10 @@ format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache
     csv = string "csv" *> pure Csv
     dhall = string "dhall" *> pure Dhall
     mustache = string "mustache" *> pure Mustache
+    -- order matters: "templating" is a prefix of "templating-doc", and a
+    -- leftover "-doc" would silently become the section's first body line
+    templatingDoc = string "templating-doc" *> pure TemplatingDoc
+    templating = string "templating" *> pure Templating
 
 section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])
 section extras = f <$> (hdrs <?> "section-headers") <*> body

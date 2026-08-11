@@ -1,0 +1,326 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Templating-lang sections"
+,"faviconUrl": "/images/favicon.png"
+}
+
+=base:topic.json
+{"topics":["sections"]
+,"keywords":["static-site generators", "design", "templating"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+
+pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
+
+.output {
+  color: gray;
+  margin-left: 2em;
+  padding-left: 1em;
+  border-left: 4px solid gray;
+}
+
+=base:summary.cmark
+
+Pre-processing sections with templating-lang, the lighter-weight alternative to
+Dhall-sections.
+
+=base:main-content.cmark
+
+[templating-lang](https://github.com/lucasdicioccio/templating-lang) is a small
+template language: a `jq`-flavoured expression language for the data half, a
+HAML-like block syntax for structure, and a deliberately tiny set of builtins.
+KitchenSink embeds its Haskell implementation, `templating-hs`, as a second
+section pre-processor next to [Dhall-sections](/sections-dhall.html).
+
+Both backends do the same job and both remain supported. Templating-lang is,
+however, the direction of travel: `dhall` and `dhall-json` are notoriously
+awkward to build and they have repeatedly held KitchenSink back from moving to
+newer GHC versions, whereas `templating-hs` needs nothing beyond `megaparsec`
+and `aeson`. Expect Dhall-sections to be deprecated eventually; nothing is
+being removed today.
+
+# Two section formats
+
+Where Dhall has one format, templating-lang has two, because the language
+distinguishes producing *data* from producing a *document*.
+
+`.templating` sections are rooted at an expression and evaluate to a JSON
+value. That value is the same `{format, contents}` contract Dhall-sections
+answer with, so the section can rewrite itself to `json`, `cmark` or `html`.
+This is the format to reach for as a drop-in replacement for a Dhall section.
+
+`.templating-doc` sections are rooted at an element — `.div(...)`, `.ul(...)` —
+and evaluate to a document tree, which KitchenSink renders to HTML. There is no
+`{format, contents}` envelope here: the result is always HTML.
+
+The two roots can never be confused: an element root always starts with `.` and
+no expression form does. The format token in the section header nevertheless
+says which mode you meant, so a mistake is a parse error rather than a
+surprise.
+
+# The `$ctx` object
+
+Templating-lang always has the input context in scope as `$ctx`. KitchenSink
+fills it with the very same information the `kitchensink` object carries in
+Dhall-sections:
+
+```
+{ file : Text        -- the source file path of this cmark file
+, sectionNum : Integer  -- this section's number in the file, from zero
+, datasets : object  -- dataset cells declared *earlier* in this file
+, vars : object      -- the --var name=value pairs given on the command line
+}
+```
+
+So `kitchensink.datasets.my-name` becomes `$ctx.datasets.my-name`, and
+`kitchensink.file` becomes `$ctx.file`.
+
+Like Dhall-sections, templating sections are *pre-processors*: they are
+evaluated once, at load time, and only see datasets declared before them in the
+file. Unlike Dhall, there are no imports — local or networked — so a template
+cannot pull in a shared library of helpers. That is a real gap against Dhall,
+and the reason the two coexist.
+
+=base:main-content.cmark
+
+# Examples
+
+The rest of this page is its own fixture: every output below is produced by a
+templating section in this very file.
+
+## A dataset to work from
+
+    =base:dataset.json crew
+    {"members": [{"name": "Alice", "posts": 22}
+                ,{"name": "Bob", "posts": 7}
+                ]
+    }
+
+=base:dataset.json crew
+{"members": [{"name": "Alice", "posts": 22}
+            ,{"name": "Bob", "posts": 7}
+            ]
+}
+
+=base:main-content.cmark
+
+## Generating a dataset
+
+A `.templating` section returning `format = "json"` in a dataset cell declares a
+*new* dataset, visible to every later section — the same way a hand-written
+`=base:dataset.json` cell is.
+
+    =base:dataset.templating crew-summary
+    @members=$ctx.datasets.crew.members
+    @n=cardinality($members)
+    { "format": "json"
+    , "contents": { "count": $n
+                  , "names": map($members, (m) => $m.name)
+                  }
+    }
+
+Note that `$n` stays a JSON number and `names` stays a JSON array: expression
+mode never stringifies its result.
+
+=base:dataset.templating crew-summary
+@members=$ctx.datasets.crew.members
+@n=cardinality($members)
+{ "format": "json"
+, "contents": { "count": $n
+              , "names": map($members, (m) => $m.name)
+              }
+}
+
+=base:main-content.cmark
+
+## Rendering a section in CommonMark
+
+Reading back the dataset the previous section generated:
+
+    =base:main-content.templating
+    @summary=$ctx.datasets.crew-summary
+    { "format": "cmark"
+    , "contents": [ "::: output"
+                  , "__generated from a templating section__"
+                  , ""
+                  , "file=`$ctx.file`, section=`$ctx.sectionNum`"
+                  , ""
+                  , "`$summary.count` crew member(s)"
+                  , ":::"
+                  ]
+    }
+
+Each element of `contents` is one line. `format` may also be `"html"`, in which
+case the lines are used verbatim, or `"json"`, in which case `contents` is an
+arbitrary JSON value rather than a list of lines.
+
+=base:main-content.templating
+@summary=$ctx.datasets.crew-summary
+{ "format": "cmark"
+, "contents": [ "::: output"
+              , "__generated from a templating section__"
+              , ""
+              , "file=`$ctx.file`, section=`$ctx.sectionNum`"
+              , ""
+              , "`$summary.count` crew member(s)"
+              , ":::"
+              ]
+}
+
+=base:main-content.cmark
+
+## Rendering a document tree
+
+The same data, but built structurally rather than as CommonMark lines:
+
+    =base:main-content.templating-doc
+    @members=$ctx.datasets.crew.members
+    .div(class: "output",
+      .h3("Crew"),
+      .ul(map($members, (m) => .li("`$m.name` wrote `$m.posts` post(s)"))))
+
+Attributes come first in an element's argument list, then children;
+`map(collection, (item) => node)` expands to one child per item.
+
+=base:main-content.templating-doc
+@members=$ctx.datasets.crew.members
+.div(class: "output",
+  .h3("Crew"),
+  .ul(map($members, (m) => .li("`$m.name` wrote `$m.posts` post(s)"))))
+
+=base:main-content.cmark
+
+## Wiring `action(...)` to JavaScript
+
+`action(eventType, key, payload)` is the language's interactivity hook. In a
+browser host it binds to a real event handler; in a statically-produced page
+there is no dispatcher to bind to, so KitchenSink writes the *evaluated* action
+onto the element as three data attributes and leaves the dispatching to you.
+
+    =base:main-content.templating-doc
+    @members=$ctx.datasets.crew.members
+    .div(class: "output",
+      .p(id: "action-log", "no action yet — click a name"),
+      .ul(map($members, (m) =>
+        .li(.button(action("on-click", "select-member", {"name": $m.name, "posts": $m.posts}),
+                    $m.name)))))
+
+Each button comes out carrying its own payload:
+
+    <button data-ks-action-event="on-click"
+            data-ks-action-key="select-member"
+            data-ks-action-payload="{&quot;name&quot;:&quot;Alice&quot;,&quot;posts&quot;:22}"
+            >Alice</button>
+
+The payload is escaped on the way out, as any attribute value is, so
+`el.dataset.ksActionPayload` hands back the original JSON text and `JSON.parse`
+is all that is needed. Note that `posts` is still the number `22` there: the
+payload goes through the *expression* half of the language, which does not
+stringify, unlike the `class` attribute next to it.
+
+=base:main-content.templating-doc
+@members=$ctx.datasets.crew.members
+.div(class: "output",
+  .p(id: "action-log", "no action yet — click a name"),
+  .ul(map($members, (m) =>
+    .li(.button(action("on-click", "select-member", {"name": $m.name, "posts": $m.posts}),
+                $m.name)))))
+
+=base:main-content.cmark
+
+A dispatcher is then one query and one `switch`: look up elements by
+`data-ks-action-event`, and branch on `data-ks-action-key` — the key is the
+contract between the template and the page, and an unrecognised one should be
+ignored rather than crash the page.
+
+```javascript
+(function () {
+  function dispatch(key, payload) {
+    var log = document.getElementById('action-log');
+    switch (key) {
+      case 'select-member':
+        log.textContent = payload.name + ' wrote ' + payload.posts + ' post(s)';
+        break;
+      default:
+        log.textContent = 'unhandled action: ' + key;
+    }
+  }
+
+  document.querySelectorAll('[data-ks-action-event="on-click"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      dispatch(el.dataset.ksActionKey, JSON.parse(el.dataset.ksActionPayload));
+    });
+  });
+})();
+```
+
+That snippet is live on this page: the buttons above are wired by it, in a plain
+`<script>` block in a `=base:main-content.cmark` section. A real page would
+rather serve it as a `.js` file next to the article and reference it with
+`<script src>`; inline here only so that one file shows the whole loop.
+
+`on-click` is currently the only event type the language accepts, so the
+attribute selector above is really a "has an action" selector. Keys, on the
+other hand, are yours to invent.
+
+<script>
+(function () {
+  function dispatch(key, payload) {
+    var log = document.getElementById('action-log');
+    switch (key) {
+      case 'select-member':
+        log.textContent = payload.name + ' wrote ' + payload.posts + ' post(s)';
+        break;
+      default:
+        log.textContent = 'unhandled action: ' + key;
+    }
+  }
+
+  document.querySelectorAll('[data-ks-action-event="on-click"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      dispatch(el.dataset.ksActionKey, JSON.parse(el.dataset.ksActionPayload));
+    });
+  });
+})();
+</script>
+
+=base:main-content.cmark
+
+# Notes and limitations
+
+Text interpolation goes through the language's display rules: a string
+interpolates raw, an integral number drops its `.0`, and anything else falls
+back to a compact JSON encoding. In `.templating-doc` mode attribute values are
+display strings too — that mode produces a document, not data — which is
+exactly why expression mode exists for JSON payloads.
+
+String literals have no escape sequences: a `"` or a backtick simply cannot
+appear inside one, since the backtick is the interpolation delimiter. So a
+template can emit a `<script>` or an HTML attribute containing quotes only
+awkwardly — prefer single quotes in generated JavaScript, or keep such content
+out of the template entirely, as the section above does.
+
+Attribute names are validated before rendering: the language permits keys the
+DOM rejects, and those are reported as an error rather than written out as
+malformed markup.
+
+The JSON (expression-rooted) mode exists only in `templating-hs`, not in the
+PureScript implementation of the language, so templates using it are not
+portable to a browser host.

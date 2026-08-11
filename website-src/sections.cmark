@@ -417,6 +417,12 @@ appropriate format. The return type is currently rather primitive and will
 likely change in the future. Changes and specifications are tracked in a
 [WIP-page](/sections-dhall.html).
 
+The same `{format, contents}` contract is also answered by `templating`
+sections, which pre-process sections with
+[templating-lang](/sections-templating.html) rather than Dhall. Both backends
+are supported; templating-lang is the lighter-weight one and the one likely to
+outlive the other, since `dhall-json` is a recurring obstacle to upgrading GHC.
+
 __example__
 
     =base:main-content.dhall
