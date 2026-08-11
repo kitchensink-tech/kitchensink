@@ -18,37 +18,46 @@ import Text.Show (Show)
 
 import KitchenSink.Commonmark.HashTag (HasHashTag (..))
 
+{- Note: neither 'Inline' nor 'Block' may be parameterized.
+
+commonmark >= 0.3 ships an OVERLAPPABLE @IsBlock (f il) (f b)@ instance lifting
+the class through applicative functors. 'IsBlock' has the functional dependency
+@b -> il@, so a parameterized @Block a@ would unify with @f b@ and be forced to
+pick @il ~ Block _@, conflicting with the @Inline@ instance below. GHC's fundep
+consistency check runs regardless of OVERLAPPING pragmas, so keeping these type
+constructors nullary is what makes the instances legal.
+-}
+
 -- INLINES
 
-data InlineChunk a
+data InlineChunk
     = LineBreak
     | SoftBreak
     | Str Text
     | Entity Text
     | EscapedChar Char
-    | Emph (Inline a)
-    | Strong (Inline a)
-    | Link Text Text (Inline a)
-    | Image Text Text (Inline a)
+    | Emph Inline
+    | Strong Inline
+    | Link Text Text Inline
+    | Image Text Text Inline
     | Code Text
     | HashTag Text
     | RawInline Format Text
-    | SpanInline (Inline a)
+    | SpanInline Inline
     deriving (Show, Generic)
-instance (ToJSON a) => ToJSON (InlineChunk a)
+instance ToJSON InlineChunk
 
-data Inline a = Inline
-    { inlineChunks :: [InlineChunk a]
+data Inline = Inline
+    { inlineChunks :: [InlineChunk]
     , inlineAttributes :: Attributes
-    , inlineExtra :: a
     }
     deriving (Show, Generic)
-instance (ToJSON a) => ToJSON (Inline a)
+instance ToJSON Inline
 
 instance ToJSON Format where
     toJSON (Format txt) = toJSON txt
 
-inlineUniplate :: Inline a -> [Inline a]
+inlineUniplate :: Inline -> [Inline]
 inlineUniplate blk = mconcat [go c | c <- inlineChunks blk]
   where
     only a = [a]
@@ -60,63 +69,60 @@ inlineUniplate blk = mconcat [go c | c <- inlineChunks blk]
         Image _ _ il -> only il
         _ -> nil
 
-inlineUniverse :: Inline a -> [Inline a]
+inlineUniverse :: Inline -> [Inline]
 inlineUniverse blk = blk : mconcat [inlineUniverse b | b <- inlineUniplate blk]
 
-inline :: a -> InlineChunk a -> Inline a
-inline a c = Inline [c] mempty a
+inline :: InlineChunk -> Inline
+inline c = Inline [c] mempty
 
-inline0 :: InlineChunk () -> Inline ()
-inline0 = inline ()
+instance Semigroup Inline where
+    Inline c1s a1s <> Inline c2s a2s = Inline (c1s <> c2s) (a1s <> a2s)
 
-instance Semigroup (Inline ()) where
-    Inline c1s a1s _ <> Inline c2s a2s _ = Inline (c1s <> c2s) (a1s <> a2s) ()
+instance Monoid Inline where
+    mempty = Inline mempty mempty
 
-instance Monoid (Inline ()) where
-    mempty = Inline mempty mempty ()
+instance HasAttributes Inline where
+    addAttributes xs (Inline c ys) = Inline c (xs <> ys)
 
-instance HasAttributes (Inline ()) where
-    addAttributes xs (Inline c ys _) = Inline c (xs <> ys) ()
+instance HasHashTag Inline where
+    hashtag t = Inline [HashTag t] mempty
 
-instance HasHashTag (Inline ()) where
-    hashtag t = Inline [HashTag t] mempty ()
+instance HasSpan Inline where
+    spanWith attrs il = Inline [SpanInline il] attrs
 
-instance HasSpan (Inline ()) where
-    spanWith attrs il = Inline [SpanInline il] attrs ()
-
-instance Rangeable (Inline ()) where
+instance Rangeable Inline where
     ranged _ a = a
 
-instance IsInline (Inline ()) where
-    lineBreak = inline0 LineBreak
-    softBreak = inline0 SoftBreak
-    str = inline0 . Str
-    entity = inline0 . Entity
-    escapedChar = inline0 . EscapedChar
-    emph = inline0 . Emph
-    strong = inline0 . Strong
-    link dst title = inline0 . Link dst title
-    image dst title = inline0 . Image dst title
-    code = inline0 . Code
-    rawInline fmt = inline0 . RawInline fmt
+instance IsInline Inline where
+    lineBreak = inline LineBreak
+    softBreak = inline SoftBreak
+    str = inline . Str
+    entity = inline . Entity
+    escapedChar = inline . EscapedChar
+    emph = inline . Emph
+    strong = inline . Strong
+    link dst title = inline . Link dst title
+    image dst title = inline . Image dst title
+    code = inline . Code
+    rawInline fmt = inline . RawInline fmt
 
 -- BLOCKS
 
-data BlockChunk a
-    = Paragraph (Inline a)
-    | Plain (Inline a)
+data BlockChunk
+    = Paragraph Inline
+    | Plain Inline
     | ThematicBreak
-    | BlockQuote (Block a)
+    | BlockQuote Block
     | CodeBlock Text Text
-    | Heading Int (Inline a)
+    | Heading Int Inline
     | RawBlock Format Text
     | ReferenceLinkDefinition Text (Text, Text)
-    | List ListType ListSpacing [Block a]
-    | NestedDivBlock (Block a)
+    | List ListType ListSpacing [Block]
+    | NestedDivBlock Block
     deriving (Show, Generic)
-instance (ToJSON a) => ToJSON (BlockChunk a)
+instance ToJSON BlockChunk
 
-blockChunkInlines :: BlockChunk a -> [Inline a]
+blockChunkInlines :: BlockChunk -> [Inline]
 blockChunkInlines bc =
     let only a = [a]
         nil = []
@@ -126,16 +132,15 @@ blockChunkInlines bc =
             Heading _ il -> only il
             _ -> nil
 
-data Block a = Block
-    { blockChunks :: [BlockChunk a]
+data Block = Block
+    { blockChunks :: [BlockChunk]
     , blockAttributes :: Attributes
-    , blockExtra :: a
     }
     deriving (Show, Generic)
-instance (ToJSON a) => ToJSON (Block a)
+instance ToJSON Block
 
-instance HasDiv (Block ()) where
-    div_ bl = Block [NestedDivBlock bl] mempty ()
+instance HasDiv Block where
+    div_ bl = Block [NestedDivBlock bl] mempty
 
 instance ToJSON EnumeratorType where
     toJSON Decimal = toJSON ("Decimal" :: Text)
@@ -166,10 +171,10 @@ instance ToJSON ListType where
                     ]
             ]
 
-blockUniplate :: Block a -> [Block a]
+blockUniplate :: Block -> [Block]
 blockUniplate blk = mconcat [blockChunkBlocks c | c <- blockChunks blk]
 
-blockChunkBlocks :: BlockChunk a -> [Block a]
+blockChunkBlocks :: BlockChunk -> [Block]
 blockChunkBlocks = go
   where
     only a = [a]
@@ -179,10 +184,10 @@ blockChunkBlocks = go
         List _ _ bls -> bls
         _ -> nil
 
-blockUniverse :: Block a -> [Block a]
+blockUniverse :: Block -> [Block]
 blockUniverse blk = blk : mconcat [blockUniverse b | b <- blockUniplate blk]
 
-blockInlines :: Block a -> [Inline a]
+blockInlines :: Block -> [Inline]
 blockInlines root = do
     -- list monad!
     blk <- blockUniverse root
@@ -190,31 +195,28 @@ blockInlines root = do
     il <- blockChunkInlines chunk
     pure il
 
-block :: a -> BlockChunk a -> Block a
-block a c = Block [c] mempty a
+block :: BlockChunk -> Block
+block c = Block [c] mempty
 
-block0 :: BlockChunk () -> Block ()
-block0 = block ()
+instance Semigroup Block where
+    Block c1s a1s <> Block c2s a2s = Block (c1s <> c2s) (a1s <> a2s)
 
-instance Semigroup (Block ()) where
-    Block c1s a1s _ <> Block c2s a2s _ = Block (c1s <> c2s) (a1s <> a2s) ()
+instance Monoid Block where
+    mempty = Block mempty mempty
 
-instance Monoid (Block ()) where
-    mempty = Block mempty mempty ()
+instance HasAttributes Block where
+    addAttributes xs (Block c ys) = Block c (xs <> ys)
 
-instance HasAttributes (Block ()) where
-    addAttributes xs (Block c ys _) = Block c (xs <> ys) ()
-
-instance Rangeable (Block ()) where
+instance Rangeable Block where
     ranged _ a = a
 
-instance IsBlock (Inline ()) (Block ()) where
-    paragraph = block0 . Paragraph
-    plain = block0 . Plain
-    thematicBreak = block0 ThematicBreak
-    blockQuote = block0 . BlockQuote
-    codeBlock t1 t2 = block0 $ CodeBlock t1 t2
-    heading n = block0 . Heading n
-    rawBlock fmt = block0 . RawBlock fmt
-    referenceLinkDefinition lbl dsttile = block0 $ ReferenceLinkDefinition lbl dsttile
-    list ltype lspacing = block0 . List ltype lspacing
+instance IsBlock Inline Block where
+    paragraph = block . Paragraph
+    plain = block . Plain
+    thematicBreak = block ThematicBreak
+    blockQuote = block . BlockQuote
+    codeBlock t1 t2 = block $ CodeBlock t1 t2
+    heading n = block . Heading n
+    rawBlock fmt = block . RawBlock fmt
+    referenceLinkDefinition lbl dsttile = block $ ReferenceLinkDefinition lbl dsttile
+    list ltype lspacing = block . List ltype lspacing

@@ -27,7 +27,7 @@ import Network.Wai.Handler.Warp as Warp
 import Network.Wai.Handler.WarpTLS qualified as WarpTLS
 import Network.Wai.Middleware.RequestLogger qualified as RequestLogger
 import Options.Generic
-import Paths_prodapi qualified
+import Paths_prodapi_core qualified
 import Prod.App qualified as Prod
 import Prod.Proxy qualified as ProdProxy
 import Prod.Proxy.MultiApp qualified as ProdProxy
@@ -140,7 +140,7 @@ run cmd = do
                             Prod.app
                                 init
                                 status
-                                (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
+                                (statusPage <> versionsSection [("prodapi", Paths_prodapi_core.version)] <> metricsSection "js/metrics.js")
                                 (coerce multiapp)
                                 (Proxy @MultiSiteApi)
                     let webapp = RequestLogger.logStdoutDev prodapiapp

@@ -32,14 +32,14 @@ textRenderSections xs = Text.unlines $ fmap go xs
             Left _ -> "\n"
             Right html -> makePlainText $ extract html
 
-makePlainText :: (FreeCommonmark.Block ()) -> Text
+makePlainText :: (FreeCommonmark.Block) -> Text
 makePlainText bRoot =
     renderBlock "" bRoot
   where
-    renderBlock :: Text -> FreeCommonmark.Block () -> Text
+    renderBlock :: Text -> FreeCommonmark.Block -> Text
     renderBlock pfx b1 = Text.unlines [pfx <> renderBlockChunk bc | bc <- b1.blockChunks]
 
-    renderBlockChunk :: FreeCommonmark.BlockChunk () -> Text
+    renderBlockChunk :: FreeCommonmark.BlockChunk -> Text
     renderBlockChunk bc1 =
         case bc1 of
             FreeCommonmark.Paragraph sub ->
@@ -65,10 +65,10 @@ makePlainText bRoot =
     intToText :: Int -> Text
     intToText = LText.toStrict . Builder.toLazyText . Builder.decimal
 
-    renderInline :: FreeCommonmark.Inline () -> Text
+    renderInline :: FreeCommonmark.Inline -> Text
     renderInline i = mconcat $ fmap renderInlineChunk i.inlineChunks
 
-    renderInlineChunk :: FreeCommonmark.InlineChunk () -> Text
+    renderInlineChunk :: FreeCommonmark.InlineChunk -> Text
     renderInlineChunk ic = case ic of
         FreeCommonmark.LineBreak -> "--------------------------------------------"
         FreeCommonmark.SoftBreak -> " "

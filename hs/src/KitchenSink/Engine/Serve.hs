@@ -14,7 +14,7 @@ import Network.Wai.Handler.Warp as Warp
 import Network.Wai.Handler.WarpTLS qualified as WarpTLS
 import Network.Wai.Middleware.RequestLogger qualified as RequestLogger
 import Options.Generic
-import Paths_prodapi qualified
+import Paths_prodapi_core qualified
 import Prod.App qualified as Prod
 import Prod.Status
 import Prod.Tracer
@@ -106,7 +106,7 @@ run cmd = do
                 Prod.app
                     init
                     apiStatus
-                    (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
+                    (statusPage <> versionsSection [("prodapi", Paths_prodapi_core.version)] <> metricsSection "js/metrics.js")
                     (serveDevApi ksconfig devengine prodengine rt)
                     (Proxy @DevApi)
         pure webapp
@@ -120,7 +120,7 @@ run cmd = do
                 Prod.app
                     init
                     apiStatus
-                    (statusPage <> versionsSection [("prodapi", Paths_prodapi.version)] <> metricsSection "js/metrics.js")
+                    (statusPage <> versionsSection [("prodapi", Paths_prodapi_core.version)] <> metricsSection "js/metrics.js")
                     (serveApi engine rt)
                     (Proxy @ServeApi)
         pure webapp

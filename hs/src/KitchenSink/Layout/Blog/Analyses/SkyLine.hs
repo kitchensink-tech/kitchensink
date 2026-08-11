@@ -36,15 +36,15 @@ instance FromJSON SkyLineItem
 type TextWeight = Int -- todo newtype over Sum Int
 type HeadingLevels = [Int] -- todo newtype over nonempty list
 
-sectionSkyLine :: (CMark.Block a) -> SkyLine
+sectionSkyLine :: CMark.Block -> SkyLine
 sectionSkyLine s =
     let u = s : blockUniplate s
      in SkyLine $ List.reverse $ snd $ foldSkylineBlocks [c | b <- u, c <- blockChunks b]
   where
-    foldSkylineBlocks :: [CMark.BlockChunk a] -> (HeadingLevels, [SkyLineItem])
+    foldSkylineBlocks :: [CMark.BlockChunk] -> (HeadingLevels, [SkyLineItem])
     foldSkylineBlocks = List.foldl' foldOneBlock ([0], [])
 
-    foldOneBlock :: (HeadingLevels, [SkyLineItem]) -> CMark.BlockChunk a -> (HeadingLevels, [SkyLineItem])
+    foldOneBlock :: (HeadingLevels, [SkyLineItem]) -> CMark.BlockChunk -> (HeadingLevels, [SkyLineItem])
     foldOneBlock (hdrs, xs) b =
         let hdrs' = case b of
                 Heading n _ -> updateHeaders n hdrs

@@ -26,7 +26,7 @@ import KitchenSink.Prelude
 import KitchenSink.Layout.Blog.Analyses.SkyLine
 
 data ArticleInfos = ArticleInfos
-    { ast :: [CMark.Block ()]
+    { ast :: [CMark.Block]
     , linkInfos :: [LinkInfo]
     , imageInfos :: [ImageInfo]
     , snippetInfos :: [SnippetInfo]
@@ -56,7 +56,7 @@ data HashTagInfo = HashTagInfo {hashtagValue :: Text}
 instance ToJSON HashTagInfo
 instance FromJSON HashTagInfo
 
-articleCMarks :: Article [Text] -> [CMark.Block ()]
+articleCMarks :: Article [Text] -> [CMark.Block]
 articleCMarks art =
     case runAssembler (getSections art isMainContent >>= traverse dumpCMark . List.filter isCmark) of
         Left _ -> []
@@ -76,28 +76,28 @@ analyzeArticle art =
             (List.nub $ mconcat [findHashTagsInSection x | x <- xs])
             (mconcat [sectionSkyLine x | x <- xs])
 
-findLinksInSection :: (CMark.Block a) -> [LinkInfo]
+findLinksInSection :: CMark.Block -> [LinkInfo]
 findLinksInSection s = do
     -- list monad!
     il <- blockInlines (s)
     Link dst ttl _ <- inlineChunks il
     pure $ LinkInfo dst ttl
 
-findSnippetsInSection :: (CMark.Block a) -> [SnippetInfo]
+findSnippetsInSection :: CMark.Block -> [SnippetInfo]
 findSnippetsInSection s = do
     -- list monad!
     b <- blockUniverse (s)
     CodeBlock typ_ raw <- blockChunks b
     pure $ SnippetInfo typ_ raw
 
-findHashTagsInSection :: (CMark.Block a) -> [HashTagInfo]
+findHashTagsInSection :: CMark.Block -> [HashTagInfo]
 findHashTagsInSection s = do
     -- list monad!
     il <- blockInlines (s)
     HashTag txt <- inlineChunks il
     pure $ HashTagInfo txt
 
-findImagesInSection :: (CMark.Block a) -> [ImageInfo]
+findImagesInSection :: CMark.Block -> [ImageInfo]
 findImagesInSection s = do
     -- list monad!
     il <- blockInlines (s)

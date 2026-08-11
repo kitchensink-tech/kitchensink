@@ -15,7 +15,7 @@ import KitchenSink.Prelude
 
 import KitchenSink.Core.Assembler.Sections.PreRendered (PreRenderedHtml (..))
 
-dumpCMark :: Section ext [Text] -> Assembler ext (Section ext (FreeCommonmark.Block ()))
+dumpCMark :: Section ext [Text] -> Assembler ext (Section ext (FreeCommonmark.Block))
 dumpCMark (Section ty Cmark lines) = do
     let customSyntax =
             mconcat
@@ -28,7 +28,7 @@ dumpCMark (Section ty Cmark lines) = do
     case res of
         Left err ->
             Assembler $ Left (CommonMarkRenderingError err)
-        Right (blk :: FreeCommonmark.Block ()) ->
+        Right (blk :: FreeCommonmark.Block) ->
             Assembler $ Right $ Section ty InMemory blk
 dumpCMark (Section _ fmt _) =
     Assembler $ Left (UnsupportedConversionFormat fmt)
