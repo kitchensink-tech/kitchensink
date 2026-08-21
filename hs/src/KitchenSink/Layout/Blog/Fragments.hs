@@ -14,11 +14,12 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601Show)
 import Lucid as Lucid
 import Lucid.Base qualified as Lucid
-import Prelude ((+))
+import Prelude ((+), (||))
 
 import Text.Atom.Feed qualified as Atom
 
 import KitchenSink.Core.Assembler (runAssembler)
+import KitchenSink.Core.Assembler qualified as CoreAssembler
 import KitchenSink.Core.Build.Site ()
 import KitchenSink.Core.Build.Target (DestinationLocation, OutputPrefix, Url, destination, destinationUrl)
 import KitchenSink.Core.Build.Target qualified as Core
@@ -117,49 +118,107 @@ assembleDefaultLayoutWarning _ = pure $ do
         p_ "this page uses a default layout"
 
 assembleUpcomingMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleUpcomingMain a = r <$> (getSections a isMainContent >>= traverse renderSection)
+assembleUpcomingMain a = r <$> renderMainSections a
   where
-    r :: [Section PreRenderedHtml] -> Lucid.Html ()
+    r :: [Lucid.Html ()] -> Lucid.Html ()
     r content = do
         div_ [class_ "upcoming-notice"] $ do
             p_ "This article is still considered unfinished and content may change significantly."
         div_ [id_ "histogram"] mempty
         div_ [class_ "main-article"] $ do
-            traverse_ f content
-
-    f :: Section PreRenderedHtml -> Lucid.Html ()
-    f content =
-        section_ [class_ "main-section"] $ do
-            toHtmlRaw @Text (extract' content)
+            mconcat content
 
 assembleArchivedMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleArchivedMain a = r <$> (getSections a isMainContent >>= traverse renderSection)
+assembleArchivedMain a = r <$> renderMainSections a
   where
-    r :: [Section PreRenderedHtml] -> Lucid.Html ()
+    r :: [Lucid.Html ()] -> Lucid.Html ()
     r content = do
         div_ [class_ "archived-notice"] $ do
             p_ "This article is considered archived."
         div_ [id_ "histogram"] mempty
         div_ [class_ "main-article"] $ do
-            traverse_ f content
-
-    f :: Section PreRenderedHtml -> Lucid.Html ()
-    f content =
-        section_ [class_ "main-section"] $ do
-            toHtmlRaw @Text (extract' content)
+            mconcat content
 
 assembleMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleMain a = r <$> (getSections a isMainContent >>= traverse renderSection)
+assembleMain a = r <$> renderMainSections a
   where
-    r :: [Section PreRenderedHtml] -> Lucid.Html ()
+    r :: [Lucid.Html ()] -> Lucid.Html ()
     r content =
         div_ [class_ "main-article"] $ do
-            traverse_ f content
+            mconcat content
 
-    f :: Section PreRenderedHtml -> Lucid.Html ()
-    f content =
-        section_ [class_ "main-section"] $ do
-            toHtmlRaw @Text (extract' content)
+-- | Renders `main-content` sections (as markdown) alongside `callout`, `faq`,
+-- and `pricing` sections (as their own widgets), in the order they appear in
+-- the source file.
+renderMainSections :: Article [Text] -> Assembler [Lucid.Html ()]
+renderMainSections a = getSections a isRenderableContent >>= traverse renderContentSection
+  where
+    isRenderableContent s = isMainContent s || isCallout s || isFaq s || isPricing s
+
+renderContentSection :: Section [Text] -> Assembler (Lucid.Html ())
+renderContentSection s
+    | isMainContent s = do
+        rendered <- renderSection s
+        pure $ section_ [class_ "main-section"] $ toHtmlRaw @Text (extract' rendered)
+    | isCallout s = do
+        calloutSection <- jsonSection @CalloutData s
+        pure $ calloutHtml (extract calloutSection)
+    | isFaq s = do
+        faqSection <- jsonSection @FaqData s
+        pure $ faqHtml (extract faqSection)
+    | isPricing s = do
+        pricingSection <- jsonSection @PricingTableData s
+        pure $ pricingHtml (extract pricingSection)
+    | otherwise = CoreAssembler.Assembler $ Left (CoreAssembler.UnsupportedConversionFormat (sectionFormat s))
+
+calloutHtml :: CalloutData -> Lucid.Html ()
+calloutHtml c =
+    div_ [class_ ("callout callout-" <> calloutKind c)] $ do
+        p_ [class_ "callout-title"] (toHtml $ fromMaybe (calloutDefaultTitle $ calloutKind c) (calloutTitle c))
+        p_ [class_ "callout-body"] (toHtml $ calloutBody c)
+
+calloutDefaultTitle :: Text -> Text
+calloutDefaultTitle "note" = "Note"
+calloutDefaultTitle "warning" = "Warning"
+calloutDefaultTitle "tip" = "Tip"
+calloutDefaultTitle "important" = "Important"
+calloutDefaultTitle "danger" = "Danger"
+calloutDefaultTitle other = other
+
+faqHtml :: FaqData -> Lucid.Html ()
+faqHtml d =
+    div_ [class_ "faq"] $ do
+        mconcat [faqItemHtml i | i <- items d]
+
+faqItemHtml :: FaqItem -> Lucid.Html ()
+faqItemHtml i =
+    details_ [class_ "faq-item"] $ do
+        summary_ [class_ "faq-question"] (toHtml $ question i)
+        p_ [class_ "faq-answer"] (toHtml $ answer i)
+
+-- | Renders as an actual `<table>`: one column per plan, one row per
+-- feature. A plan's `values` are matched to `pricingFeatures` positionally;
+-- mismatched lengths degrade gracefully to a ragged table rather than erroring.
+pricingHtml :: PricingTableData -> Lucid.Html ()
+pricingHtml d =
+    table_ [class_ "pricing-table"] $ do
+        thead_ $ tr_ $ do
+            th_ [class_ "pricing-feature-header"] mempty
+            mconcat [planHeader p | p <- pricingPlans d]
+        tbody_ $ do
+            mconcat [featureRow feat vals | (feat, vals) <- List.zip (pricingFeatures d) (List.transpose (fmap values (pricingPlans d)))]
+  where
+    planHeader :: PricingPlan -> Lucid.Html ()
+    planHeader p =
+        th_ [class_ "pricing-plan-header"] $ do
+            div_ [class_ "pricing-plan-name"] (toHtml $ name p)
+            div_ [class_ "pricing-plan-price"] (toHtml $ price p)
+
+    featureRow :: Text -> [Text] -> Lucid.Html ()
+    featureRow feat vals =
+        tr_ $ do
+            td_ [class_ "pricing-feature-name"] (toHtml feat)
+            mconcat [td_ [class_ "pricing-value"] (toHtml v) | v <- vals]
 
 assembleStyle :: Article [Text] -> Assembler (Lucid.Html ())
 assembleStyle a = r <$> (fmap Text.concat <$> getSection a isMainCss)

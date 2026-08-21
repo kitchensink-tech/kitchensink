@@ -261,6 +261,69 @@ __example__
     
 :::
 
+## callout [good-to-know]
+
+::: {.section-details}
+
+An inline admonition/callout box (note, tip, warning, important/danger, or
+any other free-form `kind` string, which falls back to a default style).
+`callout` sections are rendered in the same position, relative to
+`main-content` sections, as they appear in the source file — so you can
+interleave prose and admonitions freely by writing several `main-content`
+and `callout` sections one after another.
+
+`title` is optional and defaults to a capitalized version of `kind`. `body`
+is plain text (no markdown rendering, for now).
+
+__example__
+
+    =base:callout.json
+    {"kind": "warning"
+    ,"title": "Heads up"
+    ,"body": "This behavior may change in a future release."
+    }
+
+:::
+
+## faq [good-to-know]
+
+::: {.section-details}
+
+A list of question/answer pairs, rendered as an accordion (`<details>`
+elements, no JavaScript needed). Like `callout`, `faq` sections render in
+file order relative to `main-content` and `callout` sections, and you can
+have several of them in one article.
+
+__example__
+
+    =base:faq.json
+    {"items":
+      [ {"question": "Is this a FAQ?", "answer": "Yes."}
+      ]
+    }
+
+:::
+
+## pricing [good-to-know]
+
+::: {.section-details}
+
+A comparison table: one column per plan, one row per feature. Each plan's
+`values` line up positionally with `pricingFeatures`; mismatched lengths
+degrade to a ragged table rather than erroring.
+
+__example__
+
+    =base:pricing.json
+    {"pricingFeatures": ["Sites", "Support"]
+    ,"pricingPlans":
+      [ {"name": "Free", "price": "$0", "values": ["1", "Community"]}
+      , {"name": "Pro", "price": "$9/mo", "values": ["10", "Priority"]}
+      ]
+    }
+
+:::
+
 ## taken-off cmark [good-to-know]
 
 ::: {.section-details}

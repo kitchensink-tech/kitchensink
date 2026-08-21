@@ -55,6 +55,9 @@ headers extras =
         , base "taken-off" TakenOff
         , base "social" Social
         , base "glossary" Glossary
+        , base "callout" Callout
+        , base "faq" Faq
+        , base "pricing" Pricing
         ]
 
     -- for dataset the format is before the dataset

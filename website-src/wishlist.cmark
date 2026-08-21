@@ -39,6 +39,34 @@ A whishlist, which actually is a todolist.
 - support citation references
 - consider listing/index of all code snippets,images,etc.
 - hide zero-counts of links etc.
+- new layouts: landing/marketing page (hero + feature grid + CTA), documentation layout with a persistent sidebar TOC, changelog/release-notes (grouped by version), portfolio/case-study, redirect/short-link page
+- new sections: ~~callout/admonition~~, ~~FAQ/accordion~~, auto-derived table of contents, ~~pricing/comparison table~~, series/related-articles cross-linking
+
+=base:callout.json
+{"kind": "tip"
+,"title": "New!"
+,"body": "Callout/admonition sections just landed. This box is one, authored via a callout.json section interleaved with main-content sections; kind can be note, tip, warning, important/danger, or anything else (unstyled fallback). The body is plain text for now, no markdown rendering yet."
+}
+
+=base:main-content.cmark
+
+Main-content and callout sections render in the order they appear in the source file, so authors can interleave prose and admonitions freely. Two more section types landed alongside callouts:
+
+=base:faq.json
+{"items":
+  [ {"question": "Does a faq section support markdown in answers?", "answer": "Not yet, same plain-text limitation as callout bodies."}
+  , {"question": "Can I have more than one faq section per article?", "answer": "Yes, they render in file order just like callouts and main-content."}
+  ]
+}
+
+=base:pricing.json
+{"pricingFeatures": ["Sites", "Support", "Custom domain"]
+,"pricingPlans":
+  [ {"name": "Free", "price": "$0", "values": ["1", "Community", "No"]}
+  , {"name": "Pro", "price": "$9/mo", "values": ["10", "Priority", "Yes"]}
+  , {"name": "Team", "price": "$29/mo", "values": ["Unlimited", "Priority", "Yes"]}
+  ]
+}
 
 =base:taken-off.cmark
 - diffing lib

@@ -7,10 +7,13 @@ module KitchenSink.Core.Assembler.Sections.Primitives (
 
     -- * prebuild predicates
     isBuildInfo,
+    isCallout,
+    isFaq,
     isGlossary,
     isMainContent,
     isMainCss,
     isPreamble,
+    isPricing,
     isSocial,
     isSummary,
     isTopic,
@@ -47,6 +50,15 @@ isTopic = (== Topic) . sectionType
 
 isGlossary :: (Eq ext) => SectionPredicate ext
 isGlossary = (== Glossary) . sectionType
+
+isCallout :: (Eq ext) => SectionPredicate ext
+isCallout = (== Callout) . sectionType
+
+isFaq :: (Eq ext) => SectionPredicate ext
+isFaq = (== Faq) . sectionType
+
+isPricing :: (Eq ext) => SectionPredicate ext
+isPricing = (== Pricing) . sectionType
 
 isSocial :: (Eq ext) => SectionPredicate ext
 isSocial = (== Social) . sectionType

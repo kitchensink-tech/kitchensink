@@ -103,6 +103,10 @@ destRawFile prefix (FileSource path)
         StaticFileDestination
             (Text.pack $ "/robots.txt")
             (prefix </> "robots.txt")
+    | takeFileName path == "webfinger.json" =
+        StaticFileDestination
+            (Text.pack $ "/.well-known/webfinger")
+            (prefix </> ".well-known" </> "webfinger")
     | otherwise =
         StaticFileDestination
             (Text.pack $ "/raw/" <> takeFileName path)

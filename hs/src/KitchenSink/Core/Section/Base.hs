@@ -14,6 +14,9 @@ data SectionType ext
     | TakenOff
     | Social
     | Glossary
+    | Callout
+    | Faq
+    | Pricing
     | Dataset Name
     | Extension ext
     | --

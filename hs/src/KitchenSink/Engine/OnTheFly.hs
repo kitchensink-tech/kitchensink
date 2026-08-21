@@ -88,6 +88,7 @@ handleOnTheFlyProduction fetchTarget cntrs2 track = go
         resp $ Wai.responseLBS status200 [("content-type", ctypeFor path)] body
 
     ctypeFor path
+        | path == "/.well-known/webfinger" = "application/jrd+json"
         | ".js" `ByteString.isSuffixOf` path = "application/javascript"
         | ".json" `ByteString.isSuffixOf` path = "application/json"
         | ".html" `ByteString.isSuffixOf` path = "text/html"
