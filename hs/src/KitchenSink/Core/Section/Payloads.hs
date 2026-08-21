@@ -25,6 +25,7 @@ instance ToJSON PublicationStatus
 data BuildInfoData = BuildInfoData
     { layout :: Text
     , publicationStatus :: Maybe PublicationStatus
+    , robots :: Maybe Text
     }
     deriving (Show, Eq, Generic)
 instance FromJSON BuildInfoData
@@ -36,6 +37,7 @@ data TopicData = TopicData
     { topics :: [TopicName]
     , keywords :: [Text]
     , imageLink :: Maybe Text
+    , imageAlt :: Maybe Text
     }
     deriving (Show, Eq, Generic)
 instance FromJSON TopicData
@@ -48,8 +50,10 @@ data PreambleData = PreambleData
     { author :: Text
     , datetxt :: Maybe Text
     , date :: Maybe UTCTime
+    , updated :: Maybe UTCTime
     , title :: Text
     , faviconUrl :: Maybe Text
+    , lang :: Maybe Text
     }
     deriving (Show, Eq, Generic)
 instance FromJSON PreambleData

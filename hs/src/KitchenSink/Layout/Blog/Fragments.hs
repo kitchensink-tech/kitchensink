@@ -3,6 +3,8 @@
 module KitchenSink.Layout.Blog.Fragments where
 
 import Control.Monad (when)
+import Data.Aeson (Value, object, (.=))
+import Data.Aeson.Text (encodeToLazyText)
 import Data.Either (fromRight)
 import Data.List qualified as List
 import Data.Map.Strict qualified as Map
@@ -339,31 +341,64 @@ metaheaders mh art = do
     preamble <- fmap extract <$> jsonm @() @PreambleData art isPreamble
     let titleTxt = maybe defaultTitle mktitle preamble :: Text
     let faviconHref = mkfavicon preamble :: Text
+    let twitterCard = case topic >>= imageLink of
+            Just _ -> "summary_large_image" :: Text
+            Nothing -> "summary"
+    let modifiedTime = case preamble >>= updated of
+            Just x -> Just x
+            Nothing -> preamble >>= date
+    let robotsContent = case buildinfo art >>= robots of
+            Just x -> x
+            Nothing -> case publicationStatus =<< buildinfo art of
+                Just Upcoming -> "noindex, nofollow"
+                Just Archived -> "noindex, nofollow"
+                Just Public -> "index, follow"
+                Nothing -> "index, follow"
+    let jsonLd =
+            flip fmap preamble $ \p ->
+                object
+                    $ catMaybes
+                        [ Just $ "@context" .= ("https://schema.org" :: Text)
+                        , Just $ "@type" .= ("BlogPosting" :: Text)
+                        , Just $ "mainEntityOfPage" .= object ["@type" .= ("WebPage" :: Text), "@id" .= urlForPage]
+                        , Just $ "headline" .= title p
+                        , fmap (\x -> "description" .= compactSummary x) summary
+                        , fmap (\link -> "image" .= [urlForImage link]) (topic >>= imageLink)
+                        , fmap (\d -> "datePublished" .= fmtUTC d) (date p)
+                        , fmap (\d -> "dateModified" .= fmtUTC d) modifiedTime
+                        , Just $ "author" .= object ["@type" .= ("Person" :: Text), "name" .= author p]
+                        , Just $ "publisher" .= object ["@type" .= ("Organization" :: Text), "name" .= baseTitle extra]
+                        ]
     pure
         $ mconcat
         $ catMaybes
             [ Just $ meta_ [charset_ "utf-8"]
-            , Just $ meta_ [name_ "viewport", content_ "with=device-width, initial-scale=1.0"]
+            , Just $ meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1.0"]
+            , Just $ meta_ [name_ "robots", content_ robotsContent]
             , Just $ title_ $ toHtml titleTxt
             , Just $ link_ [rel_ "icon", type_ "image/x-icon", href_ faviconHref]
+            , Just $ link_ [rel_ "canonical", href_ urlForPage]
             , Just $ link_ [rel_ "alternate", type_ "application/atom+xml", title_ "Atom Feed", href_ urlForAtom]
             , fmap (\x -> meta_ [name_ "author", content_ $ author x]) preamble
             , fmap (\x -> meta_ [name_ "keywords", content_ $ Text.intercalate ", " $ topicKeywords x]) topic
             , fmap (\x -> meta_ [name_ "description", content_ $ compactSummary x]) summary
-            , Just $ meta_ [name_ "twitter:card", content_ "summary"]
+            , Just $ meta_ [name_ "twitter:card", content_ twitterCard]
             , Just $ meta_ [name_ "twitter:title", content_ titleTxt]
             , (\x -> meta_ [name_ "twitter:site", content_ $ "@" <> x]) <$> twitterSiteLogin extra
             , (\x -> meta_ [name_ "twitter:creator", content_ $ "@" <> x]) <$> (twitter =<< social)
             , fmap (\x -> meta_ [property_ "twitter:description", content_ $ compactSummary x]) summary
             , Just $ meta_ [name_ "type", property_ "og:type", content_ "article"]
             , Just $ meta_ [name_ "title", property_ "og:title", content_ titleTxt]
+            , Just $ meta_ [property_ "og:site_name", content_ $ baseTitle extra]
             , Just $ meta_ [name_ "url", property_ "og:url", content_ $ urlForPage]
             , fmap (\x -> meta_ [property_ "og:image", content_ $ urlForImage $ x]) (topic >>= imageLink)
             , fmap (\x -> meta_ [property_ "twitter:image:src", content_ $ urlForImage $ x]) (topic >>= imageLink)
             , fmap (\x -> meta_ [property_ "og:description", content_ $ compactSummary x]) summary
             , fmap (\x -> meta_ [name_ "article:published_time", content_ $ fmtUTC x]) $ preamble >>= date
+            , fmap (\x -> meta_ [name_ "article:modified_time", content_ $ fmtUTC x]) modifiedTime
             , Just $ meta_ [name_ "ks:article_json", content_ $ urlForJSONPage]
             , Just $ meta_ [name_ "ks:article_text", content_ $ urlForTextPage]
+            , fmap (\v -> script_ [type_ "application/ld+json"] (toHtmlRaw $ renderJsonLd v)) jsonLd
             ]
         <> [meta_ [name_ "article:tag", content_ k] | k <- maybe [] topicKeywords topic]
   where
@@ -392,15 +427,30 @@ metaheaders mh art = do
 defaultFavicon :: Text
 defaultFavicon = "/images/favicon.png"
 
+-- | Renders JSON-LD for embedding in a <script type="application/ld+json">
+-- tag. "</" is escaped because a literal "</script>" inside a JSON string
+-- value (e.g. an article title) would otherwise close the tag early.
+renderJsonLd :: Value -> Text
+renderJsonLd = Text.replace "</" "<\\/" . LText.toStrict . encodeToLazyText
+
 wrap ::
     (Lucid.Html () -> Lucid.Html ()) ->
     (Article [Text] -> Assembler (Lucid.Html ())) ->
     (Article [Text] -> Assembler (Lucid.Html ()))
 wrap k f = fmap k . f
 
-htmldoc :: (Functor t) => (a -> t (Lucid.Html ())) -> a -> t LText.Text
-htmldoc mkContent a =
-    Lucid.renderText . doctypehtml_ <$> mkContent a
+htmldoc ::
+    (Article [Text] -> Assembler (Lucid.Html ())) ->
+    Article [Text] ->
+    Assembler LText.Text
+htmldoc mkContent art =
+    Lucid.renderText . withLang <$> mkContent art
+  where
+    withLang content = doctype_ *> html_ [lang_ langCode] content
+    langCode = fromMaybe defaultLang (lang =<< articlePreambleData art)
+
+defaultLang :: Text
+defaultLang = "en"
 
 buildinfo :: Article [Text] -> Maybe BuildInfoData
 buildinfo art =
@@ -638,18 +688,26 @@ articleStats art = do
 articleImage :: Article [Text] -> Lucid.Html ()
 articleImage art = do
     div_ [class_ "article-image"] $ do
-        maybe mempty (\link -> img_ [src_ link]) imgUrl
+        maybe mempty (\link -> img_ [src_ link, alt_ altText]) imgUrl
   where
     imgUrl :: Maybe Text
-    imgUrl = case runAssembler getLink of
+    imgUrl = imageLink =<< topicData
+
+    altText :: Text
+    altText =
+        fromMaybe (maybe "" title $ articlePreambleData art)
+            $ imageAlt =<< topicData
+
+    topicData :: Maybe TopicData
+    topicData = case runAssembler getTopic of
         Left _ -> Nothing
         Right x -> x
 
-    getLink :: Assembler (Maybe Text)
-    getLink = f <$> jsonm @() @TopicData art isTopic
+    getTopic :: Assembler (Maybe TopicData)
+    getTopic = f <$> jsonm @() @TopicData art isTopic
 
-    f :: Maybe (Section TopicData) -> Maybe Text
-    f sec = imageLink . extract =<< sec
+    f :: Maybe (Section TopicData) -> Maybe TopicData
+    f sec = extract <$> sec
 
 assembleAtomEntry ::
     MetaData ->

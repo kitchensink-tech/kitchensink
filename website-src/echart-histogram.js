@@ -3,6 +3,8 @@
     var chartDom = document.getElementById('histogram');
     var myChart = echarts.init(chartDom);
     var option;
+
+    window.addEventListener('resize', () => myChart.resize());
     
     const jsonSrc = document.getElementsByName('ks:article_json')[0].content;
     

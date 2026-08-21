@@ -583,6 +583,13 @@ interactive-picture using [Apache Echarts](https://echarts.apache.org/en/index.h
 :::
 
 <script src="js/topicgraph.js"></script>
+<script>
+window.addEventListener('resize', () => {
+  const dom = document.querySelector('#echartzone .echarts-ref');
+  const chart = dom && echarts.getInstanceByDom(dom);
+  if (chart) chart.resize();
+});
+</script>
 
 A special config in [kitchen-sink.json](/kitchen-sink-dot-json.html) allows to
 give extra importance to a _subset of_ externally linked sites.  For instance a

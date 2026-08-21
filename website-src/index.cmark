@@ -26,6 +26,13 @@ We don't claim to be the best organized nor the fastest nor the prettiest. We
 just want to generate web pages from content and move on.
 
 <script src="js/topicgraph.js"></script>
+<script>
+window.addEventListener('resize', () => {
+  const dom = document.querySelector('#echartzone .echarts-ref');
+  const chart = dom && echarts.getInstanceByDom(dom);
+  if (chart) chart.resize();
+});
+</script>
 
 =base:main-css.css
 @import "/css/colors.css";

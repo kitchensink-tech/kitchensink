@@ -64,6 +64,7 @@ data TopicSummary = TopicSummary
     { topics :: [Text]
     , keywords :: [Text]
     , imageLink :: Maybe Text
+    , imageAlt :: Maybe Text
     }
     deriving (Show, Eq, Generic)
 instance FromJSON TopicSummary
