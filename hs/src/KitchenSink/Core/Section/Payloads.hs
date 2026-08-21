@@ -58,7 +58,6 @@ data SocialData = SocialData
     , linkedin :: Maybe Text
     , github :: Maybe Text
     , mastodon :: Maybe Text
-    , cohost :: Maybe Text
     }
     deriving (Show, Eq, Generic)
 instance FromJSON SocialData

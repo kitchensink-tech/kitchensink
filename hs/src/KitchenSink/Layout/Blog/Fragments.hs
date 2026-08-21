@@ -102,16 +102,14 @@ assembleFooter a = r <$> (fmap extract . jsonSection @SocialData =<< getSection 
             div_ [class_ "social-links"] $ do
                 maybe mempty twtr (twitter s)
                 maybe mempty masto (mastodon s)
-                maybe mempty chost (cohost s)
                 maybe mempty ghub (github s)
                 maybe mempty lkdn (linkedin s)
 
-    twtr, ghub, lkdn, masto, chost :: Text -> Lucid.Html ()
+    twtr, ghub, lkdn, masto :: Text -> Lucid.Html ()
     twtr h = a_ [href_ $ "https://twitter.com/" <> h] "twitter"
     ghub h = a_ [href_ $ "https://github.com/" <> h] "github"
     lkdn h = a_ [href_ $ "https://linkedin.com/in/" <> h] "linkedin"
     masto h = a_ [rel_ "me", href_ $ h] "mastodon"
-    chost h = a_ [href_ $ "https://cohost.org/" <> h] "cohost"
 
 assembleDefaultLayoutWarning :: Article [Text] -> Assembler (Lucid.Html ())
 assembleDefaultLayoutWarning _ = pure $ do
