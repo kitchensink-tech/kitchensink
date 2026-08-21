@@ -363,7 +363,12 @@ siteTargets execRoot prefix extra site = allTargets
                 [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
                 , htmlbody
                     $ mconcat
-                        [ wrap (div_ [class_ "main"])
+                        [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
+                            $ mconcat
+                                [ const $ pure $ homeLink
+                                , const $ pure $ searchBox
+                                ]
+                        , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
                                 [ assembleMain

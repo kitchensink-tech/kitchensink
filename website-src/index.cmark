@@ -29,6 +29,7 @@ just want to generate web pages from content and move on.
 
 =base:main-css.css
 @import "/css/colors.css";
+@import "/css/navigation.css";
 @import "/css/articles-listing.css";
 @import "/css/index.css";
 

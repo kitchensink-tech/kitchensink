@@ -22,14 +22,18 @@ p,ul,ol {
   font-family: sans-serif;
 }
 
+#site-navigation {
+  display: none;
+}
+
 /*~~ latest-article listing  ~~~~~~~~~~~~~*/
 
-nav:first-of-type {
+nav.articles-listing:first-of-type {
   margin: auto;
   width: 70%;
 }
 
-nav:first-of-type >.articles-listing-list {
+nav.articles-listing:first-of-type >.articles-listing-list {
   display: block;
 }
 

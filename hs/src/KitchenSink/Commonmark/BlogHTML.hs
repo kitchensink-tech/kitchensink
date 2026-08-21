@@ -7,6 +7,7 @@ module KitchenSink.Commonmark.BlogHTML where
 import Commonmark (HasAttributes, IsBlock (..), IsInline, Rangeable, ToPlainText, addAttribute, htmlInline)
 import Commonmark qualified
 import Commonmark.Extensions (HasDiv, HasEmoji, HasQuoted, HasSpan)
+import Data.Ord (min)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding (decodeUtf8)
@@ -14,6 +15,7 @@ import KitchenSink.Commonmark.HashTag (HasHashTag (..))
 
 import KitchenSink.Commonmark.Highlighting
 import KitchenSink.Prelude
+import Prelude ((+))
 
 newtype Html = Html (Commonmark.Html ())
     deriving (Show)
@@ -44,7 +46,9 @@ instance IsBlock Html Html where
     plain (Html a) = Html (plain a)
     thematicBreak = Html thematicBreak
     blockQuote (Html a) = Html (blockQuote a)
-    heading n (Html a) = Html (heading n a)
+    -- Markdown headings start one level below the hand-authored article
+    -- <h1> title, so `#` becomes <h2>, `##` becomes <h3>, etc.
+    heading n (Html a) = Html (heading (min 6 (n + 1)) a)
     rawBlock f t = Html (rawBlock f t)
     referenceLinkDefinition t kv = Html (referenceLinkDefinition t kv)
     list ty sp xs = Html (list ty sp [coerce x | x <- xs])
