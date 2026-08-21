@@ -424,17 +424,14 @@ smallArticleLinks tgts =
 topicTag :: OutputPrefix -> TopicStats -> DestinationLocation -> TopicName -> Lucid.Html ()
 topicTag prefix stats currentDestination topic =
     div_ [class_ "topic"] $ do
+        navArrow "topic-prev-link" "‹" prevUrl
         a_ [class_ "topic-link", href_ url] $ do
             span_ [class_ "topic-name"] (toHtml topic)
             span_ [class_ "topic-count"] $ do
                 toHtml $ show $ 1 + length prevArticles
                 toHtml ("/" :: Text)
                 toHtml $ show $ length articles
-        div_ [class_ "topic-prevnext"] $ do
-            span_ [class_ "topic-prev-link"] $ do
-                fromMaybe (pure ()) prevLink
-            span_ [class_ "topic-next-link"] $ do
-                fromMaybe (pure ()) nextLink
+        navArrow "topic-next-link" "›" nextUrl
   where
     url = destinationUrl $ destTopic prefix topic
     articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
@@ -445,9 +442,17 @@ topicTag prefix stats currentDestination topic =
     previousArticle = if null prevArticles then Nothing else Just $ List.last prevArticles
     nextArticle = fst <$> List.uncons nextArticles
 
-    tgtLink word (target, _) = mylink_ (destinationUrl $ destination target) word
-    prevLink = fmap (tgtLink "[prev]") previousArticle
-    nextLink = fmap (tgtLink "[next]") nextArticle
+    prevUrl = destinationUrl . destination . fst <$> previousArticle
+    nextUrl = destinationUrl . destination . fst <$> nextArticle
+
+    -- A pagination-style arrow: a clickable "‹"/"›" when there is a
+    -- neighbouring article, otherwise a static "|" marking the end of the topic.
+    navArrow :: Text -> Text -> Maybe Url -> Lucid.Html ()
+    navArrow cls arrow mUrl =
+        span_ [class_ ("topic-nav " <> cls)] $ do
+            case mUrl of
+                Just u -> a_ [class_ "topic-nav-link", href_ u] (toHtml arrow)
+                Nothing -> span_ [class_ "topic-nav-boundary"] (toHtml ("|" :: Text))
 
 sortByDate :: [(a, Article [Text])] -> [(a, Article [Text])]
 sortByDate = List.sortBy f
