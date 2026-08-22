@@ -28,6 +28,14 @@ source-repository-package
     location: https://github.com/lucasdicioccio/purescript-bridge.git
     tag: 76d8b4c53b0bbfd609a327857b1e09657cf1fc23
 
+-- Backend for `templating`/`templating-doc` sections; the alternative to
+-- dhall/dhall-json, which it should eventually replace.
+source-repository-package
+    type: git
+    location: https://github.com/lucasdicioccio/templating-lang.git
+    tag: d57b5891c325858d8e198adca931988cb6072bb0
+    subdir: templating-hs
+
 -- Use iand675's fork which has GHC 9.8 fixes
 source-repository-package
     type: git

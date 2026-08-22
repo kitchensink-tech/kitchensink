@@ -6,6 +6,7 @@ module KitchenSink.Engine.SiteLoader (module KitchenSink.Core.Build.Site, loadSi
 import Control.Exception (throwIO)
 import Data.Aeson (FromJSON (..), withObject, (.:))
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Types qualified as Aeson.Types
 import Data.ByteString.Lazy qualified as LByteString
 import Data.Either (fromRight)
 import Data.List qualified as List
@@ -37,6 +38,8 @@ import Control.Monad.State
 import KitchenSink.Core.Build.Site
 import KitchenSink.Core.Build.Target
 import KitchenSink.Core.Section
+import KitchenSink.Engine.Templating (TemplatingError)
+import KitchenSink.Engine.Templating qualified as Templating
 import KitchenSink.Prelude
 
 data LogMsg ext
@@ -73,17 +76,27 @@ loadArticle dhallRoot vars extras trace path = do
     env = EvalEnv path dhallRoot vars trace
     evalSections art = evalStateT (overSections (evalSection env) art) newState
 
-data DhallResult
-    = DhallTextContents Text [Text]
-    | DhallJsonContents Aeson.Value
+{- | What an evaluated section (Dhall, or templating-lang in expression mode)
+must answer with: a @format@ naming the concrete format the section is rewritten
+to, plus its @contents@.
+-}
+data SectionEvalResult
+    = TextContents Text [Text]
+    | JsonContents Aeson.Value
     deriving (Show)
 
-instance FromJSON DhallResult where
-    parseJSON = withObject "DhallResult" $ \obj -> do
+instance FromJSON SectionEvalResult where
+    parseJSON = withObject "SectionEvalResult" $ \obj -> do
         format <- obj .: "format"
         case format of
-            "json" -> DhallJsonContents <$> obj .: "contents"
-            _ -> DhallTextContents format <$> obj .: "contents"
+            "json" -> JsonContents <$> obj .: "contents"
+            _ -> TextContents format <$> (obj .: "contents" >>= textContents)
+      where
+        -- a single string is accepted as well as an array of lines, since
+        -- writing `[ "…" ]` for a one-line result is pure noise
+        textContents :: Aeson.Value -> Aeson.Types.Parser [Text]
+        textContents (Aeson.String txt) = pure [txt]
+        textContents v = parseJSON v
 
 data EvalEnv ext
     = EvalEnv
@@ -100,6 +113,8 @@ data EvalError
     | MalformedJSONDataset Name String
     | MalformedJSONGeneratorInstructions String
     | MustacheCompileError Parsec.ParseError
+    | TemplatingSectionError FilePath TemplatingError
+    | TemplatingResultJsonDecodeError FilePath String
     deriving (Show, Exception)
 
 type DatasetCells =
@@ -187,13 +202,22 @@ sectionStep env x@(Section t fmt body) = do
             case Aeson.fromJSON dj of
                 Aeson.Error err ->
                     liftIO $ throwIO $ DhallResultJsonDecodeError err
-                Aeson.Success (DhallJsonContents obj) ->
-                    liftIO $ pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
-                Aeson.Success (DhallTextContents newFormat contents) ->
-                    case newFormat of
-                        "cmark" -> pure $ Section t Cmark contents
-                        "html" -> pure $ Section t TextHtml contents
-                        unsupportedFmt -> liftIO $ throwIO $ UnsupportedReturnFormat $ "unknwon returned Dhall format: " <> unsupportedFmt
+                Aeson.Success result ->
+                    rewriteSection "Dhall" result
+        (_, Templating) -> do
+            let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
+            case Templating.evalJsonSection ctx (Text.unlines body) of
+                Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
+                Right jvalue -> case Aeson.fromJSON jvalue of
+                    Aeson.Error err ->
+                        liftIO $ throwIO $ TemplatingResultJsonDecodeError env.path err
+                    Aeson.Success result ->
+                        rewriteSection "templating" result
+        (_, TemplatingDoc) -> do
+            let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
+            case Templating.evalDocSection ctx (Text.unlines body) of
+                Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
+                Right html -> pure $ Section t TextHtml [html]
         (Dataset name, Json) -> do
             case (Aeson.eitherDecode $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
                 Right v -> insertDatasetContents name v
@@ -217,6 +241,31 @@ sectionStep env x@(Section t fmt body) = do
                                     [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode $ gen{stdin_json = Just jsonDataset}]
         _ ->
             pure x
+
+    {- | Rewrites an evaluated section into the concrete format its result asked
+    for. Shared by the Dhall and the templating backends; @backend@ only names
+    which one for the error message.
+
+    A generated dataset cell is registered here too: the format-dispatching
+    branches above match before @(Dataset name, Json)@ does, so without this a
+    @=base:dataset.dhall my-name@ (or @.templating@) cell would be rewritten to
+    JSON and then stay invisible to every later section.
+    -}
+    rewriteSection :: Text -> SectionEvalResult -> Eval (Section ext [Text])
+    rewriteSection _ (JsonContents obj) = do
+        case t of
+            Dataset name -> insertDatasetContents name obj
+            _ -> pure ()
+        pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
+    rewriteSection backend (TextContents newFormat contents) =
+        case newFormat of
+            "cmark" -> pure $ Section t Cmark contents
+            "html" -> pure $ Section t TextHtml contents
+            unsupportedFmt ->
+                liftIO
+                    $ throwIO
+                    $ UnsupportedReturnFormat
+                    $ "unknown returned " <> backend <> " format: " <> unsupportedFmt
 
 loadImage :: Loader a Image
 loadImage trace path = do

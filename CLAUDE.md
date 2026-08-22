@@ -72,11 +72,15 @@ A page is a `.cmark`/`.md` file split into *sections*, each introduced by a head
 =base:main-content.cmark
 =base:main-css.css
 =base:dataset.json my-name → named data cell, referenceable by later sections
+=base:main-content.templating     → templating-lang expression → {format, contents}
+=base:main-content.templating-doc → templating-lang document tree → HTML
 =generator:cmd.json        → runs an external command, its stdout becomes an extra target
 =ext:<key>.<fmt>           → layout-declared extension sections
 ```
 
-Parsing lives in `Core/Section/Parser.hs` (megaparsec); the payload record types (`BuildInfoData`, `PreambleData`, `TopicData`, …) are in `Core/Section/Payloads.hs`. `Format` covers `cmark | json | css | csv | dhall | mustache`; `dhall` and `mustache` sections are *evaluated at load time* (`Engine/SiteLoader.hs`) and rewritten into a concrete format, which is where `--var` and previously-declared datasets are threaded in.
+Parsing lives in `Core/Section/Parser.hs` (megaparsec); the payload record types (`BuildInfoData`, `PreambleData`, `TopicData`, …) are in `Core/Section/Payloads.hs`. `Format` covers `cmark | json | css | csv | dhall | mustache | templating | templating-doc`; the last four are *evaluated at load time* (`Engine/SiteLoader.hs`) and rewritten into a concrete format, which is where `--var` and previously-declared datasets are threaded in.
+
+`dhall` and `templating` are two backends for the same job — see `website-src/sections-templating.cmark`. Both answer with a `{format, contents}` value that says which concrete format (`json`/`cmark`/`html`) the section becomes; `SiteLoader.rewriteSection` is the shared tail that applies it, including registering a `=base:dataset.<fmt> name` cell generated that way. `templating`/`templating-doc` are backed by `templating-hs` (`Engine/Templating.hs`, pinned by git in `cabal.project`), respectively its expression mode (JSON out) and its document mode (a `Node` tree folded to HTML via lucid). The medium-term intent is to deprecate `dhall`, since `dhall-json` is a recurring obstacle to upgrading GHC — do not add new Dhall-only capability without a templating counterpart.
 
 Everything else in a source directory is picked up by extension (`SiteLoader.loadSite`): `.jpg/.png`, `.css`, `.js`, `.html`, `.dot` (rendered via graphviz `dot`), `.webm/.mp4`, audio, `.pdf`, and raw `.txt/.csv/.json/.dhall`. `kitchen-sink.json` at the source root is the site config and is excluded from raw files.
 

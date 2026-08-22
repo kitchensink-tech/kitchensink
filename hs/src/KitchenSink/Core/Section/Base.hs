@@ -27,6 +27,10 @@ data Format
     = Cmark
     | Dhall
     | Mustache
+    | -- | templating-lang, expression root: evaluates to @{format, contents}@
+      Templating
+    | -- | templating-lang, element root: evaluates to a document tree
+      TemplatingDoc
     | Json
     | TextHtml
     | Css
