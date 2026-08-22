@@ -1,9 +1,16 @@
 =generator:cmd.dhall
 
 let cmdcontent =
-  { cmd = "/opt/bin/ollama.sh"
+  { cmd = "agents-exe"
   , args =
-    [ "task-file", "you are given a source file of a blog post, the content resides below a =base:main-content.cmark marker. comment on the article by giving honest feedback in a sarcastic manner"
+    [ "--agent-file"
+    , "agents/critique.json"
+    , "run"
+    , "-p"
+    , "you are given a source file of a blog post, the content resides below a =base:main-content.cmark marker. comment on the article by giving honest feedback in a sarcastic manner"
+    , "-S"
+    , "-"
+    , "-f"
     , kitchensink.file
     ]
   , target = "roast-me"
@@ -12,6 +19,25 @@ let cmdcontent =
 in 
 { contents = cmdcontent
 , format = "json"
+}
+
+=generator:cmd.templating
+{ "format": "json"
+, "contents":
+    { "cmd": "agents-exe"
+    , "args":
+      [ "--agent-file"
+      , "agents/critique.json"
+      , "run"
+      , "-p"
+      , "you are given a source file of a blog post, the content resides below a =base:main-content.cmark marker. comment on the article by giving honest feedback in a sarcastic manner"
+      , "-S"
+      , "-"
+      , "-f"
+      , $ctx.file
+      ]
+    , "target": "roast-me-templating"
+    }
 }
 
 =base:build-info.json
