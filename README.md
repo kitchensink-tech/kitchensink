@@ -38,7 +38,7 @@ cabal install
 ```
 bash scaffolding/outputdir.sh www
 bash scaffolding/sourcedir.sh site-source
-kitchen-sink serve --srcDir site-source/ --servMode DEV --httpPort 7654
+kitchen-sink serve --srcDir site-source/ --servMode DEV --httpPort 7655
 ```
 
 ## running the official site
@@ -46,7 +46,7 @@ kitchen-sink serve --srcDir site-source/ --servMode DEV --httpPort 7654
 We need not scaffold anything here, thus we can directly serve the site that is along the source code.
 
 ```
-kitchen-sink serve --srcDir website-src/  --servMode DEV --httpPort 7654
+kitchen-sink serve --srcDir website-src/  --servMode DEV --httpPort 7655
 ```
 
-Then navigate to http://localhost:7654/ you'll notice there are a few things to tune.
+Then navigate to http://localhost:7655/ you'll notice there are a few things to tune.

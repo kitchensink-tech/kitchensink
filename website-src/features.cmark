@@ -142,7 +142,7 @@ route is shown to the browser. This is not especially useful but can come handy.
 
 Example usage with the default executable:
 
-`$ kitchen-sink serve --srcDir website-src --outDir website-www --servMode SERVE --httpPort 7654`
+`$ kitchen-sink serve --srcDir website-src --outDir website-www --servMode SERVE --httpPort 7655`
 
 ```console
 [...]
@@ -184,7 +184,7 @@ injected in the layout only in dev-server mode. This setup allows to auto-reload
 
 To use the dev-server mode, use `--servMode DEV`. That is, the full-command to run with the default executable is:
 
-`kitchen-sink serve --srcDir website-src --outDir website-www --servMode DEV --port 7654`
+`kitchen-sink serve --srcDir website-src --outDir website-www --servMode DEV --port 7655`
 
 ### one-time commands
 
@@ -245,7 +245,7 @@ built](https://dicioccio.fr/prometheus-monitor.html))
 
 =generator:cmd.json
 {"cmd":"curl"
-,"args":["http://localhost:7654/metrics"]
+,"args":["http://localhost:7655/metrics"]
 ,"target":"gen-local-server-metrics.txt"
 }
 

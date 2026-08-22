@@ -120,10 +120,10 @@ bash scaffolding/sourcedir.sh site-source
 __start the live-edit server__
 
 ```console
-kitchen-sink serve --srcDir site-source/ --outDir www/ --servMode DEV --port 7654
+kitchen-sink serve --srcDir site-source/ --outDir www/ --servMode DEV --port 7655
 ```
 
-Then navigate to `http://localhost:7654/` you'll notice there are a few things
+Then navigate to `http://localhost:7655/` you'll notice there are a few things
 to tune.  Things like the page title must be changed in the
 [`kitchen-sink.json`](/kitchen-sink-dot-json) file (note: as of today when you
 edit this file, you need to restart the server for all parameters to be taken

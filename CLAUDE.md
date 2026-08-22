@@ -35,10 +35,10 @@ Running the tool (three subcommands, all in `KitchenSink.Engine`):
 kitchen-sink produce --srcDir website-src --outDir www
 
 # dev server: filesystem watch, on-the-fly target production, /dev/* API
-kitchen-sink serve --srcDir website-src --outputDir www --servMode DEV --httpPort 7654
+kitchen-sink serve --srcDir website-src --outputDir www --servMode DEV --httpPort 7655
 
 # production-ish serving of a single site
-kitchen-sink serve --srcDir website-src --servMode SERVE --httpPort 7654
+kitchen-sink serve --srcDir website-src --servMode SERVE --httpPort 7655
 
 # many sites behind one daemon, configured in Dhall (SNI + per-domain proxying)
 kitchen-sink multisite --configFile sites.dhall --httpPort 80
