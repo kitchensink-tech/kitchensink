@@ -47,7 +47,9 @@ Dhall-sections.
 template language: a `jq`-flavoured expression language for the data half, a
 HAML-like block syntax for structure, and a deliberately tiny set of builtins.
 KitchenSink embeds its Haskell implementation, `templating-hs`, as a second
-section pre-processor next to [Dhall-sections](/sections-dhall.html).
+section pre-processor next to [Dhall-sections](/sections-dhall.html). A
+[playground](/playground.html) hosted on this site lets you try the language
+itself, outside of any KitchenSink section.
 
 Both backends do the same job and both remain supported. Templating-lang is,
 however, the direction of travel: `dhall` and `dhall-json` are notoriously

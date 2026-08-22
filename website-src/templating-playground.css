@@ -1,0 +1,122 @@
+/* Deliberately small and dependency-free — this is a dev tool for looking
+   at parser/eval output, not a design showcase. Everything the rendered
+   template itself produces is left unstyled on purpose (see `.rendered`
+   below): a template's own output should look like whatever the host
+   would give it, not like this page. */
+
+:root {
+  --bg: #fbfbfa;
+  --fg: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #dcdcd8;
+  --card: #fff;
+  --err: #b3261e;
+  --accent: #2b5c8a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16171a;
+    --fg: #e6e6e4;
+    --muted: #9a9a97;
+    --line: #303237;
+    --card: #1d1f23;
+    --err: #f2837b;
+    --accent: #7fb3e0;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.wrap { max-width: 1200px; margin: 0 auto; }
+
+h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
+h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 .5rem; }
+
+.hint { color: var(--muted); font-size: .85rem; margin: 0 0 1rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+summary { cursor: pointer; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+/* Two panels side by side, stacking on narrow screens. */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
+
+.row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+
+.input {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: .6rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  resize: vertical;
+}
+
+/* Both the language reference and the AST dump. Wide content scrolls
+   inside the box rather than stretching the page. */
+.ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: .75rem 0 0;
+  padding: .6rem;
+  max-height: 420px;
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+/* Output of the user's own template. No element styling here on purpose. */
+.rendered { padding: .25rem 0; overflow-x: auto; }
+
+.err { color: var(--err); font-family: ui-monospace, monospace; font-size: 13px; white-space: pre-wrap; }
+.empty { color: var(--muted); font-size: .85rem; font-style: italic; }
+
+.btn {
+  font: inherit;
+  font-size: .8rem;
+  padding: .2rem .7rem;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn:disabled { opacity: .45; cursor: default; }
+.btn-active { background: var(--accent); color: var(--card); border-color: var(--accent); }
+
+.mode-toggle { display: flex; gap: .4rem; }
+
+.log { list-style: none; margin: 0; padding: 0; }
+.log li {
+  display: flex;
+  gap: .75rem;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+}
+.log li:last-child { border-bottom: 0; }
+.log-key { color: var(--accent); flex: 0 0 auto; }
+.log-payload { color: var(--muted); overflow-wrap: anywhere; }

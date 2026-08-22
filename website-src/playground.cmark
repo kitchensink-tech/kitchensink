@@ -1,0 +1,56 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Templating-lang playground"
+,"faviconUrl": "/images/favicon.png"
+}
+
+=base:topic.json
+{"topics":["sections"]
+,"keywords":["static-site generators", "design", "templating"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+.playground-frame {
+  width: 100%;
+  height: 80vh;
+  border: 1px solid gray;
+}
+
+=base:summary.cmark
+
+An in-browser playground for [templating-lang](https://github.com/lucasdicioccio/templating-lang),
+the expression/document language behind [`.templating` and `.templating-doc`
+sections](/sections-templating.html), hosted directly on this site.
+
+=base:main-content.cmark
+
+This is the same playground built from the
+[templating-lang](https://github.com/lucasdicioccio/templating-lang)
+repository's PureScript sources, published here as a static bundle so it can
+be tried without a local build. It parses and evaluates templating-lang
+expressions and documents in the browser — nothing is sent to a server.
+
+See [Templating-lang sections](/sections-templating.html) for how the same
+language is embedded server-side, as a section pre-processor, by KitchenSink
+itself.
+
+<iframe class="playground-frame" src="/templating-playground.html" title="templating-lang playground"></iframe>
+
+If the embedded frame does not load, open the
+[playground](/templating-playground.html) directly.
