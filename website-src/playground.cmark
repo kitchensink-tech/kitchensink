@@ -5,7 +5,7 @@
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "Templating-lang playground"
+,"title": "Tramaj playground"
 ,"faviconUrl": "/images/favicon.png"
 }
 
@@ -34,23 +34,23 @@
 
 =base:summary.cmark
 
-An in-browser playground for [templating-lang](https://github.com/lucasdicioccio/templating-lang),
-the expression/document language behind [`.templating` and `.templating-doc`
-sections](/sections-templating.html), hosted directly on this site.
+An in-browser playground for [tramaj](https://github.com/lucasdicioccio/tramaj)
+— formerly "templating-lang" — the expression/document language behind
+[`.templating` and `.templating-doc` sections](/sections-templating.html),
+hosted directly on this site.
 
 =base:main-content.cmark
 
 This is the same playground built from the
-[templating-lang](https://github.com/lucasdicioccio/templating-lang)
-repository's PureScript sources, published here as a static bundle so it can
-be tried without a local build. It parses and evaluates templating-lang
-expressions and documents in the browser — nothing is sent to a server.
+[tramaj](https://github.com/lucasdicioccio/tramaj) repository's PureScript
+sources, published here as a static bundle so it can be tried without a local
+build. It parses and evaluates tramaj expressions and documents in the
+browser — nothing is sent to a server.
 
-See [Templating-lang sections](/sections-templating.html) for how the same
-language is embedded server-side, as a section pre-processor, by KitchenSink
-itself.
+See [Tramaj sections](/sections-templating.html) for how the same language is
+embedded server-side, as a section pre-processor, by KitchenSink itself.
 
-<iframe class="playground-frame" src="/templating-playground.html" title="templating-lang playground"></iframe>
+<iframe class="playground-frame" src="/templating-playground.html" title="tramaj playground"></iframe>
 
 If the embedded frame does not load, open the
 [playground](/templating-playground.html) directly.

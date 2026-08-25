@@ -1,17 +1,24 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 
-{- | Section evaluation backed by @templating-hs@ (the Haskell half of
-<https://github.com/lucasdicioccio/templating-lang>), the alternative to the
+{- | Section evaluation backed by @tramaj-hs@ (the Haskell half of
+<https://github.com/lucasdicioccio/tramaj>), the alternative to the
 Dhall backend in "KitchenSink.Engine.SiteLoader".
 
 Two modes, one per 'KitchenSink.Core.Section.Format' constructor:
 
-  * 'evalJsonSection' ('Templating') parses an /expression/-rooted program and
-    evaluates it to a JSON value, the same @{format, contents}@ contract Dhall
-    sections answer with.
-  * 'evalDocSection' ('TemplatingDoc') parses an /element/-rooted program and
-    folds the resulting document tree to HTML.
+  * 'evalJsonSection' ('Templating') expects the program to evaluate to a
+    plain JSON value, the same @{format, contents}@ contract Dhall sections
+    answer with.
+  * 'evalDocSection' ('TemplatingDoc') expects the program to evaluate to a
+    document tree, and folds it to HTML.
+
+tramaj has a single grammar and evaluator: which of the two a program
+produces follows from the value its root actually evaluated to (a 'Node' or
+a plain JSON value), not from which of these two entry points was called.
+Both below enforce the shape their caller expects, converting the other one
+over rather than rejecting it, since both are meaningful JSON/HTML values in
+their own right.
 
 Both receive the same context, 'buildContext', which is the @kitchensink@
 record Dhall sections get, reachable as @$ctx.datasets@, @$ctx.vars@,
@@ -31,6 +38,7 @@ import Data.ByteString.Lazy qualified as LByteString
 import Data.Char (isAlphaNum)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Scientific qualified as Scientific
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Text.Lazy qualified as LText
@@ -38,12 +46,13 @@ import Lucid qualified
 import Lucid.Base qualified as Lucid
 import Data.Void (Void)
 import Text.Megaparsec (ParseErrorBundle, errorBundlePretty)
-import Prelude (Integer, (&&), (||))
+import Prelude (Double, Integer, (&&), (||))
 
-import Templating.Ast (ActionPayload (..), Node (..))
-import Templating.Ast qualified as Templating
-import Templating.Eval qualified as Templating
-import Templating.Parser qualified as Templating
+import Tramaj.Ast (Program)
+import Tramaj.Eval qualified as Templating
+import Tramaj.Node (Node (..), NodeAttribute (..))
+import Tramaj.Node qualified as Templating
+import Tramaj.Parser qualified as Templating
 
 import KitchenSink.Prelude
 
@@ -68,25 +77,33 @@ buildContext path sectionNum vars datasets =
         , ("vars", Aeson.toJSON (Map.fromList vars))
         ]
 
--- | Expression-rooted mode: the section body evaluates to a JSON value.
-evalJsonSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Templating.JsonProgram, Aeson.Value)
+-- | Expression-rooted mode: the section body evaluates to a JSON value. A
+-- program whose root instead evaluated to a document is accepted too, folded
+-- to its normative JSON representation ("Tramaj.Node"'s @nodeToJson@).
+evalJsonSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Program, Aeson.Value)
 evalJsonSection libtable ctx body = do
-    prog <- adaptParse (Templating.parseJsonProgram body)
-    j <- adaptEval (Templating.evalJsonProgram libtable ctx prog)
+    prog <- adaptParse (Templating.parseProgram body)
+    out <- adaptEval (Templating.evalProgram Templating.Concrete libtable ctx prog)
+    let j = case out of
+            Templating.OValue v -> v
+            Templating.ONode n -> Templating.nodeToJson n
     pure (prog, j)
 
 -- | Element-rooted mode: the section body evaluates to a document tree, which
--- this renders as HTML.
--- TODO: also return the loaded library
-evalDocSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Templating.Program, Text)
+-- this renders as HTML. A program whose root evaluated to a plain value
+-- instead of a document is accepted too, wrapped as a lone text node.
+evalDocSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Program, Text)
 evalDocSection libtable ctx body = do
     prog <- parseLibrarySection body
-    node <- adaptEval (Templating.evalProgram libtable ctx prog)
+    out <- adaptEval (Templating.evalProgram Templating.Concrete libtable ctx prog)
+    let node = case out of
+            Templating.ONode n -> n
+            Templating.OValue v -> NText v Templating.noAnnotations
     txt <- renderNodeHtml node
     pure (prog, txt)
 
-parseLibrarySection :: Text -> Either TemplatingError Templating.Program
-parseLibrarySection body = 
+parseLibrarySection :: Text -> Either TemplatingError Program
+parseLibrarySection body =
     adaptParse (Templating.parseProgram body)
 
 adaptParse :: Either (ParseErrorBundle Text Void) a -> Either TemplatingError a
@@ -108,10 +125,11 @@ renderNodeHtml node =
         bad -> Left $ TemplatingInvalidAttributeNames bad
 
 badAttributeNames :: Node -> [Text]
-badAttributeNames (NText _) = []
-badAttributeNames n =
-    [k | k <- Map.keys n.neAttrs, not (isValidAttributeName k)]
-        <> foldMap badAttributeNames n.neChildren
+badAttributeNames (NText _ _) = []
+badAttributeNames (NFragment children _) = foldMap badAttributeNames children
+badAttributeNames (NElement _ attrs _ children _) =
+    [k | NAttr k _ <- attrs, not (isValidAttributeName k)]
+        <> foldMap badAttributeNames children
 
 isValidAttributeName :: Text -> Bool
 isValidAttributeName k =
@@ -120,29 +138,42 @@ isValidAttributeName k =
     ok c = isAlphaNum c || c == '-' || c == '_'
 
 nodeHtml :: Node -> Lucid.Html ()
-nodeHtml (NText txt) = Lucid.toHtml txt
-nodeHtml n
-    | isVoidElement n.neTag = Lucid.with (Lucid.makeElementNoEnd n.neTag) attrs
-    | otherwise = Lucid.with (Lucid.makeElement n.neTag) attrs (traverse_ nodeHtml n.neChildren)
+nodeHtml (NText v _) = Lucid.toHtml (displayValue v)
+nodeHtml (NFragment children _) = traverse_ nodeHtml children
+nodeHtml (NElement tag attrs _ children _)
+    | isVoidElement tag = Lucid.with (Lucid.makeElementNoEnd tag) htmlAttrs
+    | otherwise = Lucid.with (Lucid.makeElement tag) htmlAttrs (traverse_ nodeHtml children)
   where
-    attrs :: [Lucid.Attribute]
-    attrs =
-        [Lucid.makeAttribute k v | (k, v) <- Map.toList n.neAttrs]
-            <> maybe [] actionAttributes n.neAction
+    htmlAttrs :: [Lucid.Attribute]
+    htmlAttrs = foldMap attributeHtml attrs
 
-{- | A statically-produced page has no dispatcher to bind @action(...)@ to, so
-rather than dropping the evaluated payload we hand it to the page as data
-attributes: that is the seam a JS widget can pick up client-side.
--}
-actionAttributes :: ActionPayload -> [Lucid.Attribute]
-actionAttributes ap =
-    [ Lucid.makeAttribute "data-ks-action-event" ap.apEventType
-    , Lucid.makeAttribute "data-ks-action-key" ap.apKey
-    , Lucid.makeAttribute "data-ks-action-payload" (encodeJsonText ap.apPayload)
+attributeHtml :: NodeAttribute -> [Lucid.Attribute]
+attributeHtml (NAttr k v) = [Lucid.makeAttribute k (displayValue v)]
+attributeHtml (NAction event key payload) =
+    [ Lucid.makeAttribute "data-ks-action-event" event
+    , Lucid.makeAttribute "data-ks-action-key" key
+    , Lucid.makeAttribute "data-ks-action-payload" (encodeJsonText payload)
     ]
 
 encodeJsonText :: Aeson.Value -> Text
 encodeJsonText = Text.decodeUtf8 . LByteString.toStrict . Aeson.encode
+
+{- | A best-effort rendering of a JSON scalar\/structure to display text, used
+for an 'NText' value and an ordinary attribute's value. Mirrors tramaj's own
+@str@ builtin closely enough for a demonstrator (a plain string passes
+through unchanged, @null@\/booleans render as their literal spelling), but
+does not attempt to reproduce its ECMAScript-exact number formatting since
+that logic is internal to "Tramaj.Eval" and not exported.
+-}
+displayValue :: Aeson.Value -> Text
+displayValue Aeson.Null = ""
+displayValue (Aeson.Bool b) = if b then "true" else "false"
+displayValue (Aeson.String s) = s
+displayValue (Aeson.Number n) =
+    case Scientific.floatingOrInteger n of
+        Right (i :: Integer) -> Text.pack (show i)
+        Left (_ :: Double) -> Text.pack (show n)
+displayValue v = Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode v
 
 isVoidElement :: Text -> Bool
 isVoidElement tag = tag `elem` voidElements

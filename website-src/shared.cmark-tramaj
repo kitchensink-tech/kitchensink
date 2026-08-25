@@ -1,0 +1,2 @@
+=base:library.templating-lib badge
+.span(class: "output", "badge: `$ctx.text`")

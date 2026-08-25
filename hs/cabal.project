@@ -29,12 +29,13 @@ source-repository-package
     tag: 76d8b4c53b0bbfd609a327857b1e09657cf1fc23
 
 -- Backend for `templating`/`templating-doc` sections; the alternative to
--- dhall/dhall-json, which it should eventually replace.
+-- dhall/dhall-json, which it should eventually replace. Formerly
+-- "templating-lang" / "templating-hs"; renamed to "tramaj" / "tramaj-hs".
 source-repository-package
     type: git
-    location: https://github.com/lucasdicioccio/templating-lang.git
-    tag: aebf8a5b6622b5a930ab4cd13886cf1b76165c65
-    subdir: templating-hs
+    location: https://github.com/lucasdicioccio/tramaj.git
+    tag: 2a8d80492fd1b39b4a41f5f3991de9d21075b014
+    subdir: tramaj-hs
 
 -- Use iand675's fork which has GHC 9.8 fixes
 source-repository-package

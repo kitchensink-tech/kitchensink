@@ -27,12 +27,14 @@ import Dhall.Map qualified as DhallMap
 import Dhall.Src (Src)
 import Lens.Family
 import System.Directory (listDirectory)
-import System.FilePath.Posix (takeExtension, takeFileName, (</>))
+import System.FilePath.Posix (dropExtension, takeExtension, takeFileName, (</>))
 import Text.Megaparsec (runParser)
 import Text.Mustache qualified as Mustache
 import Text.Parsec qualified as Parsec
 import Prelude (Integer, succ, (||))
-import qualified Templating.Eval
+import Control.Monad (foldM)
+import qualified Tramaj.Ast
+import qualified Tramaj.Eval
 
 import Control.Monad.State
 
@@ -45,6 +47,7 @@ import KitchenSink.Prelude
 
 data LogMsg ext
     = LoadArticle FilePath
+    | LoadTemplatingLibraryFile FilePath
     | LoadImage FilePath
     | LoadVideo FilePath
     | LoadRaw FilePath
@@ -66,8 +69,8 @@ type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 --   * dependencies between sections? or between articles?
 --   * dependencies to external query widgets or params?
 --   * references to generated datasets (e.g., `curl a page, use as input to other place`)
-loadArticle :: FilePath -> [(Text, Text)] -> [ExtraSectionType ext] -> Loader ext (Article ext [Text])
-loadArticle dhallRoot vars extras trace path = do
+loadArticle :: FilePath -> [(Text, Text)] -> [ExtraSectionType ext] -> Tramaj.Eval.LibraryTable -> Loader ext (Article ext [Text])
+loadArticle dhallRoot vars extras globalLibs trace path = do
     trace $ LoadArticle path
     eart <- runParser (article extras path) path <$> Text.readFile path
     case eart of
@@ -75,7 +78,56 @@ loadArticle dhallRoot vars extras trace path = do
         Right art -> Sourced (FileSource path) <$> evalSections art
   where
     env = EvalEnv path dhallRoot vars trace
-    evalSections art = evalStateT (overSections (evalSection env) art) newState
+    evalSections art = evalStateT (overSections (evalSection env) art) (newState globalLibs)
+
+{- | Parses every @library.templating-lib@ section out of a set of
+templating-library-only files (a @*.cmark-tramaj@ file, picked up by
+'loadSite' and excluded from the site's articles) into one shared
+'Tramaj.Eval.LibraryTable', which every article is then seeded with (see
+'loadArticle').
+
+Every name a file registers is nested under that file's own basename, so
+@bob.cmark-tramaj@'s @icon@ library is only ever reachable as
+@import(\"bob\/icon\", ...)@. Two files can therefore never collide on a name
+-- the filesystem itself already guarantees two files in one directory don't
+share a basename -- so 'DuplicateTemplatingLibrary' below can only ever fire
+within one file, same as the ordinary in-article case.
+
+Deliberately just parsing, not evaluating: a library's body is not run here
+any more than an in-article @library.templating-lib@ section's body is run
+where it is declared (see 'sectionStep') -- it is run later, wherever
+something actually imports it and reads @.rendered@ off the result, against
+whatever library table /that/ call site has. Which library file 'loadSite'
+processes first therefore cannot matter for correctness; a genuine import
+cycle (two libraries, from the same file or different ones, that import each
+other) is caught by @tramaj@ itself as an 'Tramaj.Eval.EvalError'
+('Tramaj.Eval.ImportCycle') when something finally evaluates that chain, not
+by anything here.
+-}
+loadTemplatingLibraries ::
+    (LogMsg ext -> IO ()) ->
+    [ExtraSectionType ext] ->
+    [FilePath] ->
+    IO Tramaj.Eval.LibraryTable
+loadTemplatingLibraries trace extras = foldM loadFile Map.empty
+  where
+    loadFile acc path = do
+        trace $ LoadTemplatingLibraryFile path
+        eart <- runParser (article extras path) path <$> Text.readFile path
+        case eart of
+            Left err -> throwIO err
+            Right (Article _ secs) -> do
+                fileTable <- foldM (registerSection path) Map.empty secs
+                let prefix = Text.pack (dropExtension (takeFileName path))
+                pure $ Map.union (Map.mapKeys ((prefix <> "/") <>) fileTable) acc
+
+    registerSection path acc (Section (Library name) TemplatingLib body) = do
+        case Templating.parseLibrarySection (Text.unlines body) of
+            Left err -> throwIO $ TemplatingSectionError path err
+            Right prog
+                | Map.member name acc -> throwIO $ DuplicateTemplatingLibrary name path
+                | otherwise -> pure $ Map.insert name prog acc
+    registerSection _ acc _ = pure acc
 
 {- | What an evaluated section (Dhall, or templating-lang in expression mode)
 must answer with: a @format@ naming the concrete format the section is rewritten
@@ -116,6 +168,9 @@ data EvalError
     | MustacheCompileError Parsec.ParseError
     | TemplatingSectionError FilePath TemplatingError
     | TemplatingResultJsonDecodeError FilePath String
+    | -- | the same library name was registered twice within one
+      -- @*.cmark-tramaj@ file; carries the name and the file
+      DuplicateTemplatingLibrary Name FilePath
     deriving (Show, Exception)
 
 type DatasetCells =
@@ -124,11 +179,11 @@ type DatasetCells =
 data EvalState = EvalState
     { sectionNumber :: Integer
     , datasets :: DatasetCells
-    , templatingLibraryTable :: Templating.Eval.LibraryTable
+    , templatingLibraryTable :: Tramaj.Eval.LibraryTable
     }
 
-newState :: EvalState
-newState = EvalState 0 Map.empty mempty
+newState :: Tramaj.Eval.LibraryTable -> EvalState
+newState globalLibs = EvalState 0 Map.empty globalLibs
 
 type Eval a = StateT EvalState IO a
 
@@ -143,7 +198,7 @@ incrementSectionNumber = modify f
   where
     f st0 = st0{sectionNumber = succ (sectionNumber st0)}
 
-recordTemplatingLibrary :: Text -> Templating.Eval.LibrarySource -> Eval ()
+recordTemplatingLibrary :: Text -> Tramaj.Ast.Program -> Eval ()
 recordTemplatingLibrary key x = modify f
   where
     f st0 = st0{templatingLibraryTable = g (templatingLibraryTable st0) }
@@ -220,21 +275,21 @@ sectionStep env x@(Section t fmt body) = do
                     Aeson.Error err ->
                         liftIO $ throwIO $ TemplatingResultJsonDecodeError env.path err
                     Aeson.Success result -> do
-                        recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) (Templating.Eval.JsonSource prog)
+                        recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
                         rewriteSection "templating" result
         (_, TemplatingDoc) -> do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
             case Templating.evalDocSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
                 Right (prog, html) -> do
-                  recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) (Templating.Eval.ProgramSource prog)
+                  recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
                   pure $ Section t TextHtml [html]
         (Library name, TemplatingLib) -> do
             case Templating.parseLibrarySection (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
                 Right prog -> do
-                  recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) (Templating.Eval.ProgramSource prog)
-                  recordTemplatingLibrary name (Templating.Eval.ProgramSource prog)
+                  recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
+                  recordTemplatingLibrary name prog
                   pure $ Section t TextHtml []
         (Dataset name, Json) -> do
             case (Aeson.eitherDecode $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
@@ -344,8 +399,9 @@ loadSite ::
     IO (Site ext)
 loadSite dhallRoot vars extras trace dir = do
     paths <- listDirectory dir
+    globalLibs <- loadTemplatingLibraries trace extras (libraryPaths paths)
     Site
-        <$> articlesM paths
+        <$> articlesM globalLibs paths
         <*> imagesM paths
         <*> videosM paths
         <*> audiosM paths
@@ -357,8 +413,18 @@ loadSite dhallRoot vars extras trace dir = do
         <*> rawsM paths
         <*> docsM paths
   where
-    articlesM paths =
-        traverse (loadArticle dhallRoot vars extras trace)
+    -- Library-only files: a dedicated extension (not merely a naming
+    -- convention on top of .cmark/.md) so an ordinary article can never be
+    -- mistaken for one, or vice versa. They generate no target of their own
+    -- -- 'articlesM' below never sees them, since their extension doesn't
+    -- match its filter -- and are instead parsed for their
+    -- @library.templating-lib@ sections into one shared table every article
+    -- can import from. Sorted only so 'LoadTemplatingLibraryFile' tracing is
+    -- in a stable, deterministic order; which file is processed first does
+    -- not otherwise matter (see 'loadTemplatingLibraries').
+    libraryPaths paths = List.sort [dir </> p | p <- paths, takeExtension p == ".cmark-tramaj"]
+    articlesM globalLibs paths =
+        traverse (loadArticle dhallRoot vars extras globalLibs trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark"]]
     imagesM paths =
         traverse (loadImage trace)

@@ -118,11 +118,12 @@ library
                     , servant-server
                     , prometheus-client
                     , process
+                    , scientific
                     , prodapi-core
                     , prodapi-web
                     , prodapi-proxy
                     , stm
-                    , templating-hs
+                    , tramaj-hs
                     , tls
                     , http-types
                     , wai

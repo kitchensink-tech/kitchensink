@@ -108,6 +108,16 @@ summary { cursor: pointer; font-size: .8rem; text-transform: uppercase; letter-s
 
 .mode-toggle { display: flex; gap: .4rem; }
 
+.tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .5rem 0; }
+.tab { display: flex; align-items: center; gap: .2rem; padding: .1rem .1rem .1rem .5rem; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); }
+.tab-active { border-color: var(--accent); }
+.tab-error { border-color: var(--err); }
+.tab-name { font: inherit; font-size: .8rem; border: none; background: transparent; color: var(--fg); width: 6.5rem; }
+.tab-name:focus { outline: none; }
+.tab-close { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: .9rem; line-height: 1; padding: .2rem .4rem; border-radius: 3px; }
+.tab-close:hover:not(:disabled) { background: var(--line); }
+.tab-close:disabled { opacity: .35; cursor: default; }
+
 .log { list-style: none; margin: 0; padding: 0; }
 .log li {
   display: flex;

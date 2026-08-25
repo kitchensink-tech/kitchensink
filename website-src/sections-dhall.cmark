@@ -160,16 +160,16 @@ in
 
 =base:main-content.cmark
 
-The same section ported to [templating-lang](/sections-templating.html). The
-list has to be built structurally here, in `.templating-doc` mode: the
-expression mode has no way to append the mapped item lines to the header lines,
-because the language has no `concat` builtin and a `contents` array must be
-flat.
+The same section ported to [tramaj](/sections-templating.html). The list has
+to be built structurally here, in `.templating-doc` mode: expression mode's
+`contents` array has to be a flat list of lines, with no way to splice in one
+`<li>` per item and keep the surrounding header lines, so a document built out
+of real elements is the natural fit.
 
     =base:main-content.templating-doc
     @d=$ctx.datasets.example
     .div(class: "output",
-      .p(.strong("this code block is defined in some templating-lang")),
+      .p(.strong("this code block is defined in some tramaj")),
       .p("file=`$ctx.file`"),
       .p("section=`$ctx.sectionNum`"),
       .p("some number from a dataset:`$d.answer`"),
@@ -179,7 +179,7 @@ flat.
 =base:main-content.templating-doc
 @d=$ctx.datasets.example
 .div(class: "output",
-  .p(.strong("this code block is defined in some templating-lang")),
+  .p(.strong("this code block is defined in some tramaj")),
   .p("file=`$ctx.file`"),
   .p("section=`$ctx.sectionNum`"),
   .p("some number from a dataset:`$d.answer`"),
@@ -257,7 +257,7 @@ in
 
 =base:main-content.cmark
 
-The same generator in templating-lang. This one is a straight port: the result
+The same generator in tramaj. This one is a straight port: the result
 is a JSON value rather than lines of text, so it stays in expression mode, and
 `kitchensink.file` becomes `$ctx.file`.
 
@@ -319,7 +319,7 @@ not immediate enough .
 
 =base:main-content.cmark
 
-And the same dataset in templating-lang. A `.templating` cell returning
+And the same dataset in tramaj. A `.templating` cell returning
 `format = "json"` registers a dataset exactly the way the Dhall one does, so
 every later section can read it back from `$ctx.datasets`.
 
