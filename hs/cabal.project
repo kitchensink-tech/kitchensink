@@ -33,7 +33,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/lucasdicioccio/templating-lang.git
-    tag: d57b5891c325858d8e198adca931988cb6072bb0
+    tag: aebf8a5b6622b5a930ab4cd13886cf1b76165c65
     subdir: templating-hs
 
 -- Use iand675's fork which has GHC 9.8 fixes

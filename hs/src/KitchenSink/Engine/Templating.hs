@@ -70,14 +70,14 @@ buildContext path sectionNum vars datasets =
 evalJsonSection :: Aeson.Value -> Text -> Either TemplatingError Aeson.Value
 evalJsonSection ctx body = do
     prog <- adaptParse (Templating.parseJsonProgram body)
-    adaptEval (Templating.evalJsonProgram ctx prog)
+    adaptEval (Templating.evalJsonProgram mempty ctx prog)
 
 -- | Element-rooted mode: the section body evaluates to a document tree, which
 -- this renders as HTML.
 evalDocSection :: Aeson.Value -> Text -> Either TemplatingError Text
 evalDocSection ctx body = do
     prog <- adaptParse (Templating.parseProgram body)
-    node <- adaptEval (Templating.evalProgram ctx prog)
+    node <- adaptEval (Templating.evalProgram mempty ctx prog)
     renderNodeHtml node
 
 adaptParse :: Either (ParseErrorBundle Text Void) a -> Either TemplatingError a
