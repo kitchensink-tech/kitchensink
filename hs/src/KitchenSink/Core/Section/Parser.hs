@@ -62,7 +62,8 @@ headers extras =
 
     -- for dataset the format is before the dataset
     complicated =
-        [ adaptDataset <$> (nsKeyVal "base" "dataset" Dataset) <*> dotFormat <*> (space *> kebabString)
+        [ adaptDataset <$> (nsKeyVal "base" "library" Library) <*> dotFormat <*> (space *> kebabString)
+        , adaptDataset <$> (nsKeyVal "base" "dataset" Dataset) <*> dotFormat <*> (space *> kebabString)
         ]
       where
         adaptDataset :: (Name -> SectionType ext) -> Format -> Text -> (SectionType ext, Format)
@@ -76,7 +77,7 @@ headers extras =
         [ext k (Extension v) | ExtraSectionType k v <- extras]
 
 format :: Parser Format
-format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> templatingDoc <|> templating
+format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> templatingDoc <|> templatingLib <|> templating
   where
     cmark = string "cmark" *> pure Cmark
     json = string "json" *> pure Json
@@ -87,6 +88,7 @@ format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> templatingDoc
     -- order matters: "templating" is a prefix of "templating-doc", and a
     -- leftover "-doc" would silently become the section's first body line
     templatingDoc = string "templating-doc" *> pure TemplatingDoc
+    templatingLib = string "templating-lib" *> pure TemplatingLib
     templating = string "templating" *> pure Templating
 
 section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])

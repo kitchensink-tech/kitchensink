@@ -36,10 +36,12 @@ pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
   border-left: 4px solid gray;
 }
 
+
 =base:summary.cmark
 
 Pre-processing sections with templating-lang, the lighter-weight alternative to
 Dhall-sections.
+
 
 =base:main-content.cmark
 
@@ -305,6 +307,61 @@ to define. The selector above happens to bind clicks only.
   });
 })();
 </script>
+
+=base:main-content.cmark
+
+## Using partial templates
+
+Templating-lang support partial templates and KitchenSink exposes them using a specific section close to datasets.
+
+The `icon` tag next to `library.templating-lib` correspond to the name given to
+the library in further imports.
+
+The context passed to imported libraries is entirely determined by the caller, KitchenSink does not add all the fancy datasets, they have to be passed from the call site.
+
+A limitation today is that import must refer to a library defined above the
+evaluated section. In future release we will support libraries defined in other files.
+
+    =base:library.templating-lib icon
+    .span(class: "icon",
+      .a(href: $ctx.href,
+         title: $ctx.title,
+        .img(height:16, width:16, src:$ctx.src)
+    ))
+
+We can then import this `icon` template and apply it.
+
+    =base:main-content.templating-doc
+    @icon=partial-import("icon",{"href":"", "title": "demo-templated-icon"})
+    @icon1=$icon({"src": "/images/favicon.png"})
+    @icon2=$icon({"src": "/images/features-001-targetsizes-timeseries.png"})
+    @icon3=$icon({"src": "/images/features-002-dot-demo.dot.png"})
+    .div(class: "output",
+      .p("Below are multiple ", .em("icons"), "."),
+      $icon1.rendered,
+      $icon2.rendered,
+      $icon3.rendered
+    )
+
+=base:library.templating-lib icon
+.span(class: "icon",
+  .a(href: $ctx.href,
+     title: $ctx.title,
+    .img(height:16, width:16, src:$ctx.src)
+))
+
+=base:main-content.templating-doc
+@icon=partial-import("icon",{"href":"", "title": "demo-templated-icon"})
+@icon1=$icon({"src": "/images/favicon.png"})
+@icon2=$icon({"src": "/images/features-001-targetsizes-timeseries.png"})
+@icon3=$icon({"src": "/gen/images/features-002-dot-demo.dot.png"})
+.div(class: "output",
+  .p("Below are multiple ", .em("icons"), "."),
+  $icon1.rendered,
+  $icon2.rendered,
+  $icon3.rendered
+)
+
 
 =base:main-content.cmark
 

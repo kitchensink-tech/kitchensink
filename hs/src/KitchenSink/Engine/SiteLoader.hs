@@ -32,6 +32,7 @@ import Text.Megaparsec (runParser)
 import Text.Mustache qualified as Mustache
 import Text.Parsec qualified as Parsec
 import Prelude (Integer, succ, (||))
+import qualified Templating.Eval
 
 import Control.Monad.State
 
@@ -123,10 +124,11 @@ type DatasetCells =
 data EvalState = EvalState
     { sectionNumber :: Integer
     , datasets :: DatasetCells
+    , templatingLibraryTable :: Templating.Eval.LibraryTable
     }
 
 newState :: EvalState
-newState = EvalState 0 Map.empty
+newState = EvalState 0 Map.empty mempty
 
 type Eval a = StateT EvalState IO a
 
@@ -140,6 +142,12 @@ incrementSectionNumber :: Eval ()
 incrementSectionNumber = modify f
   where
     f st0 = st0{sectionNumber = succ (sectionNumber st0)}
+
+recordTemplatingLibrary :: Text -> Templating.Eval.LibrarySource -> Eval ()
+recordTemplatingLibrary key x = modify f
+  where
+    f st0 = st0{templatingLibraryTable = g (templatingLibraryTable st0) }
+    g libtable = Map.insert key x libtable 
 
 insertDatasetContents :: Name -> Aeson.Value -> Eval ()
 insertDatasetContents k val = modify f
@@ -206,18 +214,28 @@ sectionStep env x@(Section t fmt body) = do
                     rewriteSection "Dhall" result
         (_, Templating) -> do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
-            case Templating.evalJsonSection ctx (Text.unlines body) of
+            case Templating.evalJsonSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
-                Right jvalue -> case Aeson.fromJSON jvalue of
+                Right (prog,jvalue) -> case Aeson.fromJSON jvalue of
                     Aeson.Error err ->
                         liftIO $ throwIO $ TemplatingResultJsonDecodeError env.path err
-                    Aeson.Success result ->
+                    Aeson.Success result -> do
+                        recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) (Templating.Eval.JsonSource prog)
                         rewriteSection "templating" result
         (_, TemplatingDoc) -> do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
-            case Templating.evalDocSection ctx (Text.unlines body) of
+            case Templating.evalDocSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
-                Right html -> pure $ Section t TextHtml [html]
+                Right (prog, html) -> do
+                  recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) (Templating.Eval.ProgramSource prog)
+                  pure $ Section t TextHtml [html]
+        (Library name, TemplatingLib) -> do
+            case Templating.parseLibrarySection (Text.unlines body) of
+                Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
+                Right prog -> do
+                  recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) (Templating.Eval.ProgramSource prog)
+                  recordTemplatingLibrary name (Templating.Eval.ProgramSource prog)
+                  pure $ Section t TextHtml []
         (Dataset name, Json) -> do
             case (Aeson.eitherDecode $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
                 Right v -> insertDatasetContents name v

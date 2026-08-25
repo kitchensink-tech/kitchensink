@@ -19,6 +19,7 @@ module KitchenSink.Core.Assembler.Sections.Primitives (
     isTopic,
     isGeneratorInstructions,
     isDataset,
+    isLibrary,
 ) where
 
 import Data.List qualified as List
@@ -69,6 +70,11 @@ isPreamble = (== Preamble) . sectionType
 isDataset :: SectionPredicate ext
 isDataset s = case sectionType s of
     (Dataset _) -> True
+    _ -> False
+
+isLibrary :: SectionPredicate ext
+isLibrary s = case sectionType s of
+    (Library _) -> True
     _ -> False
 
 getSection :: (Eq ext) => Article ext a -> SectionPredicate ext -> Assembler ext (Section ext a)

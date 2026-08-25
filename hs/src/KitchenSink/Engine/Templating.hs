@@ -22,6 +22,7 @@ module KitchenSink.Engine.Templating (
     buildContext,
     evalJsonSection,
     evalDocSection,
+    parseLibrarySection,
     renderNodeHtml,
 ) where
 
@@ -40,6 +41,7 @@ import Text.Megaparsec (ParseErrorBundle, errorBundlePretty)
 import Prelude (Integer, (&&), (||))
 
 import Templating.Ast (ActionPayload (..), Node (..))
+import Templating.Ast qualified as Templating
 import Templating.Eval qualified as Templating
 import Templating.Parser qualified as Templating
 
@@ -67,18 +69,25 @@ buildContext path sectionNum vars datasets =
         ]
 
 -- | Expression-rooted mode: the section body evaluates to a JSON value.
-evalJsonSection :: Aeson.Value -> Text -> Either TemplatingError Aeson.Value
-evalJsonSection ctx body = do
+evalJsonSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Templating.JsonProgram, Aeson.Value)
+evalJsonSection libtable ctx body = do
     prog <- adaptParse (Templating.parseJsonProgram body)
-    adaptEval (Templating.evalJsonProgram mempty ctx prog)
+    j <- adaptEval (Templating.evalJsonProgram libtable ctx prog)
+    pure (prog, j)
 
 -- | Element-rooted mode: the section body evaluates to a document tree, which
 -- this renders as HTML.
-evalDocSection :: Aeson.Value -> Text -> Either TemplatingError Text
-evalDocSection ctx body = do
-    prog <- adaptParse (Templating.parseProgram body)
-    node <- adaptEval (Templating.evalProgram mempty ctx prog)
-    renderNodeHtml node
+-- TODO: also return the loaded library
+evalDocSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Templating.Program, Text)
+evalDocSection libtable ctx body = do
+    prog <- parseLibrarySection body
+    node <- adaptEval (Templating.evalProgram libtable ctx prog)
+    txt <- renderNodeHtml node
+    pure (prog, txt)
+
+parseLibrarySection :: Text -> Either TemplatingError Templating.Program
+parseLibrarySection body = 
+    adaptParse (Templating.parseProgram body)
 
 adaptParse :: Either (ParseErrorBundle Text Void) a -> Either TemplatingError a
 adaptParse = either (Left . TemplatingParseError . errorBundlePretty) Right

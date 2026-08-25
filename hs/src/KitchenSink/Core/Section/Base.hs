@@ -18,6 +18,7 @@ data SectionType ext
     | Faq
     | Pricing
     | Dataset Name
+    | Library Name
     | Extension ext
     | --
       GeneratorInstructions
@@ -31,6 +32,8 @@ data Format
       Templating
     | -- | templating-lang, element root: evaluates to a document tree
       TemplatingDoc
+    | -- | templating-lang, library, for imports only
+      TemplatingLib
     | Json
     | TextHtml
     | Css

@@ -76,6 +76,7 @@ destinationExtension fmt = FileExtension $ case fmt of
     Core.Mustache -> "mustache"
     Core.Templating -> "templating"
     Core.TemplatingDoc -> "templating-doc"
+    Core.TemplatingLib -> "templating-lib"
     Core.TextHtml -> "html"
     Core.Css -> "css"
     Core.Csv -> "csv"
