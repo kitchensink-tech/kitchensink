@@ -14,5 +14,5 @@ bash ./scaffolding/outputdir.sh "./scaffold-test-out"
 kitchen-sink serve \
   --servMode "DEV" \
   --srcDir "./scaffold-test-src" \
-  --outDir "./scaffold-test-out" \
+  --outputDir "./scaffold-test-out" \
   --httpPort 8765
