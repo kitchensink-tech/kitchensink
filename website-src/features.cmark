@@ -428,25 +428,21 @@ blog](https://dicioccio.fr/) as I've added this section in the
 ![selfie](https://lucasdicioccio.github.io/gen/out/about-me.cmark__latest-selfie.jpg)
 
 
-Another fun usage is to roast your articles, provided agents-exe is installed, the following uses an LLM to roast an article (example at [a generated-file path](/gen/out/philosophy.cmark__roast-me)). Here I've used the Dhall section (see below) so that the source-path is accessible to the generator command.
+Another fun usage is to roast your articles, provided agents-exe is installed, the following uses an LLM to roast an article (example at [a generated-file path](/gen/out/philosophy.cmark__roast-me)). Here I've used a [tramaj section](/sections-templating.html) so that the source-path is accessible to the generator command, as `$ctx.file`.
 
-    =generator:cmd.dhall
-    
-    let cmdcontent =
-      { cmd = "agents-exe"
-      , args =
-        [ "--agent-file" , "agents/critique.json"
-        , "run"
-        , "-p" , "you are given a source file of a blog post, the content resides below a =base:main-content.cmark marker. comment on the article by giving honest feedback in a sarcastic manner"
-        , "-S" , "-"
-        , "-f" , kitchensink.file
-        ]
-      , target = "roast-me"
-      }
-    
-    in 
-    { contents = cmdcontent
-    , format = "json"
+    =generator:cmd.templating
+    { "format": "json"
+    , "contents":
+        { "cmd": "agents-exe"
+        , "args":
+          [ "--agent-file", "agents/critique.json"
+          , "run"
+          , "-p", "you are given a source file of a blog post, the content resides below a =base:main-content.cmark marker. comment on the article by giving honest feedback in a sarcastic manner"
+          , "-S", "-"
+          , "-f", $ctx.file
+          ]
+        , "target": "roast-me"
+        }
     }
 
 
