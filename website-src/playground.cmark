@@ -36,7 +36,7 @@
 
 An in-browser playground for [tramaj](https://github.com/lucasdicioccio/tramaj)
 — formerly "templating-lang" — the expression/document language behind
-[`.templating` and `.templating-doc` sections](/sections-templating.html),
+[`.tramaj-json` and `.tramaj-doc` sections](/sections-templating.html),
 hosted directly on this site.
 
 =base:main-content.cmark

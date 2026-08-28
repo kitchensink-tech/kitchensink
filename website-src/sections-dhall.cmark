@@ -161,12 +161,12 @@ in
 =base:main-content.cmark
 
 The same section ported to [tramaj](/sections-templating.html). The list has
-to be built structurally here, in `.templating-doc` mode: expression mode's
+to be built structurally here, in `.tramaj-doc` mode: expression mode's
 `contents` array has to be a flat list of lines, with no way to splice in one
 `<li>` per item and keep the surrounding header lines, so a document built out
 of real elements is the natural fit.
 
-    =base:main-content.templating-doc
+    =base:main-content.tramaj-doc
     @d=$ctx.datasets.example
     .div(class: "output",
       .p(.strong("this code block is defined in some tramaj")),
@@ -176,7 +176,7 @@ of real elements is the natural fit.
       .p("some list from a dataset:"),
       .ul(map($d.items, (i) => .li($i))))
 
-=base:main-content.templating-doc
+=base:main-content.tramaj-doc
 @d=$ctx.datasets.example
 .div(class: "output",
   .p(.strong("this code block is defined in some tramaj")),
@@ -261,7 +261,7 @@ The same generator in tramaj. This one is a straight port: the result
 is a JSON value rather than lines of text, so it stays in expression mode, and
 `kitchensink.file` becomes `$ctx.file`.
 
-    =generator:cmd.templating
+    =generator:cmd.tramaj-json
     { "format": "json"
     , "contents": { "cmd": "cat"
                   , "args": [$ctx.file]
@@ -271,7 +271,7 @@ is a JSON value rather than lines of text, so it stays in expression mode, and
 
 [once the generated section is evaluated](/gen/out/sections-dhall.cmark__cat-this-file-templating)
 
-=generator:cmd.templating
+=generator:cmd.tramaj-json
 { "format": "json"
 , "contents": { "cmd": "cat"
               , "args": [$ctx.file]
@@ -319,11 +319,11 @@ not immediate enough .
 
 =base:main-content.cmark
 
-And the same dataset in tramaj. A `.templating` cell returning
+And the same dataset in tramaj. A `.tramaj-json` cell returning
 `format = "json"` registers a dataset exactly the way the Dhall one does, so
 every later section can read it back from `$ctx.datasets`.
 
-    =base:dataset.templating alice-bob-templating
+    =base:dataset.tramaj-json alice-bob-templating
     { "format": "json"
     , "contents": [ {"name": "Alice", "posts": 22}
                   , {"name": "Bob", "posts": 7}
@@ -332,7 +332,7 @@ every later section can read it back from `$ctx.datasets`.
 
 [rendered](/raw/data/sections-dhall.cmark__alice-bob-templating3.json)
 
-=base:dataset.templating alice-bob-templating
+=base:dataset.tramaj-json alice-bob-templating
 { "format": "json"
 , "contents": [ {"name": "Alice", "posts": 22}
               , {"name": "Bob", "posts": 7}

@@ -28,12 +28,12 @@ data Format
     = Cmark
     | Dhall
     | Mustache
-    | -- | templating-lang, expression root: evaluates to @{format, contents}@
-      Templating
-    | -- | templating-lang, element root: evaluates to a document tree
-      TemplatingDoc
-    | -- | templating-lang, library, for imports only
-      TemplatingLib
+    | -- | tramaj, expression root: evaluates to @{format, contents}@
+      TramajJson
+    | -- | tramaj, element root: evaluates to a document tree
+      TramajDoc
+    | -- | tramaj, library, for imports only
+      TramajLib
     | Json
     | TextHtml
     | Css

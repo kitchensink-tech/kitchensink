@@ -77,7 +77,7 @@ headers extras =
         [ext k (Extension v) | ExtraSectionType k v <- extras]
 
 format :: Parser Format
-format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> templatingDoc <|> templatingLib <|> templating
+format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> tramajDoc <|> tramajLib <|> tramajJson
   where
     cmark = string "cmark" *> pure Cmark
     json = string "json" *> pure Json
@@ -85,11 +85,11 @@ format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> templatingDoc
     csv = string "csv" *> pure Csv
     dhall = string "dhall" *> pure Dhall
     mustache = string "mustache" *> pure Mustache
-    -- order matters: "templating" is a prefix of "templating-doc", and a
-    -- leftover "-doc" would silently become the section's first body line
-    templatingDoc = string "templating-doc" *> pure TemplatingDoc
-    templatingLib = string "templating-lib" *> pure TemplatingLib
-    templating = string "templating" *> pure Templating
+    -- all three tramaj modes carry a suffix ("-json"/"-doc"/"-lib"), so none
+    -- is a prefix of another and there is no ordering hazard between them
+    tramajDoc = string "tramaj-doc" *> pure TramajDoc
+    tramajLib = string "tramaj-lib" *> pure TramajLib
+    tramajJson = string "tramaj-json" *> pure TramajJson
 
 section :: forall ext. [ExtraSectionType ext] -> Parser (Section ext [Text])
 section extras = f <$> (hdrs <?> "section-headers") <*> body

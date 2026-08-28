@@ -1,4 +1,4 @@
-=generator:cmd.templating
+=generator:cmd.tramaj-json
 { "format": "json"
 , "contents":
     { "cmd": "agents-exe"

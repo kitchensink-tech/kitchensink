@@ -121,7 +121,7 @@ loadTemplatingLibraries trace extras = foldM loadFile Map.empty
                 let prefix = Text.pack (dropExtension (takeFileName path))
                 pure $ Map.union (Map.mapKeys ((prefix <> "/") <>) fileTable) acc
 
-    registerSection path acc (Section (Library name) TemplatingLib body) = do
+    registerSection path acc (Section (Library name) TramajLib body) = do
         case Templating.parseLibrarySection (Text.unlines body) of
             Left err -> throwIO $ TemplatingSectionError path err
             Right prog
@@ -267,7 +267,7 @@ sectionStep env x@(Section t fmt body) = do
                     liftIO $ throwIO $ DhallResultJsonDecodeError err
                 Aeson.Success result ->
                     rewriteSection "Dhall" result
-        (_, Templating) -> do
+        (_, TramajJson) -> do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
             case Templating.evalJsonSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
@@ -276,15 +276,15 @@ sectionStep env x@(Section t fmt body) = do
                         liftIO $ throwIO $ TemplatingResultJsonDecodeError env.path err
                     Aeson.Success result -> do
                         recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
-                        rewriteSection "templating" result
-        (_, TemplatingDoc) -> do
+                        rewriteSection "tramaj-json" result
+        (_, TramajDoc) -> do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
             case Templating.evalDocSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
                 Right (prog, html) -> do
                   recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
                   pure $ Section t TextHtml [html]
-        (Library name, TemplatingLib) -> do
+        (Library name, TramajLib) -> do
             case Templating.parseLibrarySection (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
                 Right prog -> do

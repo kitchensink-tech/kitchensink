@@ -1,2 +1,2 @@
-=base:library.templating-lib badge
+=base:library.tramaj-lib badge
 .span(class: "output", "badge: `$ctx.text`")
