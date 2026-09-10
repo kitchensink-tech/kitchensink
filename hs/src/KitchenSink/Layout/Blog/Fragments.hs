@@ -16,7 +16,7 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601Show)
 import Lucid as Lucid
 import Lucid.Base qualified as Lucid
-import Prelude ((+), (||))
+import Prelude ((&&), (+), (||))
 
 import Text.Atom.Feed qualified as Atom
 
@@ -119,8 +119,8 @@ assembleDefaultLayoutWarning _ = pure $ do
     div_ [class_ "no-layout-notice"] $ do
         p_ "this page uses a default layout"
 
-assembleUpcomingMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleUpcomingMain a = r <$> renderMainSections a
+assembleUpcomingMain :: UrlPrefix -> Article [Text] -> Assembler (Lucid.Html ())
+assembleUpcomingMain urlPrefix a = r <$> renderMainSections urlPrefix a
   where
     r :: [Lucid.Html ()] -> Lucid.Html ()
     r content = do
@@ -130,8 +130,8 @@ assembleUpcomingMain a = r <$> renderMainSections a
         div_ [class_ "main-article"] $ do
             mconcat content
 
-assembleArchivedMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleArchivedMain a = r <$> renderMainSections a
+assembleArchivedMain :: UrlPrefix -> Article [Text] -> Assembler (Lucid.Html ())
+assembleArchivedMain urlPrefix a = r <$> renderMainSections urlPrefix a
   where
     r :: [Lucid.Html ()] -> Lucid.Html ()
     r content = do
@@ -141,8 +141,8 @@ assembleArchivedMain a = r <$> renderMainSections a
         div_ [class_ "main-article"] $ do
             mconcat content
 
-assembleMain :: Article [Text] -> Assembler (Lucid.Html ())
-assembleMain a = r <$> renderMainSections a
+assembleMain :: UrlPrefix -> Article [Text] -> Assembler (Lucid.Html ())
+assembleMain urlPrefix a = r <$> renderMainSections urlPrefix a
   where
     r :: [Lucid.Html ()] -> Lucid.Html ()
     r content =
@@ -152,16 +152,41 @@ assembleMain a = r <$> renderMainSections a
 -- | Renders `main-content` sections (as markdown) alongside `callout`, `faq`,
 -- and `pricing` sections (as their own widgets), in the order they appear in
 -- the source file.
-renderMainSections :: Article [Text] -> Assembler [Lucid.Html ()]
-renderMainSections a = getSections a isRenderableContent >>= traverse renderContentSection
+renderMainSections :: UrlPrefix -> Article [Text] -> Assembler [Lucid.Html ()]
+renderMainSections urlPrefix a = getSections a isRenderableContent >>= traverse (renderContentSection urlPrefix)
   where
     isRenderableContent s = isMainContent s || isCallout s || isFaq s || isPricing s
 
-renderContentSection :: Section [Text] -> Assembler (Lucid.Html ())
-renderContentSection s
+{- | Rewrites root-relative @href="/..."@ and @src="/..."@ attribute values in
+an already-rendered HTML fragment to carry the site's @basePath@. This is
+what makes a plain markdown link like @[home](\/index.html)@, written by an
+author with no idea the site might be hosted under a subpath, resolve
+correctly there. Protocol-relative (@\/\/...@), scheme-qualified
+(@https:\/\/...@), and fragment (@#...@) URLs are left untouched, since none
+of them start with a single @\/@.
+-}
+prefixRootRelativeLinks :: UrlPrefix -> Text -> Text
+prefixRootRelativeLinks "" html = html
+prefixRootRelativeLinks urlPrefix html =
+    rewriteAttr "src=\"" $ rewriteAttr "href=\"" html
+  where
+    rewriteAttr :: Text -> Text -> Text
+    rewriteAttr marker = go
+      where
+        go t = case Text.breakOn marker t of
+            (before, rest)
+                | Text.null rest -> before
+                | otherwise ->
+                    let afterMarker = Text.drop (Text.length marker) rest
+                        isRootRelative = "/" `Text.isPrefixOf` afterMarker && not ("//" `Text.isPrefixOf` afterMarker)
+                        inserted = if isRootRelative then urlPrefix else ""
+                     in before <> marker <> inserted <> go afterMarker
+
+renderContentSection :: UrlPrefix -> Section [Text] -> Assembler (Lucid.Html ())
+renderContentSection urlPrefix s
     | isMainContent s = do
         rendered <- renderSection s
-        pure $ section_ [class_ "main-section"] $ toHtmlRaw @Text (extract' rendered)
+        pure $ section_ [class_ "main-section"] $ toHtmlRaw @Text (prefixRootRelativeLinks urlPrefix $ extract' rendered)
     | isCallout s = do
         calloutSection <- jsonSection @CalloutData s
         pure $ calloutHtml (extract calloutSection)
@@ -237,7 +262,7 @@ assembleTopicListing urlPrefix prefix stats topic articles =
         header_ [class_ "heading"] $ do
             h1_ $ toHtml topic
         section_ [class_ "main"] $ do
-            mainArticleLinks articles
+            mainArticleLinks urlPrefix articles
         section_ [class_ "others"]
             $ mconcat
                 [ h2_ [class_ "listing-callout"] "other topics"
@@ -260,8 +285,8 @@ topicListingTag urlPrefix prefix stats topic =
 
 type TagValue = Text.Text
 
-assembleHashtagListing :: TagValue -> [(Target a, Article [Text])] -> Assembler (Lucid.Html ())
-assembleHashtagListing tag articles =
+assembleHashtagListing :: UrlPrefix -> TagValue -> [(Target a, Article [Text])] -> Assembler (Lucid.Html ())
+assembleHashtagListing urlPrefix tag articles =
     pure r
   where
     r :: Lucid.Html ()
@@ -269,7 +294,7 @@ assembleHashtagListing tag articles =
         header_ [class_ "heading"] $ do
             h1_ $ toHtml tag
         section_ [class_ "main"] $ do
-            mainArticleLinks articles
+            mainArticleLinks urlPrefix articles
 
 assembleGlossaryListing :: OutputPrefix -> WholeGlossary -> [(Target a, Article [Text])] -> Assembler (Lucid.Html ())
 assembleGlossaryListing _ g _ =
@@ -577,27 +602,27 @@ extractDate art =
         $ runAssembler
         $ json @() @PreambleData art isPreamble
 
-mainArticleLinks :: [(Target a, Article [Text])] -> Lucid.Html ()
-mainArticleLinks targets =
-    articleListing "all articles"
+mainArticleLinks :: UrlPrefix -> [(Target a, Article [Text])] -> Lucid.Html ()
+mainArticleLinks urlPrefix targets =
+    articleListing urlPrefix "all articles"
         $ List.filter (isListableArticle . snd)
         $ sortByDate targets
 
-latestArticleLink :: [(Target a, Article [Text])] -> Lucid.Html ()
-latestArticleLink targets =
-    articleListing "latest article"
+latestArticleLink :: UrlPrefix -> [(Target a, Article [Text])] -> Lucid.Html ()
+latestArticleLink urlPrefix targets =
+    articleListing urlPrefix "latest article"
         $ List.take 1
         $ List.filter (isPublishedArticle . snd)
         $ List.filter (isListableArticle . snd)
         $ sortByDate targets
 
-articleListing :: Text -> [(Target a, Article [Text])] -> Lucid.Html ()
-articleListing htext targets =
+articleListing :: UrlPrefix -> Text -> [(Target a, Article [Text])] -> Lucid.Html ()
+articleListing urlPrefix htext targets =
     nav_ [class_ "articles-listing"] $ do
         h2_ [class_ "listing-callout"] $ Lucid.toHtml htext
         div_ [class_ "articles-listing-list"] $ do
             mconcat
-                [ uncurry mainArticleLinkWithAnnotation p
+                [ uncurry (mainArticleLinkWithAnnotation urlPrefix) p
                 | p <- targets
                 ]
 
@@ -607,15 +632,15 @@ siteGraphEchartZone urlPrefix =
         h2_ [class_ "listing-callout"] "site map"
         div_ [id_ "echartzone", data_ "base-path" urlPrefix, style_ "width:800px;height:600px;"] mempty
 
-mainArticleLinkWithAnnotation :: Target a -> Article [Text] -> Lucid.Html ()
-mainArticleLinkWithAnnotation t art =
+mainArticleLinkWithAnnotation :: UrlPrefix -> Target a -> Article [Text] -> Lucid.Html ()
+mainArticleLinkWithAnnotation urlPrefix t art =
     div_ [class_ $ mconcat ["articles-listing-item", " ", publishStatusClass]] $ do
         span_ [class_ "article-date"] (toHtml formattedDate)
         div_ $ do
             statusIcon
             articleLink t art
             when (isPublishedArticle art) $ do
-                articleSummary art
+                articleSummary urlPrefix art
   where
     formattedDate :: Text
     formattedDate = fromMaybe "" $ preambleDateText =<< preamble
@@ -649,13 +674,13 @@ preambleDateText preamble =
     fmtUTC :: UTCTime -> Text
     fmtUTC = Text.pack . formatTime defaultTimeLocale "%a, %d %b %Y"
 
-articleSummary :: Article [Text] -> Lucid.Html ()
-articleSummary art = when (isJust x) $ do
+articleSummary :: UrlPrefix -> Article [Text] -> Lucid.Html ()
+articleSummary urlPrefix art = when (isJust x) $ do
     div_ [class_ "article-summary"] $ do
         when (shouldShowStatsForArticle art) $ do
             articleStats art
         articleImage art
-        maybe mempty (toHtmlRaw @Text . extract') x
+        maybe mempty (toHtmlRaw @Text . prefixRootRelativeLinks urlPrefix . extract') x
   where
     x :: Maybe (Section PreRenderedHtml)
     x = fromRight Nothing $ runAssembler (lookupSection art isSummary >>= traverse renderSection)
@@ -719,7 +744,7 @@ assembleAtomEntry ::
     Assembler (Atom.Entry)
 assembleAtomEntry extra dloc art = do
     summary <- fmap (compactSummary . extract) <$> lookupSection art isSummary
-    contents <- assembleMain art
+    contents <- assembleMain extra.pathPrefix art
     r
         <$> (extract <$> json @() @PreambleData art isPreamble)
         <*> pure summary

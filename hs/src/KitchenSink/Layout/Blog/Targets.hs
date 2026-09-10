@@ -374,10 +374,10 @@ siteTargets execRoot prefix extra site = allTargets
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
-                                [ assembleMain
-                                , const $ pure $ latestArticleLink articleTargets
+                                [ assembleMain urlPrefix
+                                , const $ pure $ latestArticleLink urlPrefix articleTargets
                                 , const $ pure $ siteGraphEchartZone urlPrefix
-                                , const $ pure $ mainArticleLinks articleTargets
+                                , const $ pure $ mainArticleLinks urlPrefix articleTargets
                                 , const $ pure $ topicsListings stats
                                 ]
                         ]
@@ -404,7 +404,7 @@ siteTargets execRoot prefix extra site = allTargets
                             $ wrap article_
                             $ mconcat
                                 [ assembleHeader urlPrefix prefix stats dloc
-                                , assembleArchivedMain
+                                , assembleArchivedMain urlPrefix
                                 , assembleFooter
                                 ]
                         ]
@@ -431,7 +431,7 @@ siteTargets execRoot prefix extra site = allTargets
                             $ wrap article_
                             $ mconcat
                                 [ assembleHeader urlPrefix prefix stats dloc
-                                , assembleUpcomingMain
+                                , assembleUpcomingMain urlPrefix
                                 , assembleFooter
                                 ]
                         ]
@@ -458,7 +458,7 @@ siteTargets execRoot prefix extra site = allTargets
                             $ wrap article_
                             $ mconcat
                                 [ assembleHeader urlPrefix prefix stats dloc
-                                , assembleMain
+                                , assembleMain urlPrefix
                                 , assembleGlossary
                                 , assembleFooter
                                 ]
@@ -481,7 +481,7 @@ siteTargets execRoot prefix extra site = allTargets
                         , wrap (div_ [class_ "help"])
                             $ wrap article_
                             $ mconcat
-                                [ assembleMain
+                                [ assembleMain urlPrefix
                                 ]
                         ]
                 ]
@@ -500,7 +500,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (div_ [id_ "gallery", class_ "photos"])
                             $ mconcat
-                                [ assembleMain
+                                [ assembleMain urlPrefix
                                 ]
                         ]
                 ]
@@ -519,7 +519,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (div_ [id_ "listing"])
                             $ mconcat
-                                [ assembleMain
+                                [ assembleMain urlPrefix
                                 ]
                         ]
                 ]
@@ -575,7 +575,7 @@ siteTargets execRoot prefix extra site = allTargets
                             , wrap (div_ [class_ "main"])
                                 $ wrap article_
                                 $ mconcat
-                                    [ const (assembleHashtagListing (hashtagValue tag) articles)
+                                    [ const (assembleHashtagListing urlPrefix (hashtagValue tag) articles)
                                     ]
                             ]
                     ]
@@ -629,7 +629,7 @@ siteTargets execRoot prefix extra site = allTargets
                             $ mconcat
                                 [ assembleHeader urlPrefix prefix stats dloc
                                 , assembleDefaultLayoutWarning
-                                , assembleMain
+                                , assembleMain urlPrefix
                                 , assembleGlossary
                                 , assembleFooter
                                 ]
