@@ -22,7 +22,7 @@ their own right.
 
 Both receive the same context, 'buildContext', which is the @kitchensink@
 record Dhall sections get, reachable as @$ctx.datasets@, @$ctx.vars@,
-@$ctx.file@ and @$ctx.sectionNum@.
+@$ctx.file@, @$ctx.sectionNum@ and @$ctx.pathPrefix@.
 -}
 module KitchenSink.Engine.Templating (
     TemplatingError (..),
@@ -68,11 +68,12 @@ data TemplatingError
 no schema inference round trip, so there is no way for the datasets to silently
 degrade into an error string.
 -}
-buildContext :: FilePath -> Integer -> [(Text, Text)] -> Map Name Aeson.Value -> Aeson.Value
-buildContext path sectionNum vars datasets =
+buildContext :: FilePath -> Integer -> Text -> [(Text, Text)] -> Map Name Aeson.Value -> Aeson.Value
+buildContext path sectionNum pathPrefix vars datasets =
     Aeson.object
         [ ("file", Aeson.toJSON (Text.pack path))
         , ("sectionNum", Aeson.toJSON sectionNum)
+        , ("pathPrefix", Aeson.toJSON pathPrefix)
         , ("datasets", Aeson.toJSON datasets)
         , ("vars", Aeson.toJSON (Map.fromList vars))
         ]

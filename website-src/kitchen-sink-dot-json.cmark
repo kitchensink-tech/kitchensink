@@ -47,7 +47,7 @@ As the time of writing this article, `kitchen-sink.json` supports the following 
 
 - `title`: the title on the index page and the prefix of per-articles titles
 - `publishURL`: the url that will be added as prefix of links in permalinks
-- `basePath` (optional): a path prefix (e.g., `"tramaj"` or `"/tramaj"`) prepended to every internal link, stylesheet, script, and image URL that kitchen-sink generates. Leave unset (or `""`) when the site is hosted at the domain root; set it when the site is hosted under a subpath, such as a GitHub Pages *project* page (`https://user.github.io/reponame/`) as opposed to a *user/org* page (`https://user.github.io/`)
+- `basePath` (optional): a path prefix (e.g., `"tramaj"` or `"/tramaj"`) prepended to every internal link, stylesheet, script, and image URL that kitchen-sink generates. Leave unset (or `""`) when the site is hosted at the domain root; set it when the site is hosted under a subpath, such as a GitHub Pages *project* page (`https://user.github.io/reponame/`) as opposed to a *user/org* page (`https://user.github.io/`). It is also available to `.dhall`/`.tramaj-json`/`.tramaj-doc` sections as `kitchensink.pathPrefix`/`$ctx.pathPrefix` (see [Dhall sections](/sections-dhall.html) / [Tramaj sections](/sections-templating.html)), for cases like a CSS section's own `@import` URLs that kitchen-sink itself does not rewrite
 - `twitterLogin` (optional): the Twitter handle for the website, which may differ from the Twitter handle of individual authors
 - `commands`: an array of json objects containing:
   - a  `display` for the text on the web

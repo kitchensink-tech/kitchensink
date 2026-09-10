@@ -371,6 +371,7 @@ Dhall value and has the following structure:
 ```dhall
 { file : Text -- contains the source file path for the cmark
 , sectionNum : Integer -- contains the section number of this file (starting from zero)
+, pathPrefix : Text -- the site's configured basePath (see kitchen-sink.json), or "" at the domain root
 , datasets : <data-dependant> -- contains a record<dataset-name, (json-value-to-dhall|text-value)> or an error message if it failed to load
 , vars : <data-dependant> -- contains a record<key, value: Text> depending on the --var foo=bar command line arguments
 }

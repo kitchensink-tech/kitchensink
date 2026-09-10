@@ -69,15 +69,15 @@ type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 --   * dependencies between sections? or between articles?
 --   * dependencies to external query widgets or params?
 --   * references to generated datasets (e.g., `curl a page, use as input to other place`)
-loadArticle :: FilePath -> [(Text, Text)] -> [ExtraSectionType ext] -> Tramaj.Eval.LibraryTable -> Loader ext (Article ext [Text])
-loadArticle dhallRoot vars extras globalLibs trace path = do
+loadArticle :: FilePath -> [(Text, Text)] -> Text -> [ExtraSectionType ext] -> Tramaj.Eval.LibraryTable -> Loader ext (Article ext [Text])
+loadArticle dhallRoot vars pathPrefix extras globalLibs trace path = do
     trace $ LoadArticle path
     eart <- runParser (article extras path) path <$> Text.readFile path
     case eart of
         Left err -> throwIO err
         Right art -> Sourced (FileSource path) <$> evalSections art
   where
-    env = EvalEnv path dhallRoot vars trace
+    env = EvalEnv path dhallRoot vars pathPrefix trace
     evalSections art = evalStateT (overSections (evalSection env) art) (newState globalLibs)
 
 {- | Parses every @library.templating-lib@ section out of a set of
@@ -156,6 +156,7 @@ data EvalEnv ext
     { path :: FilePath
     , dhallRoot :: FilePath
     , vars :: [(Text, Text)]
+    , pathPrefix :: Text
     , trace :: LogMsg ext -> IO ()
     }
 
@@ -237,11 +238,13 @@ sectionStep env x@(Section t fmt body) = do
             let varsExprc =
                     Core.RecordLit
                         (DhallMap.fromList varListExprs)
+            let pathPrefixExpr = Core.Annot (Core.TextLit (Core.Chunks [] env.pathPrefix)) (Core.Text)
             let ksExpr =
                     Core.RecordLit
                         $ DhallMap.fromList
                             [ ("file", Core.makeRecordField pathExpr)
                             , ("sectionNum", Core.makeRecordField sectionNumExpr)
+                            , ("pathPrefix", Core.makeRecordField pathPrefixExpr)
                             , ("datasets", Core.makeRecordField $ fromRight errorExpr dhallDataset)
                             , ("vars", Core.makeRecordField varsExprc)
                             ]
@@ -268,7 +271,7 @@ sectionStep env x@(Section t fmt body) = do
                 Aeson.Success result ->
                     rewriteSection "Dhall" result
         (_, TramajJson) -> do
-            let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
+            let ctx = Templating.buildContext env.path st0.sectionNumber env.pathPrefix env.vars st0.datasets
             case Templating.evalJsonSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
                 Right (prog,jvalue) -> case Aeson.fromJSON jvalue of
@@ -278,7 +281,7 @@ sectionStep env x@(Section t fmt body) = do
                         recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
                         rewriteSection "tramaj-json" result
         (_, TramajDoc) -> do
-            let ctx = Templating.buildContext env.path st0.sectionNumber env.vars st0.datasets
+            let ctx = Templating.buildContext env.path st0.sectionNumber env.pathPrefix env.vars st0.datasets
             case Templating.evalDocSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
                 Right (prog, html) -> do
@@ -393,11 +396,12 @@ loadDotSource trace path = do
 loadSite ::
     FilePath ->
     [(Text, Text)] ->
+    Text ->
     [ExtraSectionType ext] ->
     (LogMsg ext -> IO ()) ->
     FilePath ->
     IO (Site ext)
-loadSite dhallRoot vars extras trace dir = do
+loadSite dhallRoot vars pathPrefix extras trace dir = do
     paths <- listDirectory dir
     globalLibs <- loadTemplatingLibraries trace extras (libraryPaths paths)
     Site
@@ -424,7 +428,7 @@ loadSite dhallRoot vars extras trace dir = do
     -- not otherwise matter (see 'loadTemplatingLibraries').
     libraryPaths paths = List.sort [dir </> p | p <- paths, takeExtension p == ".cmark-tramaj"]
     articlesM globalLibs paths =
-        traverse (loadArticle dhallRoot vars extras globalLibs trace)
+        traverse (loadArticle dhallRoot vars pathPrefix extras globalLibs trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark"]]
     imagesM paths =
         traverse (loadImage trace)

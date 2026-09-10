@@ -35,6 +35,7 @@ run cmd = do
             loadSite
                 "."
                 cmd.variables
+                serveMetadata.pathPrefix
                 (extraSectiontypes Blog.layout)
                 (runTracer $ contramap Loading $ tracePrint)
                 srcPath

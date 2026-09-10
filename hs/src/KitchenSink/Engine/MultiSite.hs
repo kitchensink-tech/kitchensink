@@ -304,7 +304,7 @@ buildDirectorySourceApp :: Runtime -> KitchenSinkDirectorySourceStanza -> SiteSt
 buildDirectorySourceApp rt src cfg = do
     -- loaded once for the whole duration of the application
     metadata <- loadMetadata src.metadata
-    site <- loadSource
+    site <- loadSource metadata
     let targets = evalTargets metadata site
     let engine = Engine (pure site) (pure metadata) (\_ _ -> targets) (produceTarget print)
     let webapp =
@@ -323,11 +323,12 @@ buildDirectorySourceApp rt src cfg = do
         fmap (fmap $ const ())
             $ (siteTargets Blog.layout) (src.execRoot) unusedPrefix med site
 
-    loadSource :: IO (SiteLoader.Site ())
-    loadSource =
+    loadSource :: MetaData -> IO (SiteLoader.Site ())
+    loadSource med =
         SiteLoader.loadSite
             (fromMaybe "." src.dhallRoot)
             rt.vars
+            med.pathPrefix
             (extraSectiontypes Blog.layout)
             (runTracer $ contramap Loading $ tracePrint)
             src.path

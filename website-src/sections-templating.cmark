@@ -92,10 +92,16 @@ Dhall-sections:
 ```
 { file : Text        -- the source file path of this cmark file
 , sectionNum : Integer  -- this section's number in the file, from zero
+, pathPrefix : Text  -- the site's configured basePath (see kitchen-sink.json), or "" at the domain root
 , datasets : object  -- dataset cells declared *earlier* in this file
 , vars : object      -- the --var name=value pairs given on the command line
 }
 ```
+
+`pathPrefix` is what lets a `.tramaj-json`/`.tramaj-doc` CSS section adapt
+its `@import` URLs (or any other section adapt a root-relative link) to a site
+hosted under a subpath, e.g. `"@import \"`$ctx.pathPrefix`/css/dev.css\";"`
+instead of hardcoding `/css/dev.css`.
 
 So `kitchensink.datasets.my-name` becomes `$ctx.datasets.my-name`, and
 `kitchensink.file` becomes `$ctx.file`.
