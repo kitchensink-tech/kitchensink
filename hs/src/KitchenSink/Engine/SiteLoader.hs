@@ -337,6 +337,7 @@ sectionStep env x@(Section t fmt body) = do
         case newFormat of
             "cmark" -> pure $ Section t Cmark contents
             "html" -> pure $ Section t TextHtml contents
+            "css" -> pure $ Section t Css contents
             unsupportedFmt ->
                 liftIO
                     $ throwIO

@@ -71,7 +71,8 @@ section must produce.
 
 `.tramaj-json` sections are rooted at an expression and evaluate to a JSON
 value. That value is the same `{format, contents}` contract Dhall-sections
-answer with, so the section can rewrite itself to `json`, `cmark` or `html`.
+answer with, so the section can rewrite itself to `json`, `cmark`, `html` or
+`css`.
 This is the format to reach for as a drop-in replacement for a Dhall section.
 
 `.tramaj-doc` sections are rooted at an element — `.div(...)`, `.ul(...)` —
@@ -98,10 +99,11 @@ Dhall-sections:
 }
 ```
 
-`pathPrefix` is what lets a `.tramaj-json`/`.tramaj-doc` CSS section adapt
-its `@import` URLs (or any other section adapt a root-relative link) to a site
-hosted under a subpath, e.g. `"@import \"`$ctx.pathPrefix`/css/dev.css\";"`
-instead of hardcoding `/css/dev.css`.
+`pathPrefix` is what lets a `.tramaj-json` `main-css` section (returning
+`format = "css"`) adapt its `@import` URLs -- or any `.tramaj-json`/
+`.tramaj-doc` section adapt a root-relative link -- to a site hosted under a
+subpath, e.g. `"@import \"`$ctx.pathPrefix`/css/dev.css\";"` instead of
+hardcoding `/css/dev.css`.
 
 So `kitchensink.datasets.my-name` becomes `$ctx.datasets.my-name`, and
 `kitchensink.file` becomes `$ctx.file`.
@@ -182,8 +184,10 @@ Reading back the dataset the previous section generated:
     }
 
 Each element of `contents` is one line. `format` may also be `"html"`, in which
-case the lines are used verbatim, or `"json"`, in which case `contents` is an
-arbitrary JSON value rather than a list of lines.
+case the lines are used verbatim; `"css"`, likewise verbatim but rewriting the
+section to CSS (handy for a `main-css` section that needs `$ctx.pathPrefix` in
+its `@import` URLs); or `"json"`, in which case `contents` is an arbitrary
+JSON value rather than a list of lines.
 
 =base:main-content.tramaj-json
 @summary=$ctx.datasets.crew-summary
