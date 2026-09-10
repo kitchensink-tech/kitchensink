@@ -63,5 +63,6 @@ serveMetadataFromSiteInfo config = do
         <*> pure (twitterLogin config)
         <*> pure noExtraHeaders
         <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
+        <*> pure (normalizedBasePath config)
   where
     noExtraHeaders _ = pure mempty

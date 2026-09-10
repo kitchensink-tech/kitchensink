@@ -139,24 +139,27 @@ serveMetadataFromSiteInfo config = do
         <*> pure (twitterLogin config)
         <*> pure noExtraHeaders
         <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
+        <*> pure (normalizedBasePath config)
   where
     noExtraHeaders _ = pure mempty
 
 loadDevModeExtraData :: FilePath -> IO MetaData
 loadDevModeExtraData path = do
     config <- fromMaybe defaultSiteInfo <$> loadJSONFile @SiteInfo path
+    let prefix = normalizedBasePath config
     MetaData
         <$> getCurrentTime
         <*> pure (title config)
         <*> pure (publishURL config)
         <*> pure (twitterLogin config)
-        <*> pure jsReloadExtraHeaders
+        <*> pure (jsReloadExtraHeaders prefix)
         <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
+        <*> pure prefix
   where
-    jsReloadExtraHeaders :: Article ext [Text] -> Assembler ext (Lucid.Html ())
-    jsReloadExtraHeaders _ =
-        let js1 = Lucid.termRawWith "script" [type_ "text/javascript", src_ "/js/autoreload.js"] ""
-            js2 = Lucid.termRawWith "script" [type_ "text/javascript", src_ "/js/add-dev-route.js"] ""
-            js3 = Lucid.termRawWith "script" [type_ "text/javascript", src_ "/js/echarts.min.js"] ""
-            js5 = Lucid.termRawWith "script" [type_ "text/javascript", src_ "/js/echart-histogram.js"] ""
+    jsReloadExtraHeaders :: Text -> Article ext [Text] -> Assembler ext (Lucid.Html ())
+    jsReloadExtraHeaders prefix _ =
+        let js1 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/autoreload.js")] ""
+            js2 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/add-dev-route.js")] ""
+            js3 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/echarts.min.js")] ""
+            js5 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/echart-histogram.js")] ""
          in pure (js1 *> js2 *> js3 *> js5)

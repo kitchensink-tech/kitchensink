@@ -49,15 +49,15 @@ data ExternalSitesInfo = ExternalSitesInfo
     { externalKitchenSinks :: [URL]
     }
 
-topicsgraph :: ExternalSitesInfo -> TopicStats -> TopicGraph
-topicsgraph external stats =
+topicsgraph :: UrlPrefix -> ExternalSitesInfo -> TopicStats -> TopicGraph
+topicsgraph urlPrefix external stats =
     TopicGraph
         (topicNodes <> hashtagNodes <> articleNodes <> imagesNodes <> externalKSSitesNodes)
         (topicArticleEdges <> hashtagArticleEdges <> articleArticleEdges <> articleImageEdges <> articleExternalSiteEdges)
   where
     topicNodes, hashtagNodes, articleNodes, externalKSSitesNodes :: [(NodeKey, Node)]
-    topicNodes = [(topicKey t, TopicNode (destinationUrl $ destTopic "" t) (length xs)) | (t, xs) <- Map.toList (byTopic stats)]
-    hashtagNodes = [let t = hashtagValue tag in (hashtagKey tag, HashTagNode (destinationUrl $ destHashTag "" t) (length xs)) | (tag, xs) <- Map.toList (byHashTag stats)]
+    topicNodes = [(topicKey t, TopicNode (destinationUrl $ destTopic urlPrefix "" t) (length xs)) | (t, xs) <- Map.toList (byTopic stats)]
+    hashtagNodes = [let t = hashtagValue tag in (hashtagKey tag, HashTagNode (destinationUrl $ destHashTag urlPrefix "" t) (length xs)) | (tag, xs) <- Map.toList (byHashTag stats)]
     articleNodes = [(articleKey t, ArticleNode (targetUrl t) histsize) | (t, histsize) <- uniqueTargetArticles]
     imagesNodes = [(imageKey url, ImageNode url) | url <- uniqueImages]
     externalKSSitesNodes = [(externalSiteKey url, ExternalKitchenSinkSiteNode url) | url <- externalKitchenSinks external]

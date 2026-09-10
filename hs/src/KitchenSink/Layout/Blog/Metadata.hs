@@ -17,6 +17,7 @@ data MetaData = MetaData
     , twitterSiteLogin :: Maybe Text
     , extraHeaders :: Article [Text] -> Assembler (Lucid.Html ())
     , externalKitchenSinkURLs :: [Text]
+    , pathPrefix :: Text
     }
 
 epochUTCTime :: UTCTime

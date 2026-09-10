@@ -10,6 +10,9 @@ import KitchenSink.Core.Section.Base as Core
 import KitchenSink.Core.Section.Payloads (TopicName)
 import KitchenSink.Prelude
 
+-- | Root-relative URL prefix from site config (e.g. @"/tramaj"@, or @""@).
+type UrlPrefix = Text.Text
+
 topicFileName :: TopicName -> FilePath
 topicFileName t = Text.unpack (Text.replace " " "-" t) <> ".html"
 
@@ -28,42 +31,49 @@ data GenFileExtension
 extensionString :: GenFileExtension -> String
 extensionString GenPngFile = ".png"
 
-destTopic :: OutputPrefix -> TopicName -> DestinationLocation
-destTopic prefix topic =
+-- | Prepends the configured site path-prefix (e.g. @"/tramaj"@, or @""@ when
+-- hosted at the domain root) to a root-relative URL. Every @dest*@ function
+-- below routes its 'Url' through this so a site hosted under a GitHub
+-- Pages project subpath gets correct links.
+withPrefix :: UrlPrefix -> String -> Text.Text
+withPrefix prefix path = prefix <> Text.pack path
+
+destTopic :: UrlPrefix -> OutputPrefix -> TopicName -> DestinationLocation
+destTopic urlPrefix prefix topic =
     VirtualFileDestination
-        (Text.pack $ "/topics/" <> topicFileName topic)
+        (withPrefix urlPrefix $ "/topics/" <> topicFileName topic)
         (prefix </> "topics" </> topicFileName topic)
 
-destTopicAtom :: OutputPrefix -> TopicName -> DestinationLocation
-destTopicAtom prefix topic =
+destTopicAtom :: UrlPrefix -> OutputPrefix -> TopicName -> DestinationLocation
+destTopicAtom urlPrefix prefix topic =
     VirtualFileDestination
-        (Text.pack $ "/topics/" <> topicAtomName topic)
+        (withPrefix urlPrefix $ "/topics/" <> topicAtomName topic)
         (prefix </> "topics" </> topicAtomName topic)
 
 type HashTagName = Text.Text -- TODO: move me
 
-destHashTag :: OutputPrefix -> HashTagName -> DestinationLocation
-destHashTag prefix tag =
+destHashTag :: UrlPrefix -> OutputPrefix -> HashTagName -> DestinationLocation
+destHashTag urlPrefix prefix tag =
     VirtualFileDestination
-        (Text.pack $ "/hashtags/" <> hashtagFileName tag)
+        (withPrefix urlPrefix $ "/hashtags/" <> hashtagFileName tag)
         (prefix </> "hashtags" </> hashtagFileName tag)
 
-destHashTagAtom :: OutputPrefix -> HashTagName -> DestinationLocation
-destHashTagAtom prefix tag =
+destHashTagAtom :: UrlPrefix -> OutputPrefix -> HashTagName -> DestinationLocation
+destHashTagAtom urlPrefix prefix tag =
     VirtualFileDestination
-        (Text.pack $ "/hashtags/" <> hashtagAtomName tag)
+        (withPrefix urlPrefix $ "/hashtags/" <> hashtagAtomName tag)
         (prefix </> "hashtags" </> hashtagAtomName tag)
 
-destGenImage :: OutputPrefix -> SourceLocation -> GenFileExtension -> DestinationLocation
-destGenImage prefix (FileSource path) ext =
+destGenImage :: UrlPrefix -> OutputPrefix -> SourceLocation -> GenFileExtension -> DestinationLocation
+destGenImage urlPrefix prefix (FileSource path) ext =
     StaticFileDestination
-        (Text.pack $ "/gen/images/" <> takeFileName path <> extensionString ext)
+        (withPrefix urlPrefix $ "/gen/images/" <> takeFileName path <> extensionString ext)
         (prefix </> "gen/images" </> takeFileName path <> extensionString ext)
 
-destGenArbitrary :: OutputPrefix -> SourceLocation -> GeneratorInstructionsData -> DestinationLocation
-destGenArbitrary prefix (FileSource path) g =
+destGenArbitrary :: UrlPrefix -> OutputPrefix -> SourceLocation -> GeneratorInstructionsData -> DestinationLocation
+destGenArbitrary urlPrefix prefix (FileSource path) g =
     StaticFileDestination
-        (Text.pack $ "/gen/out/" <> takeFileName path <> "__" <> target g)
+        (withPrefix urlPrefix $ "/gen/out/" <> takeFileName path <> "__" <> target g)
         (prefix </> "gen/out" </> takeFileName path <> "__" <> target g)
 
 newtype FileExtension = FileExtension String
@@ -82,90 +92,89 @@ destinationExtension fmt = FileExtension $ case fmt of
     Core.Csv -> "csv"
     Core.InMemory -> "mem"
 
-destEmbeddedData :: OutputPrefix -> SourceLocation -> FileExtension -> Name -> Int -> DestinationLocation
-destEmbeddedData prefix (FileSource path) (FileExtension ext) name index =
+destEmbeddedData :: UrlPrefix -> OutputPrefix -> SourceLocation -> FileExtension -> Name -> Int -> DestinationLocation
+destEmbeddedData urlPrefix prefix (FileSource path) (FileExtension ext) name index =
     StaticFileDestination
-        (Text.pack $ "/raw/data/" <> takeFileName path <> "__" <> Text.unpack name <> show index <> "." <> ext)
+        (withPrefix urlPrefix $ "/raw/data/" <> takeFileName path <> "__" <> Text.unpack name <> show index <> "." <> ext)
         (prefix </> "raw/data" </> takeFileName path <> "__" <> Text.unpack name <> show index <> "." <> ext)
 
-destVideoFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destVideoFile prefix (FileSource path) =
+destVideoFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destVideoFile urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/videos/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/videos/" <> takeFileName path)
         (prefix </> "videos" </> takeFileName path)
 
-destAudioFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destAudioFile prefix (FileSource path) =
+destAudioFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destAudioFile urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/audios/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/audios/" <> takeFileName path)
         (prefix </> "audios" </> takeFileName path)
 
-destRawFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destRawFile prefix (FileSource path)
+destRawFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destRawFile urlPrefix prefix (FileSource path)
     | takeFileName path == "robots.txt" =
         StaticFileDestination
-            (Text.pack $ "/robots.txt")
+            (withPrefix urlPrefix "/robots.txt")
             (prefix </> "robots.txt")
     | takeFileName path == "webfinger.json" =
         StaticFileDestination
-            (Text.pack $ "/.well-known/webfinger")
+            (withPrefix urlPrefix "/.well-known/webfinger")
             (prefix </> ".well-known" </> "webfinger")
     | otherwise =
         StaticFileDestination
-            (Text.pack $ "/raw/" <> takeFileName path)
+            (withPrefix urlPrefix $ "/raw/" <> takeFileName path)
             (prefix </> "raw" </> takeFileName path)
 
-destDocumentFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destDocumentFile prefix (FileSource path) =
+destDocumentFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destDocumentFile urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/docs/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/docs/" <> takeFileName path)
         (prefix </> "docs" </> takeFileName path)
 
-destImage :: OutputPrefix -> SourceLocation -> DestinationLocation
-destImage prefix (FileSource path) =
+destImage :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destImage urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/images/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/images/" <> takeFileName path)
         (prefix </> "images" </> takeFileName path)
 
-destCssFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destCssFile prefix (FileSource path) =
+destCssFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destCssFile urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/css/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/css/" <> takeFileName path)
         (prefix </> "css" </> takeFileName path)
 
-destWebfontFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destWebfontFile prefix (FileSource path) =
+destWebfontFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destWebfontFile urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/webfonts/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/webfonts/" <> takeFileName path)
         (prefix </> "webfonts" </> takeFileName path)
 
-destJsFile :: OutputPrefix -> SourceLocation -> DestinationLocation
-destJsFile prefix (FileSource path) =
+destJsFile :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destJsFile urlPrefix prefix (FileSource path) =
     StaticFileDestination
-        (Text.pack $ "/js/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/js/" <> takeFileName path)
         (prefix </> "js" </> takeFileName path)
 
-destJsonDataFile :: OutputPrefix -> FilePath -> DestinationLocation
-destJsonDataFile prefix path =
+destJsonDataFile :: UrlPrefix -> OutputPrefix -> FilePath -> DestinationLocation
+destJsonDataFile urlPrefix prefix path =
     StaticFileDestination
-        (Text.pack $ "/json/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/json/" <> takeFileName path)
         (prefix </> "json" </> takeFileName path)
 
-destTextDataFile :: OutputPrefix -> FilePath -> DestinationLocation
-destTextDataFile prefix path =
+destTextDataFile :: UrlPrefix -> OutputPrefix -> FilePath -> DestinationLocation
+destTextDataFile urlPrefix prefix path =
     StaticFileDestination
-        (Text.pack $ "/text/" <> takeFileName path)
+        (withPrefix urlPrefix $ "/text/" <> takeFileName path)
         (prefix </> "text" </> takeFileName path)
 
-destRootDataFile :: OutputPrefix -> FilePath -> DestinationLocation
-destRootDataFile prefix path
-    | otherwise =
-        StaticFileDestination
-            (Text.pack $ "/" <> takeFileName path)
-            (prefix </> takeFileName path)
-
-destHtml :: OutputPrefix -> SourceLocation -> DestinationLocation
-destHtml prefix (FileSource path) =
+destRootDataFile :: UrlPrefix -> OutputPrefix -> FilePath -> DestinationLocation
+destRootDataFile urlPrefix prefix path =
     StaticFileDestination
-        (Text.pack $ "/" <> takeBaseName path <> ".html")
+        (withPrefix urlPrefix $ "/" <> takeFileName path)
+        (prefix </> takeFileName path)
+
+destHtml :: UrlPrefix -> OutputPrefix -> SourceLocation -> DestinationLocation
+destHtml urlPrefix prefix (FileSource path) =
+    StaticFileDestination
+        (withPrefix urlPrefix $ "/" <> takeBaseName path <> ".html")
         (prefix </> takeBaseName path <> ".html")

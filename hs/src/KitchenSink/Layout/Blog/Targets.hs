@@ -56,15 +56,15 @@ simpleTarget :: TargetType -> DestinationLocation -> ProductionRule -> Target
 simpleTarget z x y =
     target (TargetSummary z Nothing Nothing Nothing Nothing Nothing (HashTagSummary [])) x y
 
-imageTargets :: OutputPrefix -> Site -> [Target]
-imageTargets prefix site =
-    [simpleTarget ImageTarget (destImage prefix loc) (copyFrom loc) | Sourced loc _ <- site.images]
+imageTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+imageTargets urlPrefix prefix site =
+    [simpleTarget ImageTarget (destImage urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.images]
 
-dotimageTargets :: OutputPrefix -> Site -> [Target]
-dotimageTargets prefix site =
+dotimageTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+dotimageTargets urlPrefix prefix site =
     [ simpleTarget
         GraphVizImageTarget
-        (destGenImage prefix loc GenPngFile)
+        (destGenImage urlPrefix prefix loc GenPngFile)
         (execCmd root "dot" ["-Tpng", "-o", "/dev/stdout", path] "")
     | Sourced loc@(FileSource path) _ <- site.dotSourceFiles
     ]
@@ -72,74 +72,77 @@ dotimageTargets prefix site =
     root :: ExecRoot
     root = Nothing
 
-videoTargets :: OutputPrefix -> Site -> [Target]
-videoTargets prefix site =
-    [simpleTarget VideoTarget (destVideoFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.videoFiles]
+videoTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+videoTargets urlPrefix prefix site =
+    [simpleTarget VideoTarget (destVideoFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.videoFiles]
 
-audioTargets :: OutputPrefix -> Site -> [Target]
-audioTargets prefix site =
-    [simpleTarget AudioTarget (destAudioFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.audioFiles]
+audioTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+audioTargets urlPrefix prefix site =
+    [simpleTarget AudioTarget (destAudioFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.audioFiles]
 
-rawTargets :: OutputPrefix -> Site -> [Target]
-rawTargets prefix site =
-    [simpleTarget RawTarget (destRawFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.rawFiles]
+rawTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+rawTargets urlPrefix prefix site =
+    [simpleTarget RawTarget (destRawFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.rawFiles]
 
-documentTargets :: OutputPrefix -> Site -> [Target]
-documentTargets prefix site =
-    [simpleTarget DocumentTarget (destDocumentFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.docFiles]
+documentTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+documentTargets urlPrefix prefix site =
+    [simpleTarget DocumentTarget (destDocumentFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.docFiles]
 
-cssTargets :: OutputPrefix -> Site -> [Target]
-cssTargets prefix site =
-    [simpleTarget CssTarget (destCssFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.cssFiles]
+cssTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+cssTargets urlPrefix prefix site =
+    [simpleTarget CssTarget (destCssFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.cssFiles]
 
-webfontTargets :: OutputPrefix -> Site -> [Target]
-webfontTargets prefix site =
-    [simpleTarget WebfontTarget (destWebfontFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.webfontFiles]
+webfontTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+webfontTargets urlPrefix prefix site =
+    [simpleTarget WebfontTarget (destWebfontFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.webfontFiles]
 
-jsTargets :: OutputPrefix -> Site -> [Target]
-jsTargets prefix site =
-    [simpleTarget JavaScriptSourceTarget (destJsFile prefix loc) (copyFrom loc) | Sourced loc _ <- site.jsFiles]
+jsTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+jsTargets urlPrefix prefix site =
+    [simpleTarget JavaScriptSourceTarget (destJsFile urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.jsFiles]
 
-htmlTargets :: OutputPrefix -> Site -> [Target]
-htmlTargets prefix site =
-    [simpleTarget HtmlSourceTarget (destHtml prefix loc) (copyFrom loc) | Sourced loc _ <- site.htmlFiles]
+htmlTargets :: UrlPrefix -> OutputPrefix -> Site -> [Target]
+htmlTargets urlPrefix prefix site =
+    [simpleTarget HtmlSourceTarget (destHtml urlPrefix prefix loc) (copyFrom loc) | Sourced loc _ <- site.htmlFiles]
 
-jsonDataTarget :: (ToJSON a) => OutputPrefix -> a -> FilePath -> Target
-jsonDataTarget prefix v loc =
-    simpleTarget JSONTarget (destJsonDataFile prefix loc) (Core.ProduceGenerator f)
+jsonDataTarget :: (ToJSON a) => UrlPrefix -> OutputPrefix -> a -> FilePath -> Target
+jsonDataTarget urlPrefix prefix v loc =
+    simpleTarget JSONTarget (destJsonDataFile urlPrefix prefix loc) (Core.ProduceGenerator f)
   where
     f _ = Generator $ pure $ Right $ LByteString.toStrict $ encode v
 
-textDataTarget :: OutputPrefix -> Article [Text] -> FilePath -> Target
-textDataTarget prefix v loc =
-    simpleTarget JSONTarget (destTextDataFile prefix loc) (Core.ProduceGenerator f)
+textDataTarget :: UrlPrefix -> OutputPrefix -> Article [Text] -> FilePath -> Target
+textDataTarget urlPrefix prefix v loc =
+    simpleTarget JSONTarget (destTextDataFile urlPrefix prefix loc) (Core.ProduceGenerator f)
   where
     f _ = Generator $ pure $ Right $ Text.encodeUtf8 $ TextRender.textRender v
 
-rootDataTarget :: OutputPrefix -> Text -> FilePath -> Target
-rootDataTarget prefix v loc =
-    simpleTarget RootFileTarget (destRootDataFile prefix loc) (Core.ProduceGenerator f)
+rootDataTarget :: UrlPrefix -> OutputPrefix -> Text -> FilePath -> Target
+rootDataTarget urlPrefix prefix v loc =
+    simpleTarget RootFileTarget (destRootDataFile urlPrefix prefix loc) (Core.ProduceGenerator f)
   where
     f _ = Generator $ pure $ Right $ Text.encodeUtf8 v
 
 siteTargets :: ExecRoot -> OutputPrefix -> MetaData -> Site -> [Target]
 siteTargets execRoot prefix extra site = allTargets
   where
+    urlPrefix :: UrlPrefix
+    urlPrefix = extra.pathPrefix
+
     allTargets =
         mconcat
             [ embeddedGeneratorTargets
             , embeddedDataTargets
             , fmap fst articleTargets
-            , imageTargets prefix site
-            , dotimageTargets prefix site
-            , videoTargets prefix site
-            , audioTargets prefix site
-            , rawTargets prefix site
-            , documentTargets prefix site
-            , cssTargets prefix site
-            , webfontTargets prefix site
-            , jsTargets prefix site
-            , htmlTargets prefix site
+            , imageTargets urlPrefix prefix site
+            , dotimageTargets urlPrefix prefix site
+            , videoTargets urlPrefix prefix site
+            , audioTargets urlPrefix prefix site
+            , rawTargets urlPrefix prefix site
+            , documentTargets urlPrefix prefix site
+            , cssTargets urlPrefix prefix site
+            , webfontTargets urlPrefix prefix site
+            , jsTargets urlPrefix prefix site
+            , htmlTargets urlPrefix prefix site
             , topicIndexesTargets (lookupSpecialArticle SpecialArticles.Topics site)
             , topicAtomTargets (lookupSpecialArticle SpecialArticles.Topics site)
             , hashtagIndexesTargets (lookupSpecialArticle SpecialArticles.HashTagListings site)
@@ -155,28 +158,28 @@ siteTargets execRoot prefix extra site = allTargets
 
     jsonDataTargets :: [Target]
     jsonDataTargets =
-        [ jsonDataTarget prefix (pathList) "paths.json"
-        , jsonDataTarget prefix (filecounts site) "filecounts.json"
-        , jsonDataTarget prefix (topicsgraph (ExternalSitesInfo $ externalKitchenSinkURLs extra) stats) "topicsgraph.json"
+        [ jsonDataTarget urlPrefix prefix (pathList) "paths.json"
+        , jsonDataTarget urlPrefix prefix (filecounts site) "filecounts.json"
+        , jsonDataTarget urlPrefix prefix (topicsgraph urlPrefix (ExternalSitesInfo $ externalKitchenSinkURLs extra) stats) "topicsgraph.json"
         ]
-            <> [ jsonDataTarget prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- site.articles
+            <> [ jsonDataTarget urlPrefix prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- site.articles
                ]
 
     textDataTargets :: [Target]
     textDataTargets =
-        [ textDataTarget prefix art (p <> ".text") | (Sourced (FileSource p) art) <- site.articles
+        [ textDataTarget urlPrefix prefix art (p <> ".text") | (Sourced (FileSource p) art) <- site.articles
         ]
 
     seoTargets :: [Target]
     seoTargets =
-        [ rootDataTarget prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) articleTargets) "sitemap.txt"
-        , rootDataTarget prefix (atomFeedContent articleTargets) "atom.xml"
+        [ rootDataTarget urlPrefix prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) articleTargets) "sitemap.txt"
+        , rootDataTarget urlPrefix prefix (atomFeedContent articleTargets) "atom.xml"
         ]
 
     atomFeedContent :: [(Ext.Target z, Article [Text])] -> Text
     atomFeedContent targets =
         let render = LText.toStrict . fromJust . Export.textFeedWith def . AtomFeed
-            uri = publishBaseURL extra <> (destinationUrl $ destRootDataFile prefix "atom.xml")
+            uri = publishBaseURL extra <> (destinationUrl $ destRootDataFile urlPrefix prefix "atom.xml")
          in render
                 $ feedForArticles uri
                 $ List.filter (isPublishedArticle . snd)
@@ -208,9 +211,9 @@ siteTargets execRoot prefix extra site = allTargets
 
     articleTarget :: Sourced (Article [Text]) -> Target
     articleTarget (Sourced loc@(FileSource path) art) =
-        let u = destHtml prefix loc
-            j = destJsonDataFile prefix (path <> ".json") -- todo:unify
-            t = destTextDataFile prefix (path <> ".text") -- todo:unify
+        let u = destHtml urlPrefix prefix loc
+            j = destJsonDataFile urlPrefix prefix (path <> ".json") -- todo:unify
+            t = destTextDataFile urlPrefix prefix (path <> ".text") -- todo:unify
             tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art) (summarizeHashTags $ analyzeArticle art)
          in target tgtSummary u (Core.ProduceAssembler $ layoutFor u j t art)
 
@@ -243,7 +246,7 @@ siteTargets execRoot prefix extra site = allTargets
                         (Text.unpack g.cmd)
                         (fmap Text.unpack g.args)
                         (fromMaybe "" $ (fmap Text.encodeUtf8 g.stdin) <|> (fmap (LByteString.toStrict . encode) g.stdin_json))
-             in simpleTarget GeneratedTarget (destGenArbitrary prefix loc g) rule
+             in simpleTarget GeneratedTarget (destGenArbitrary urlPrefix prefix loc g) rule
 
         generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]
         generatorInstructions art =
@@ -267,7 +270,7 @@ siteTargets execRoot prefix extra site = allTargets
         dataTarget :: SourceLocation -> (Int, Section () [Text]) -> Maybe Target
         dataTarget loc (index, (Section (Dataset name) format contents)) =
             let
-                dataDestination = destEmbeddedData prefix loc (destinationExtension format) name index
+                dataDestination = destEmbeddedData urlPrefix prefix loc (destinationExtension format) name index
                 rule = Core.ProduceAssembler (pure $ LText.fromStrict $ Text.unlines contents)
              in
                 Just $ simpleTarget DatasetTarget dataDestination rule
@@ -280,7 +283,7 @@ siteTargets execRoot prefix extra site = allTargets
     topicIndexesTargets :: Maybe (Article [Text]) -> [Target]
     topicIndexesTargets Nothing = []
     topicIndexesTargets (Just art) =
-        [ let u = destTopic prefix topic
+        [ let u = destTopic urlPrefix prefix topic
            in simpleTarget TopicsIndexTarget u (Core.ProduceAssembler $ topicsLayout topic articles u u u art)
         | (topic, articles) <- Map.toList (byTopic stats)
         ]
@@ -288,7 +291,7 @@ siteTargets execRoot prefix extra site = allTargets
     topicAtomTargets :: Maybe (Article [Text]) -> [Target]
     topicAtomTargets Nothing = []
     topicAtomTargets (Just _) =
-        [ let u = destTopicAtom prefix topic
+        [ let u = destTopicAtom urlPrefix prefix topic
               rule = Core.ProduceAssembler $ pure $ LText.fromStrict $ atomFeedContent articles
            in simpleTarget TopicsIndexTarget u rule
         | (topic, articles) <- Map.toList (byTopic stats)
@@ -297,7 +300,7 @@ siteTargets execRoot prefix extra site = allTargets
     hashtagIndexesTargets :: Maybe (Article [Text]) -> [Target]
     hashtagIndexesTargets Nothing = []
     hashtagIndexesTargets (Just art) =
-        [ let u = destHashTag prefix (hashtagValue tag)
+        [ let u = destHashTag urlPrefix prefix (hashtagValue tag)
            in simpleTarget HashTagsIndexTarget u (Core.ProduceAssembler $ hashtagsLayout tag articles u u u art)
         | (tag, articles) <- Map.toList (byHashTag stats)
         ]
@@ -305,7 +308,7 @@ siteTargets execRoot prefix extra site = allTargets
     hashtagAtomTargets :: Maybe (Article [Text]) -> [Target]
     hashtagAtomTargets Nothing = []
     hashtagAtomTargets (Just _) =
-        [ let u = destHashTagAtom prefix (hashtagValue tag)
+        [ let u = destHashTagAtom urlPrefix prefix (hashtagValue tag)
               rule = Core.ProduceAssembler $ pure $ LText.fromStrict $ atomFeedContent articles
            in simpleTarget HashTagsIndexTarget u rule
         | (tag, articles) <- Map.toList (byHashTag stats)
@@ -314,7 +317,7 @@ siteTargets execRoot prefix extra site = allTargets
     glossaryTargets :: Maybe (Sourced (Article [Text])) -> [Target]
     glossaryTargets Nothing = []
     glossaryTargets (Just (Sourced loc art)) =
-        let u = destHtml prefix loc
+        let u = destHtml urlPrefix prefix loc
          in [ simpleTarget GlossaryTarget u (Core.ProduceAssembler $ glossaryListingLayout articleTargets u u u art)
             ]
 
@@ -349,7 +352,7 @@ siteTargets execRoot prefix extra site = allTargets
     wholeGlossary = buildWholeGlossary site.articles (fmap (const ()) . articleTarget)
 
     rootAtomDLoc :: DestinationLocation
-    rootAtomDLoc = destRootDataFile prefix "atom.xml"
+    rootAtomDLoc = destRootDataFile urlPrefix prefix "atom.xml"
 
     indexLayout ::
         DestinationLocation ->
@@ -365,8 +368,8 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink
-                                , const $ pure $ searchBox
+                                [ const $ pure $ homeLink urlPrefix
+                                , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
@@ -394,13 +397,13 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink
-                                , const $ pure $ searchBox
+                                [ const $ pure $ homeLink urlPrefix
+                                , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
-                                [ assembleHeader prefix stats dloc
+                                [ assembleHeader urlPrefix prefix stats dloc
                                 , assembleArchivedMain
                                 , assembleFooter
                                 ]
@@ -421,13 +424,13 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink
-                                , const $ pure $ searchBox
+                                [ const $ pure $ homeLink urlPrefix
+                                , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
-                                [ assembleHeader prefix stats dloc
+                                [ assembleHeader urlPrefix prefix stats dloc
                                 , assembleUpcomingMain
                                 , assembleFooter
                                 ]
@@ -448,13 +451,13 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink
-                                , const $ pure $ searchBox
+                                [ const $ pure $ homeLink urlPrefix
+                                , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
-                                [ assembleHeader prefix stats dloc
+                                [ assembleHeader urlPrefix prefix stats dloc
                                 , assembleMain
                                 , assembleGlossary
                                 , assembleFooter
@@ -530,7 +533,7 @@ siteTargets execRoot prefix extra site = allTargets
         Article [Text] ->
         Assembler LText.Text
     topicsLayout topic articles dloc jsondloc txtdloc =
-        let atomDLoc = destTopicAtom prefix topic
+        let atomDLoc = destTopicAtom urlPrefix prefix topic
          in htmldoc
                 $ mconcat
                     [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc atomDLoc) assembleStyle
@@ -538,13 +541,13 @@ siteTargets execRoot prefix extra site = allTargets
                         $ mconcat
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                                 $ mconcat
-                                    [ const $ pure $ homeLink
-                                    , const $ pure $ searchBox
+                                    [ const $ pure $ homeLink urlPrefix
+                                    , const $ pure $ searchBox urlPrefix
                                     ]
                             , wrap (div_ [class_ "main"])
                                 $ wrap article_
                                 $ mconcat
-                                    [ const (assembleTopicListing prefix stats topic articles)
+                                    [ const (assembleTopicListing urlPrefix prefix stats topic articles)
                                     ]
                             ]
                     ]
@@ -558,7 +561,7 @@ siteTargets execRoot prefix extra site = allTargets
         Article [Text] ->
         Assembler LText.Text
     hashtagsLayout tag articles dloc jsondloc txtdloc =
-        let atomDLoc = destHashTagAtom prefix (hashtagValue tag)
+        let atomDLoc = destHashTagAtom urlPrefix prefix (hashtagValue tag)
          in htmldoc
                 $ mconcat
                     [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc atomDLoc) assembleStyle
@@ -566,8 +569,8 @@ siteTargets execRoot prefix extra site = allTargets
                         $ mconcat
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                                 $ mconcat
-                                    [ const $ pure $ homeLink
-                                    , const $ pure $ searchBox
+                                    [ const $ pure $ homeLink urlPrefix
+                                    , const $ pure $ searchBox urlPrefix
                                     ]
                             , wrap (div_ [class_ "main"])
                                 $ wrap article_
@@ -592,8 +595,8 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink
-                                , const $ pure $ searchBox
+                                [ const $ pure $ homeLink urlPrefix
+                                , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
@@ -618,13 +621,13 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink
-                                , const $ pure $ searchBox
+                                [ const $ pure $ homeLink urlPrefix
+                                , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
-                                [ assembleHeader prefix stats dloc
+                                [ assembleHeader urlPrefix prefix stats dloc
                                 , assembleDefaultLayoutWarning
                                 , assembleMain
                                 , assembleGlossary

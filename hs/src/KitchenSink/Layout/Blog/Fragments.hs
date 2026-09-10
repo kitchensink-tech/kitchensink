@@ -35,8 +35,8 @@ import KitchenSink.Layout.Blog.Destinations
 import KitchenSink.Layout.Blog.Extensions (Article, Assembler, Section, Target)
 import KitchenSink.Layout.Blog.Metadata
 
-assembleHeader :: OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
-assembleHeader prefix stats currentDestination art =
+assembleHeader :: UrlPrefix -> OutputPrefix -> TopicStats -> DestinationLocation -> Article [Text] -> Assembler (Lucid.Html ())
+assembleHeader urlPrefix prefix stats currentDestination art =
     r
         <$> (extract <$> json @() @PreambleData art isPreamble)
         <*> (fmap extract <$> jsonm @() @SocialData art isSocial)
@@ -55,7 +55,7 @@ assembleHeader prefix stats currentDestination art =
                         do
                             div_ [class_ "topiclist"]
                             $ mconcat
-                                [ topicTag prefix stats currentDestination t | t <- topics d
+                                [ topicTag urlPrefix prefix stats currentDestination t | t <- topics d
                                 ]
 
         let wc =
@@ -228,8 +228,8 @@ assembleStyle a = r <$> (fmap Text.concat <$> getSection a isMainCss)
     r :: Section Text -> Lucid.Html ()
     r content = style_ (extract content)
 
-assembleTopicListing :: OutputPrefix -> TopicStats -> TopicName -> [(Target a, Article [Text])] -> Assembler (Lucid.Html ())
-assembleTopicListing prefix stats topic articles =
+assembleTopicListing :: UrlPrefix -> OutputPrefix -> TopicStats -> TopicName -> [(Target a, Article [Text])] -> Assembler (Lucid.Html ())
+assembleTopicListing urlPrefix prefix stats topic articles =
     pure r
   where
     r :: Lucid.Html ()
@@ -243,19 +243,19 @@ assembleTopicListing prefix stats topic articles =
                 [ h2_ [class_ "listing-callout"] "other topics"
                 , div_ [class_ "topiclist"]
                     $ mconcat
-                        [ topicListingTag prefix stats otherTopic | otherTopic <- Map.keys $ byTopic stats, otherTopic /= topic
+                        [ topicListingTag urlPrefix prefix stats otherTopic | otherTopic <- Map.keys $ byTopic stats, otherTopic /= topic
                         ]
                 ]
 
-topicListingTag :: OutputPrefix -> TopicStats -> TopicName -> Lucid.Html ()
-topicListingTag prefix stats topic =
+topicListingTag :: UrlPrefix -> OutputPrefix -> TopicStats -> TopicName -> Lucid.Html ()
+topicListingTag urlPrefix prefix stats topic =
     div_ [class_ "topic"] $ do
         a_ [class_ "topic-link", href_ url] $ do
             span_ [class_ "topic-name"] (toHtml topic)
             span_ [class_ "topic-count"] $ do
                 toHtml $ show $ length articles
   where
-    url = destinationUrl $ destTopic prefix topic
+    url = destinationUrl $ destTopic urlPrefix prefix topic
     articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
 
 type TagValue = Text.Text
@@ -422,7 +422,7 @@ metaheaders mh art = do
     mktitle x = mconcat [baseTitle extra, " - ", title x]
 
     mkfavicon :: Maybe PreambleData -> Text
-    mkfavicon x = fromMaybe defaultFavicon (faviconUrl =<< x)
+    mkfavicon x = fromMaybe (extra.pathPrefix <> defaultFavicon) (faviconUrl =<< x)
 
 defaultFavicon :: Text
 defaultFavicon = "/images/favicon.png"
@@ -498,12 +498,12 @@ articleLink (Core.Target d _ _) art =
 mylink_ :: Url -> Text -> Lucid.Html ()
 mylink_ url txt = a_ [href_ url] (toHtml txt)
 
-homeLink :: Lucid.Html ()
-homeLink = mylink_ "/" "home"
+homeLink :: UrlPrefix -> Lucid.Html ()
+homeLink urlPrefix = mylink_ (urlPrefix <> "/") "home"
 
-searchBox :: Lucid.Html ()
-searchBox = div_ [id_ "search-box"] $ do
-    js_ "/js/search-box.js"
+searchBox :: UrlPrefix -> Lucid.Html ()
+searchBox urlPrefix = div_ [id_ "search-box"] $ do
+    js_ (urlPrefix <> "/js/search-box.js")
 
 js_ :: Text -> Lucid.Html ()
 js_ p = Lucid.termRawWith "script" [type_ "text/javascript", src_ p, async_ ""] ""
@@ -530,8 +530,8 @@ smallArticleLinks tgts =
         $ mconcat
             [li_ [class_ "article-links-list-item"] $ uncurry articleLink t | t <- tgts]
 
-topicTag :: OutputPrefix -> TopicStats -> DestinationLocation -> TopicName -> Lucid.Html ()
-topicTag prefix stats currentDestination topic =
+topicTag :: UrlPrefix -> OutputPrefix -> TopicStats -> DestinationLocation -> TopicName -> Lucid.Html ()
+topicTag urlPrefix prefix stats currentDestination topic =
     div_ [class_ "topic"] $ do
         navArrow "topic-prev-link" "‹" prevUrl
         a_ [class_ "topic-link", href_ url] $ do
@@ -542,7 +542,7 @@ topicTag prefix stats currentDestination topic =
                 toHtml $ show $ length articles
         navArrow "topic-next-link" "›" nextUrl
   where
-    url = destinationUrl $ destTopic prefix topic
+    url = destinationUrl $ destTopic urlPrefix prefix topic
     articles = fromMaybe [] $ Map.lookup topic $ byTopic stats
     -- todo: extract the following into separate functions
     isOtherTarget (target2, _) = destination target2 /= currentDestination
