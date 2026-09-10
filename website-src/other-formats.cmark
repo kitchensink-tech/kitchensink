@@ -62,6 +62,8 @@ Other usages could be to support things like webmaster-verification tools on Goo
 
 :warning: there is no conflict detection yet so avoid having a `.cmark` matching a `.html` file or you risk inconsistencies.
 
+:warning: a raw `.html` file is copied verbatim, so any `href`/`src` it contains is not rewritten for [`basePath`](/kitchen-sink-dot-json.html) the way generated pages and markdown links are — there is no static analysis over hand-written HTML to safely tell a root-relative link from, say, a snippet of markup you genuinely want left alone. The same is true of raw HTML embedded directly in a `main-content`/`summary` markdown section (an `<iframe src="/foo.html">`, say). If you need such a link to follow the site's `basePath`, generate that HTML via a [`.tramaj-doc` section](/sections-templating.html) referencing `$ctx.pathPrefix` instead of hand-typing it.
+
 ## javascript
 
 KitchenSink copies `.js` files under `/js`.
