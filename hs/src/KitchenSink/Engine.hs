@@ -8,13 +8,18 @@ module KitchenSink.Engine where
 import Options.Generic
 
 import Data.Text as Text
+import KitchenSink.Engine.Init qualified as Init
 import KitchenSink.Engine.MultiSite qualified as MultiSite
 import KitchenSink.Engine.Produce qualified as Produce
 import KitchenSink.Engine.Serve qualified as Serve
 import KitchenSink.Prelude
 
 data Action
-    = Produce
+    = Init
+        { dir :: FilePath <?> "directory to create the new site in"
+        , force :: Bool <?> "overwrite if directory already exists and is non-empty"
+        }
+    | Produce
         { srcDir :: FilePath <?> "source directory"
         , outDir :: FilePath <?> "output directory"
         , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
@@ -48,6 +53,9 @@ defaultMain :: IO ()
 defaultMain = do
     cmd <- getRecord "kitchen-sink"
     case cmd of
+        Init a b ->
+            let (a', b') = coerce (a, b)
+             in Init.run (Init.Args a' b')
         Produce a b c vars ->
             let (a', b', c') = coerce (a, b, c)
              in Produce.run (Produce.Args a' b' c' (parseVars (coerce vars)))

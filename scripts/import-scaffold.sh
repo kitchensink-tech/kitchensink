@@ -16,3 +16,13 @@ cp -v ./website-src/echart-histogram.js ./scaffolding/js
 cp -v ./website-src/echarts.min.js ./scaffolding/js
 cp -v ./website-src/search-box.js ./scaffolding/js
 cp -v ./website-src/topicgraph.js ./scaffolding/js
+
+# hs/scaffolding is a copy of scaffolding/ (minus the *.sh scripts) kept
+# inside the cabal package so `kitchen-sink init` can embed it at
+# compile-time (file-embed requires embedded paths to live inside the
+# package directory).
+cp -v ./scaffolding/kitchen-sink.json ./hs/scaffolding
+cp -v ./scaffolding/README.md ./hs/scaffolding
+cp -v ./scaffolding/*.tmpl ./hs/scaffolding
+cp -v ./scaffolding/js/*.js ./hs/scaffolding/js
+cp -v ./scaffolding/css/*.css ./hs/scaffolding/css

@@ -20,6 +20,11 @@ maintainer:         lucas@dicioccio.fr
 -- copyright:
 -- category:
 extra-source-files: CHANGELOG.md
+                   , scaffolding/*.json
+                   , scaffolding/*.md
+                   , scaffolding/*.tmpl
+                   , scaffolding/js/*.js
+                   , scaffolding/css/*.css
 
 library
     exposed-modules: KitchenSink.Layout.Base
@@ -65,6 +70,7 @@ library
                  , KitchenSink.Engine.Config
                  , KitchenSink.Engine.Counters
                  , KitchenSink.Engine.Handlers
+                 , KitchenSink.Engine.Init
                  , KitchenSink.Engine.MultiSite
                  , KitchenSink.Engine.MultiSiteConfig
                  , KitchenSink.Engine.OnTheFly
@@ -91,6 +97,7 @@ library
                     , containers
                     , directory
                     , dhall
+                    , file-embed
                     , dhall-json
                     , either
                     , lens-family-core
