@@ -26,7 +26,7 @@ import Web.HTML.Window (Window, open)
 
 import Halogen.ECharts as ECharts
 import KSGraph as KSGraph
-import KitchenSink (fetchGraph)
+import KitchenSink (fetchGraph, getBasePath)
 import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph, _TopicGraph)
 import KitchenSink.Layout.Blog.Analyses.SiteGraph as KS
 
@@ -47,10 +47,8 @@ getGraph baseUrl = do
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  -- TODO: "" ignores the site's basePath; should read the prefix from a
-  -- data attribute on the page (see KitchenSink.purs TODO) instead of
-  -- always fetching from the domain root.
-  graph <- H.liftAff $ getGraph ""
+  basePath <- liftEffect $ getBasePath "echartzone"
+  graph <- H.liftAff $ getGraph basePath
   elem <- HA.selectElement (QuerySelector "#echartzone")
   let tgt = fromMaybe body elem
   runUI component graph tgt

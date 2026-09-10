@@ -12,6 +12,7 @@ import Data.String (trim, split, contains, Pattern(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
+import Effect.Class (liftEffect)
 import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.Aff as HA
@@ -21,18 +22,14 @@ import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 import Web.DOM.ParentNode (QuerySelector(..))
 
-import KitchenSink (fetchPaths)
+import KitchenSink (BaseUrl, fetchPaths, getBasePath)
 import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, _TargetSummary, _TopicSummary, _PreambleSummary, _HashTagSummary, _HashTagItem, TargetType(..), _PathList)
 
 import Searchbox
 
--- TODO: fetchPaths ignores the site's basePath, so under a subpath
--- deployment (e.g. a GitHub Pages project page) this fetches from the
--- domain root instead of the site's actual location. See the TODO in
--- KitchenSink.purs.
-fetchPathList :: Aff (Maybe PathList)
-fetchPathList = do
-  res <- fetchPaths
+fetchPathList :: BaseUrl -> Aff (Maybe PathList)
+fetchPathList basePath = do
+  res <- fetchPaths basePath
   case res of
     Left err -> do
       log $ "failed: " <> AX.printError err
@@ -45,7 +42,8 @@ fetchPathList = do
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  blogPaths <- H.liftAff fetchPathList
+  basePath <- liftEffect $ getBasePath "search-box"
+  blogPaths <- H.liftAff $ fetchPathList basePath
   let routes = toArrayOf (_Just <<< _PathList <<< to _.paths <<< traversed) blogPaths
   elem <- HA.selectElement (QuerySelector "#search-box")
   let tgt = fromMaybe body elem

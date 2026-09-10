@@ -24,9 +24,6 @@ newtype RequestedPath = RequestedPath ByteString
 requestedPath :: Request -> RequestedPath
 requestedPath = RequestedPath . rawPathInfo
 
-rootRequestPath :: RequestedPath
-rootRequestPath = RequestedPath "/"
-
 data DevServerTrack ext
     = ProducedBuild
     | PublishedBuild String

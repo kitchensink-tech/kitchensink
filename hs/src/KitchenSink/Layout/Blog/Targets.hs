@@ -376,7 +376,7 @@ siteTargets execRoot prefix extra site = allTargets
                             $ mconcat
                                 [ assembleMain
                                 , const $ pure $ latestArticleLink articleTargets
-                                , const $ pure $ siteGraphEchartZone
+                                , const $ pure $ siteGraphEchartZone urlPrefix
                                 , const $ pure $ mainArticleLinks articleTargets
                                 , const $ pure $ topicsListings stats
                                 ]

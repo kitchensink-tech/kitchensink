@@ -501,16 +501,11 @@ mylink_ url txt = a_ [href_ url] (toHtml txt)
 homeLink :: UrlPrefix -> Lucid.Html ()
 homeLink urlPrefix = mylink_ (urlPrefix <> "/") "home"
 
--- TODO: the search-box.js and topicgraph.js bundles (purs/search-box,
--- purs/graphexplorer) fetch /json/paths.json and /json/topicsgraph.json
--- with hardcoded, non-prefixed paths, so they break under a `basePath`
--- deployment even though this script tag itself is now correctly
--- prefixed. Fix: expose `urlPrefix` here as a data attribute (e.g.
--- `data-base-path`) that the PureScript reads at startup instead of
--- assuming the domain root. Worth doing alongside a simplification of
--- how much JS we ship for this.
+-- | The `data-base-path` attribute is read by search-box.js at startup
+-- (see @KitchenSink.getBasePath@ in purs/kitchen-sink-compat) so it fetches
+-- @paths.json@ from the right place under a `basePath` deployment.
 searchBox :: UrlPrefix -> Lucid.Html ()
-searchBox urlPrefix = div_ [id_ "search-box"] $ do
+searchBox urlPrefix = div_ [id_ "search-box", data_ "base-path" urlPrefix] $ do
     js_ (urlPrefix <> "/js/search-box.js")
 
 js_ :: Text -> Lucid.Html ()
@@ -606,11 +601,11 @@ articleListing htext targets =
                 | p <- targets
                 ]
 
-siteGraphEchartZone :: Lucid.Html ()
-siteGraphEchartZone =
+siteGraphEchartZone :: UrlPrefix -> Lucid.Html ()
+siteGraphEchartZone urlPrefix =
     nav_ [class_ "articles-graph"] $ do
         h2_ [class_ "listing-callout"] "site map"
-        div_ [id_ "echartzone", style_ "width:800px;height:600px;"] mempty
+        div_ [id_ "echartzone", data_ "base-path" urlPrefix, style_ "width:800px;height:600px;"] mempty
 
 mainArticleLinkWithAnnotation :: Target a -> Article [Text] -> Lucid.Html ()
 mainArticleLinkWithAnnotation t art =

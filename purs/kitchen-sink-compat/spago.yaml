@@ -17,6 +17,8 @@ package:
     - prelude
     - profunctor-lenses
     - tuples
+    - web-dom
+    - web-html
   test:
     main: Test.Main
     dependencies: []

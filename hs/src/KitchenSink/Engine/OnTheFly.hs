@@ -21,7 +21,8 @@ import KitchenSink.Engine.Counters (Counters (..), timeItWithLabel)
 import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.SiteBuilder
 import KitchenSink.Engine.SiteLoader (Site)
-import KitchenSink.Engine.Track (DevServerTrack (..), RequestedPath (..), blogTargetTracer, requestedPath, rootRequestPath)
+import KitchenSink.Engine.Track (DevServerTrack (..), RequestedPath (..), blogTargetTracer, requestedPath)
+import KitchenSink.Layout.Blog.Metadata (pathPrefix)
 import KitchenSink.Prelude
 
 type TargetPath = ByteString
@@ -35,8 +36,11 @@ findTarget ::
     FetchTarget ext
 findTarget engine loadSite track = \origpath -> do
     runTracer track (TargetRequested origpath)
-    let path = if origpath == rootRequestPath then "/index.html" else coerce origpath
-    tgts <- evalTargets engine <$> execLoadMetaExtradata engine <*> loadSite
+    med <- execLoadMetaExtradata engine
+    let rootPath = RequestedPath $ Text.encodeUtf8 (pathPrefix med) <> "/"
+    let indexPath = Text.encodeUtf8 (pathPrefix med) <> "/index.html"
+    let path = if origpath == rootPath then indexPath else coerce origpath
+    tgts <- evalTargets engine med <$> loadSite
     let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
     pure (path, target)
 
