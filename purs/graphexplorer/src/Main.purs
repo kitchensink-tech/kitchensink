@@ -47,6 +47,9 @@ getGraph baseUrl = do
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
+  -- TODO: "" ignores the site's basePath; should read the prefix from a
+  -- data attribute on the page (see KitchenSink.purs TODO) instead of
+  -- always fetching from the domain root.
   graph <- H.liftAff $ getGraph ""
   elem <- HA.selectElement (QuerySelector "#echartzone")
   let tgt = fromMaybe body elem

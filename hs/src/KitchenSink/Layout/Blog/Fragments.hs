@@ -501,6 +501,14 @@ mylink_ url txt = a_ [href_ url] (toHtml txt)
 homeLink :: UrlPrefix -> Lucid.Html ()
 homeLink urlPrefix = mylink_ (urlPrefix <> "/") "home"
 
+-- TODO: the search-box.js and topicgraph.js bundles (purs/search-box,
+-- purs/graphexplorer) fetch /json/paths.json and /json/topicsgraph.json
+-- with hardcoded, non-prefixed paths, so they break under a `basePath`
+-- deployment even though this script tag itself is now correctly
+-- prefixed. Fix: expose `urlPrefix` here as a data attribute (e.g.
+-- `data-base-path`) that the PureScript reads at startup instead of
+-- assuming the domain root. Worth doing alongside a simplification of
+-- how much JS we ship for this.
 searchBox :: UrlPrefix -> Lucid.Html ()
 searchBox urlPrefix = div_ [id_ "search-box"] $ do
     js_ (urlPrefix <> "/js/search-box.js")

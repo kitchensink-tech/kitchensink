@@ -26,6 +26,10 @@ import KitchenSink.Layout.Blog.Summary (PathList, TargetSummary, _TargetSummary,
 
 import Searchbox
 
+-- TODO: fetchPaths ignores the site's basePath, so under a subpath
+-- deployment (e.g. a GitHub Pages project page) this fetches from the
+-- domain root instead of the site's actual location. See the TODO in
+-- KitchenSink.purs.
 fetchPathList :: Aff (Maybe PathList)
 fetchPathList = do
   res <- fetchPaths
