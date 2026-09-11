@@ -36,10 +36,20 @@ cabal install
 ## minimal site setup
 
 ```
-bash scaffolding/outputdir.sh www
-bash scaffolding/sourcedir.sh site-source
-kitchen-sink serve --srcDir site-source/ --servMode DEV --httpPort 7655
+kitchen-sink init --dir myblog
+cd myblog
+kitchen-sink serve --srcDir src --outputDir www --servMode DEV --httpPort 7655
 ```
+
+`init` bootstraps `myblog/src` (site source) and `myblog/www` (output
+skeleton) from built-in scaffolding, plus a `README.md` with pointers to
+the [feature list](https://kitchensink-tech.github.io/features.html) and
+the [section format](https://kitchensink-tech.github.io/sections.html).
+Pass `--force` to overwrite an existing non-empty directory.
+
+The underlying `scaffolding/outputdir.sh` and `scaffolding/sourcedir.sh`
+scripts are still available for repo-checkout workflows (they only work
+from the repo root, unlike `kitchen-sink init`).
 
 ## running the official site
 
