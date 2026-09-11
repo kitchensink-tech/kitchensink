@@ -80,7 +80,7 @@ run cmd = do
             putStrLn "Next steps:"
             putStrLn $ "  cd " <> target
             putStrLn $
-                "  kitchen-sink serve --srcDir src --outputDir www --servMode DEV --httpPort 7655"
+                "  kitchen-sink serve --srcDir src --outDir www --servMode DEV --httpPort 7655"
 
 -- | Reproduces the mapping of scaffolding/sourcedir.sh: .tmpl files are
 -- renamed on copy, and js/ and css/ subdirectories are flattened into the

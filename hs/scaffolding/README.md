@@ -18,7 +18,7 @@ those sections into a full site.
 Run the dev server, which rebuilds on file changes:
 
 ```
-kitchen-sink serve --srcDir src --outputDir www --servMode DEV --httpPort 7655
+kitchen-sink serve --srcDir src --outDir www --servMode DEV --httpPort 7655
 ```
 
 Then open http://localhost:7655/ and start editing the `.cmark` files in

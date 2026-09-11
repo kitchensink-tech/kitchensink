@@ -21,13 +21,13 @@ data Action
         }
     | Produce
         { srcDir :: FilePath <?> "source directory"
-        , outDir :: FilePath <?> "output directory"
+        , outDir :: Maybe FilePath <?> "output directory"
         , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
         , var :: [Text] <?> "variables in --var varname=value format"
         }
     | Serve
         { srcDir :: FilePath <?> "source directory"
-        , outputDir :: Maybe FilePath <?> "output directory"
+        , outDir :: Maybe FilePath <?> "output directory"
         , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
         , servMode :: Serve.ServMode <?> "SERVE|DEV"
         , var :: [Text] <?> "variables in --var varname=value format"

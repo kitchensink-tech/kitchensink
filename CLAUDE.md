@@ -35,7 +35,7 @@ Running the tool (three subcommands, all in `KitchenSink.Engine`):
 kitchen-sink produce --srcDir website-src --outDir www
 
 # dev server: filesystem watch, on-the-fly target production, /dev/* API
-kitchen-sink serve --srcDir website-src --outputDir www --servMode DEV --httpPort 7655
+kitchen-sink serve --srcDir website-src --outDir www --servMode DEV --httpPort 7655
 
 # production-ish serving of a single site
 kitchen-sink serve --srcDir website-src --servMode SERVE --httpPort 7655
@@ -44,7 +44,7 @@ kitchen-sink serve --srcDir website-src --servMode SERVE --httpPort 7655
 kitchen-sink multisite --configFile sites.dhall --httpPort 80
 ```
 
-Flags are derived by `optparse-generic` from the `Action` record fields in `KitchenSink/Engine.hs` — that file is the authority when a flag name in the website docs looks stale (e.g. `serve` takes `--outputDir`, `produce` takes `--outDir`).
+Flags are derived by `optparse-generic` from the `Action` record fields in `KitchenSink/Engine.hs` — that file is the authority when a flag name in the website docs looks stale.
 
 `--var name=value` injects variables available to Dhall sections.
 

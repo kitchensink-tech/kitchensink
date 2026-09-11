@@ -21,7 +21,7 @@ import KitchenSink.Prelude
 data Args
     = Args
     { srcDir :: FilePath
-    , outDir :: FilePath
+    , outDir :: Maybe FilePath
     , ksFile :: Maybe FilePath
     , variables :: [(Text, Text)]
     }
@@ -43,7 +43,7 @@ run cmd = do
             Engine
                 (handleLoadSite)
                 (pure serveMetadata)
-                (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing cmd.outDir med site)
+                (\med site -> fmap (fmap $ const ()) $ (siteTargets Blog.layout) Nothing (fromMaybe "./out" cmd.outDir) med site)
                 (produceTarget print)
     site <- execLoadSite prodengine
     meta <- execLoadMetaExtradata prodengine

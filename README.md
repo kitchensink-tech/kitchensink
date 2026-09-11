@@ -38,7 +38,7 @@ cabal install
 ```
 kitchen-sink init --dir myblog
 cd myblog
-kitchen-sink serve --srcDir src --outputDir www --servMode DEV --httpPort 7655
+kitchen-sink serve --srcDir src --outDir www --servMode DEV --httpPort 7655
 ```
 
 `init` bootstraps `myblog/src` (site source) and `myblog/www` (output
