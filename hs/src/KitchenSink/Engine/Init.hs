@@ -42,6 +42,7 @@ outputSkeletonDirs =
     , "json"
     , "js"
     , "css"
+    , "webfonts"
     , "raw"
     , "raw/data"
     , ".well-known"
