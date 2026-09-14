@@ -10,6 +10,7 @@ import Options.Generic
 import Data.Text as Text
 import KitchenSink.Engine.Init qualified as Init
 import KitchenSink.Engine.MultiSite qualified as MultiSite
+import KitchenSink.Engine.NewArticle qualified as NewArticle
 import KitchenSink.Engine.Produce qualified as Produce
 import KitchenSink.Engine.Serve qualified as Serve
 import KitchenSink.Prelude
@@ -35,6 +36,12 @@ data Action
         , httpsPort :: Maybe Int <?> "port-num"
         , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
         , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
+        }
+    | NewArticle
+        { srcDir :: FilePath <?> "source directory"
+        , title :: Text <?> "article title"
+        , layout :: Maybe Text <?> "layout name (default: article)"
+        , author :: Maybe Text <?> "author name"
         }
     | MultiSite
         { configFile :: FilePath <?> "dhall config file"
@@ -62,6 +69,9 @@ defaultMain = do
         Serve a b c d vars e f g h ->
             let (a', b', c', d', e', f', g', h') = coerce (a, b, c, d, e, f, g, h)
              in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h')
+        NewArticle a b c d ->
+            let (a', b', c', d') = coerce (a, b, c, d)
+             in NewArticle.run (NewArticle.Args a' b' c' d')
         MultiSite a vars b c d e f ->
             let (a', b', c', d', e', f') = coerce (a, b, c, d, e, f)
              in MultiSite.run (MultiSite.Args a' (parseVars (coerce vars)) b' c' d' e' f')
