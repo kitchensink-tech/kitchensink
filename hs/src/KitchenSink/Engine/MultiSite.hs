@@ -6,6 +6,7 @@
 module KitchenSink.Engine.MultiSite where
 
 import Control.Concurrent.Async (Concurrently (..))
+import Control.Monad (filterM)
 import Data.ByteString qualified as ByteString
 import Data.Function ((&))
 import Data.List (concatMap)
@@ -35,7 +36,8 @@ import Prod.Status
 import Prod.Tracer
 import Prometheus qualified as Prometheus
 import Servant
-import Prelude (id)
+import System.Directory (doesFileExist)
+import Prelude (id, (&&))
 
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.Config (ApiProxyConfig (..), Prefix, RewriteRule (..), SlashApiProxyDirective (..), TransportSecurity (..))
@@ -352,10 +354,29 @@ buildApplicationMap rt cfg =
         bundleApps . catMaybes <$> traverse (buildSiteApplication rt) cfg.services
 
 buildTLSMap :: MultiSiteConfig -> IO (Either String ProdProxy.CredentialMap)
-buildTLSMap cfg =
-    ProdProxy.loadCredentialMap
+buildTLSMap cfg = do
+    triplets <- filterM certificateFilesExist
         $ mconcat
         $ fmap siteTLSTriplet cfg.services
+    ProdProxy.loadCredentialMap triplets
+  where
+    -- A missing cert/key file must not crash the whole daemon: we warn and
+    -- drop the entry, letting that host fall through to the process-wide
+    -- fallback certificate at TLS handshake time (see the NOTE in `run`).
+    certificateFilesExist :: (TLS.HostName, ProdProxy.X509Path, ProdProxy.PrivateKeyPath) -> IO Bool
+    certificateFilesExist (host, pemPath, keyPath) = do
+        pemExists <- doesFileExist pemPath
+        keyExists <- doesFileExist keyPath
+        if pemExists && keyExists
+            then pure True
+            else do
+                print
+                    ( "warning: missing TLS certificate files for host, falling back to the default certificate" :: Text
+                    , host
+                    , pemPath
+                    , keyPath
+                    )
+                pure False
 
 siteTLSTriplet :: SiteStanza -> [(TLS.HostName, ProdProxy.X509Path, ProdProxy.PrivateKeyPath)]
 siteTLSTriplet cfg = do

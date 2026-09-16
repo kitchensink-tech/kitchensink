@@ -78,6 +78,11 @@ articleContents layoutName authorName title now =
         , "=base:topic.json"
         , jsonLine ["topics" .= ([] :: [Text]), "keywords" .= ([] :: [Text])]
         , ""
+        , "=base:social.json"
+        , jsonLine []
+        , ""
+        , "=base:main-css.css"
+        , ""
         , "=base:summary.cmark"
         , ""
         , "TODO: write a short summary of \"" <> title <> "\"."
