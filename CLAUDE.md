@@ -53,12 +53,13 @@ Rebuilding the site the project serves as its own docs, from the repo root:
 ```bash
 bash scaffolding/outputdir.sh www          # create the expected output tree
 bash scaffolding/sourcedir.sh site-source  # scaffold a fresh source tree
-bash scripts/test-scaffold.sh              # scaffold + serve smoke test
+bash scripts/test-scaffold.sh              # scaffold + serve (manual check in a browser)
+bash scripts/smoke-test.sh                 # produce a fresh scaffold + website-src, check outputs
 bash scripts/build-js-components.sh        # rebuild purs widgets into website-src/*.js
 bash scripts/import-scaffold.sh            # copy website-src css/js back into scaffolding/
 ```
 
-There is **no test suite** — no test-suite stanza in `kitchen-sink.cabal`. Verification is `cabal build` (warnings are errors) plus running `serve --servMode DEV` against `website-src/`.
+There is **no cabal test suite**. Verification is `cabal build` (warnings are errors), then `bash scripts/smoke-test.sh`, which runs `produce` on a freshly `init`-ed site and on `website-src/` in a temp dir and checks the main outputs (the LLM and dev-server generators in `website-src/` are stubbed; `KITCHEN_SINK=<binary>` skips the cabal build, `KEEP_SMOKE_OUTPUT=1` keeps the outputs). For HTML/CSS changes, also run `serve --servMode DEV` against `website-src/`.
 
 ## The source format
 
