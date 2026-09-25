@@ -17,6 +17,8 @@ Kitchen-Sink also is an API gateway.
 
 =base:main-content.cmark
 
+<img class="mascot" src="/images/logo.png" alt="The Kitchen-Sink mascot: a smiling kitchen sink with many legs, waving.">
+
 Kitchen-Sink is a [_frivolous_](/philosophy.html)  static-site generator.
 
 This website is the main documentation and main example of Kitchen-Sink features.
