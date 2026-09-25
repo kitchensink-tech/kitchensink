@@ -1,6 +1,8 @@
 Kitchen-Sink
 ============
 
+<img src="website-src/logo.png" alt="The Kitchen-Sink mascot" width="320" align="right">
+
 Kitchen-Sink is @lucasdicioccio's static-site generator.
 
 The main documentation is to be found on the [GitHub pages](https://kitchensink-tech.github.io/).

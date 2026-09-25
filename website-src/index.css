@@ -44,6 +44,16 @@ p,ul,ol {
   font-family: var(--font-sans);
 }
 
+/*~~ mascot  ~~~~~~~~~~~~~*/
+
+img.mascot {
+  display: block;
+  max-width: 24rem;
+  width: 70%;
+  height: auto;
+  margin: 0 auto 1.5em auto;
+}
+
 /*~~ latest-article listing  ~~~~~~~~~~~~~*/
 
 nav.articles-listing:first-of-type {
