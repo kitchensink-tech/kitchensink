@@ -523,8 +523,20 @@ articleLink (Core.Target d _ _) art =
 mylink_ :: Url -> Text -> Lucid.Html ()
 mylink_ url txt = a_ [href_ url] (toHtml txt)
 
-homeLink :: UrlPrefix -> Lucid.Html ()
-homeLink urlPrefix = mylink_ (urlPrefix <> "/") "home"
+-- | The link back to the site root, labelled (and optionally decorated with an
+-- icon) according to the site's @homeLink@ configuration.
+homeLink :: MetaData -> Lucid.Html ()
+homeLink meta =
+    a_ [href_ (meta.pathPrefix <> "/"), class_ "home-link"] $ do
+        traverse_ (\icon -> img_ [src_ (iconUrl icon), alt_ ""]) spec.homeIcon
+        toHtml spec.homeLabel
+  where
+    spec = meta.homeLinkSpec
+    -- only a root-relative URL follows the site's basePath; absolute
+    -- (https://..., //...) and relative URLs are left alone
+    iconUrl icon
+        | "/" `Text.isPrefixOf` icon && not ("//" `Text.isPrefixOf` icon) = meta.pathPrefix <> icon
+        | otherwise = icon
 
 -- | The `data-base-path` attribute is read by search-box.js at startup
 -- (see @KitchenSink.getBasePath@ in purs/kitchen-sink-compat) so it fetches

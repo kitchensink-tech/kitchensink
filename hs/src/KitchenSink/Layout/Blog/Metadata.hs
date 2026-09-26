@@ -1,5 +1,7 @@
 module KitchenSink.Layout.Blog.Metadata (
     MetaData (..),
+    HomeLinkSpec (..),
+    defaultHomeLink,
     epochUTCTime,
 ) where
 
@@ -18,7 +20,18 @@ data MetaData = MetaData
     , extraHeaders :: Article [Text] -> Assembler (Lucid.Html ())
     , externalKitchenSinkURLs :: [Text]
     , pathPrefix :: Text
+    , homeLinkSpec :: HomeLinkSpec
     }
+
+-- | How the top-left link back to the site root is rendered.
+data HomeLinkSpec = HomeLinkSpec
+    { homeLabel :: Text
+    , homeIcon :: Maybe Text
+    -- ^ image URL, relative to the site (the 'pathPrefix' is applied to a root-relative one)
+    }
+
+defaultHomeLink :: HomeLinkSpec
+defaultHomeLink = HomeLinkSpec "Home" Nothing
 
 epochUTCTime :: UTCTime
 epochUTCTime = UTCTime (fromOrdinalDate 1970 1) (secondsToDiffTime 0)
