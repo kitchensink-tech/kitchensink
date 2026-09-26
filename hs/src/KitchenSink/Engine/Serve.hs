@@ -141,6 +141,7 @@ serveMetadataFromSiteInfo config = do
         <*> pure noExtraHeaders
         <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
         <*> pure (normalizedBasePath config)
+        <*> pure (resolveHomeLink config)
   where
     noExtraHeaders _ = pure mempty
 
@@ -156,6 +157,7 @@ loadDevModeExtraData path = do
         <*> pure (jsReloadExtraHeaders prefix)
         <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
         <*> pure prefix
+        <*> pure (resolveHomeLink config)
   where
     jsReloadExtraHeaders :: Text -> Article ext [Text] -> Assembler ext (Lucid.Html ())
     jsReloadExtraHeaders prefix _ =

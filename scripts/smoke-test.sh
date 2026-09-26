@@ -100,6 +100,8 @@ check_grep "<entry" "${www}/atom.xml"
 check_file "${www}/sitemap.txt"
 check_json '.paths | length > 0' "${www}/json/paths.json"
 check_file "${www}/topics/some-topic.html"
+# a site without a `homeLink` config renders the default "Home" link
+check_grep 'class="home-link">Home</a>' "${www}/index.html"
 
 # 2. The project website, which exercises most section types.
 web="${workdir}/website"
@@ -107,6 +109,8 @@ bash scaffolding/outputdir.sh "${web}" > /dev/null
 produce website website-src "${web}"
 check_file "${web}/index.html"
 check_grep "<title>The Kitchen Sink Blog Generator - Home</title>" "${web}/index.html"
+# website-src configures `homeLink` with a label and an icon
+check_grep 'class="home-link"><img src="/images/logo.png" alt>Home</a>' "${web}/index.html"
 check_file "${web}/features.html"
 check_file "${web}/sections-templating.html"
 check_file "${web}/sections-dhall.html"

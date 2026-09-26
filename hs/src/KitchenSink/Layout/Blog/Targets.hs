@@ -368,7 +368,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink urlPrefix
+                                [ const $ pure $ homeLink extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -397,7 +397,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink urlPrefix
+                                [ const $ pure $ homeLink extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -424,7 +424,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink urlPrefix
+                                [ const $ pure $ homeLink extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -451,7 +451,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink urlPrefix
+                                [ const $ pure $ homeLink extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -541,7 +541,7 @@ siteTargets execRoot prefix extra site = allTargets
                         $ mconcat
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                                 $ mconcat
-                                    [ const $ pure $ homeLink urlPrefix
+                                    [ const $ pure $ homeLink extra
                                     , const $ pure $ searchBox urlPrefix
                                     ]
                             , wrap (div_ [class_ "main"])
@@ -569,7 +569,7 @@ siteTargets execRoot prefix extra site = allTargets
                         $ mconcat
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                                 $ mconcat
-                                    [ const $ pure $ homeLink urlPrefix
+                                    [ const $ pure $ homeLink extra
                                     , const $ pure $ searchBox urlPrefix
                                     ]
                             , wrap (div_ [class_ "main"])
@@ -595,7 +595,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink urlPrefix
+                                [ const $ pure $ homeLink extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -621,7 +621,7 @@ siteTargets execRoot prefix extra site = allTargets
                     $ mconcat
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
-                                [ const $ pure $ homeLink urlPrefix
+                                [ const $ pure $ homeLink extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
