@@ -1,0 +1,71 @@
+=base:build-info.json
+{"layout":"documentation"
+,"publicationStatus":"Public"
+,"order":1
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "The documentation layout"
+}
+
+=base:topic.json
+{"topics":["authoring articles", "how-to"]
+,"keywords":["documentation", "layouts"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+@import "/css/documentation.css";
+
+=base:summary.cmark
+
+A layout for technical documentation: a table of contents next to the page and
+links to the previous and next pages.
+
+=base:main-content.cmark
+
+Set the layout of a page to `documentation` to render it as a page of a
+documentation. This very page is written with it: the sidebar lists the
+headings of the page (on a narrow screen it moves above the content), and the
+links at the bottom lead to the previous and next pages of the documentation.
+
+# Using the layout
+
+In the `base:build-info.json` section of a page, use the `documentation`
+layout and, optionally, an `order`:
+
+    =base:build-info.json
+    {"layout":"documentation"
+    ,"publicationStatus":"Public"
+    ,"order":1
+    }
+
+Then import the stylesheet of the layout next to the other ones, in a
+`base:main-css.css` section:
+
+    @import "/css/documentation.css";
+
+You can also start such a page with
+`kitchen-sink newarticle --layout documentation`.
+
+# The table of contents
+
+The table of contents lists the second and third level headings (`#` and `##`
+in the markdown of the `main-content` sections). A page without any heading has
+no table of contents.
+
+# Moving between pages
+
+All the pages that use the `documentation` layout are part of one
+documentation, sorted as explained in [ordering documentation
+pages](/documentation-ordering.html).

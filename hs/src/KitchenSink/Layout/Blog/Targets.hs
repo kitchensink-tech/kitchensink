@@ -374,6 +374,7 @@ siteTargets execRoot prefix extra site = allTargets
         , (ArchivedArticle, archivedArticleLayout)
         , (UpcomingArticle, upcomingArticleLayout)
         , (PublishedArticle, articleLayout)
+        , (DocumentationPage, documentationLayout)
         , (IndexPage, indexLayout)
         ]
 
@@ -493,6 +494,38 @@ siteTargets execRoot prefix extra site = allTargets
                                 , assembleMain urlPrefix
                                 , assembleGlossary
                                 , assembleFooter
+                                ]
+                        ]
+                ]
+
+    documentationLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    documentationLayout dloc jsondloc txtdloc =
+        htmldoc
+            $ mconcat
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
+                , htmlbody
+                    $ mconcat
+                        [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
+                            $ mconcat
+                                [ const $ pure $ homeLink extra
+                                , const $ pure $ searchBox urlPrefix
+                                ]
+                        , wrap (div_ [class_ "main doc-layout"])
+                            $ mconcat
+                                [ assembleDocumentationToc
+                                , wrap article_
+                                    $ mconcat
+                                        [ assembleHeader urlPrefix prefix stats dloc
+                                        , assembleMain urlPrefix
+                                        , assembleGlossary
+                                        , const $ pure $ documentationPager articleTargets dloc
+                                        , assembleFooter
+                                        ]
                                 ]
                         ]
                 ]

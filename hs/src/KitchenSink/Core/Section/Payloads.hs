@@ -26,6 +26,8 @@ data BuildInfoData = BuildInfoData
     { layout :: Text
     , publicationStatus :: Maybe PublicationStatus
     , robots :: Maybe Text
+    , order :: Maybe Int
+    -- ^ position among the pages of a same layout (used by the documentation layout)
     }
     deriving (Show, Eq, Generic)
 instance FromJSON BuildInfoData
