@@ -39,8 +39,7 @@ pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
 
 =base:summary.cmark
 
-Pre-processing sections with tramaj, the lighter-weight alternative to
-Dhall-sections.
+Pre-processing sections with tramaj, which replaced the removed Dhall-sections.
 
 
 =base:main-content.cmark
@@ -49,16 +48,15 @@ Dhall-sections.
 — is a small template language: a `jq`-flavoured expression language for the
 data half, a HAML-like block syntax for structure, and a deliberately tiny set
 of builtins. KitchenSink embeds its Haskell implementation, `tramaj-hs`, as a
-second section pre-processor next to [Dhall-sections](/sections-dhall.html). A
+section pre-processor. A
 [playground](/playground.html) hosted on this site lets you try the language
 itself, outside of any KitchenSink section.
 
-Both backends do the same job and both remain supported. Tramaj is, however,
-the direction of travel: `dhall` and `dhall-json` are notoriously awkward to
-build and they have repeatedly held KitchenSink back from moving to newer GHC
-versions, whereas `tramaj-hs` needs nothing beyond `megaparsec` and `aeson`.
-Expect Dhall-sections to be deprecated eventually; nothing is being removed
-today.
+Tramaj replaced Dhall as the section pre-processor: `dhall` and `dhall-json`
+were notoriously awkward to build and had repeatedly held KitchenSink back from
+moving to newer GHC versions, whereas `tramaj-hs` needs nothing beyond
+`megaparsec` and `aeson`. A `.dhall` section is now rejected at load time with
+an error naming the file; rewrite it as a `tramaj-json` or `tramaj-doc` section.
 
 # Two section formats
 
@@ -87,7 +85,7 @@ surprise.
 # The `$ctx` object
 
 Tramaj always has the input context in scope as `$ctx`. KitchenSink fills it
-with the very same information the `kitchensink` object carries in
+with the information the `kitchensink` object carried in the former
 Dhall-sections:
 
 ```
@@ -105,14 +103,13 @@ Dhall-sections:
 subpath, e.g. `"@import \"`$ctx.pathPrefix`/css/dev.css\";"` instead of
 hardcoding `/css/dev.css`.
 
-So `kitchensink.datasets.my-name` becomes `$ctx.datasets.my-name`, and
-`kitchensink.file` becomes `$ctx.file`.
+When migrating a Dhall section, `kitchensink.datasets.my-name` becomes
+`$ctx.datasets.my-name`, and `kitchensink.file` becomes `$ctx.file`.
 
-Like Dhall-sections, templating sections are *pre-processors*: they are
-evaluated once, at load time, and only see datasets declared before them in the
-file. Unlike Dhall there are no networked imports, but tramaj does have local
-imports of other sections in the same file — see "Using partial templates"
-below — so the gap against Dhall is narrower than it once was.
+Templating sections are *pre-processors*: they are evaluated once, at load
+time, and only see datasets declared before them in the file. There are no
+networked imports, but tramaj does have local imports of other sections in the
+same file — see "Using partial templates" below.
 
 =base:main-content.cmark
 
@@ -441,8 +438,7 @@ re-enters it — not a hang.
 A library file is still a KitchenSink section file, with a `library.tramaj-lib`
 header per library — there is no support yet for a "bare" file containing just
 a program body and nothing else — and imports still only resolve by name
-within the same site, never across a networked location the way a Dhall
-import can.
+within the same site, never across a networked location.
 
 =base:main-content.cmark
 

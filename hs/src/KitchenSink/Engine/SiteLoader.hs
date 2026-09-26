@@ -8,7 +8,6 @@ import Data.Aeson (FromJSON (..), withObject, (.:))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson.Types
 import Data.ByteString.Lazy qualified as LByteString
-import Data.Either (fromRight)
 import Data.List qualified as List
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -16,22 +15,12 @@ import Data.Maybe (isJust)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Text.IO qualified as Text
-import Data.Void (Void)
-import Dhall
-import Dhall.Context qualified as Context
-import Dhall.Core qualified as Core
-import Dhall.JSON (CompileError, dhallToJSON)
-import Dhall.JSONToDhall (defaultConversion, dhallFromJSON, inferSchema, schemaToDhallType)
-import Dhall.Map qualified as Dhall
-import Dhall.Map qualified as DhallMap
-import Dhall.Src (Src)
-import Lens.Family
 import System.Directory (listDirectory)
 import System.FilePath.Posix (dropExtension, takeExtension, takeFileName, (</>))
 import Text.Megaparsec (runParser)
 import Text.Mustache qualified as Mustache
 import Text.Parsec qualified as Parsec
-import Prelude (Integer, succ, (||))
+import Prelude (Integer, ioError, succ, userError, (||))
 import Control.Monad (foldM)
 import qualified Tramaj.Ast
 import qualified Tramaj.Eval
@@ -63,21 +52,21 @@ data LogMsg ext
 type Loader ext a = (LogMsg ext -> IO ()) -> FilePath -> IO (Sourced a)
 
 -- TODO: consider adding some LoadedArticle type to:
--- - distinguish article that have just been parsed from pre-procssed-via Dhall
+-- - distinguish article that have just been parsed from pre-processed ones
 -- - return some extra structure about the Article like:
 --   * dependencies using a specific section
 --   * dependencies between sections? or between articles?
 --   * dependencies to external query widgets or params?
 --   * references to generated datasets (e.g., `curl a page, use as input to other place`)
-loadArticle :: FilePath -> [(Text, Text)] -> Text -> [ExtraSectionType ext] -> Tramaj.Eval.LibraryTable -> Loader ext (Article ext [Text])
-loadArticle dhallRoot vars pathPrefix extras globalLibs trace path = do
+loadArticle :: [(Text, Text)] -> Text -> [ExtraSectionType ext] -> Tramaj.Eval.LibraryTable -> Loader ext (Article ext [Text])
+loadArticle vars pathPrefix extras globalLibs trace path = do
     trace $ LoadArticle path
     eart <- runParser (article extras path) path <$> Text.readFile path
     case eart of
         Left err -> throwIO err
         Right art -> Sourced (FileSource path) <$> evalSections art
   where
-    env = EvalEnv path dhallRoot vars pathPrefix trace
+    env = EvalEnv path vars pathPrefix trace
     evalSections art = evalStateT (overSections (evalSection env) art) (newState globalLibs)
 
 {- | Parses every @library.templating-lib@ section out of a set of
@@ -129,7 +118,7 @@ loadTemplatingLibraries trace extras = foldM loadFile Map.empty
                 | otherwise -> pure $ Map.insert name prog acc
     registerSection _ acc _ = pure acc
 
-{- | What an evaluated section (Dhall, or templating-lang in expression mode)
+{- | What an evaluated section (templating-lang in expression mode)
 must answer with: a @format@ naming the concrete format the section is rewritten
 to, plus its @contents@.
 -}
@@ -154,7 +143,6 @@ instance FromJSON SectionEvalResult where
 data EvalEnv ext
     = EvalEnv
     { path :: FilePath
-    , dhallRoot :: FilePath
     , vars :: [(Text, Text)]
     , pathPrefix :: Text
     , trace :: LogMsg ext -> IO ()
@@ -162,8 +150,6 @@ data EvalEnv ext
 
 data EvalError
     = UnsupportedReturnFormat Text
-    | DhallRuntimeError CompileError
-    | DhallResultJsonDecodeError String
     | MalformedJSONDataset Name String
     | -- | the file holding the section, and what the JSON decoder said
       MalformedJSONGeneratorInstructions FilePath String
@@ -227,50 +213,12 @@ sectionStep env x@(Section t fmt body) = do
                 Right tpl -> do
                     let contents = Mustache.substitute tpl jsonDataset
                     pure $ Section t Cmark [contents]
-        (_, Dhall) -> do
-            let jsonDataset = Aeson.toJSON st0.datasets
-            -- prepare kitchensink expression
-            let dhallDataset = dhallFromJSON defaultConversion (schemaToDhallType $ inferSchema jsonDataset) jsonDataset
-            let sectionNumExpr = Core.Annot (Core.IntegerLit st0.sectionNumber) (Core.Integer)
-            let textExpr v = Core.TextLit (Core.Chunks [] v)
-            let pathExpr = Core.Annot (Core.TextLit (Core.Chunks [] $ Text.pack env.path)) (Core.Text)
-            let errorExpr = Core.Annot (Core.TextLit (Core.Chunks [] "could not load datasets into Dhall")) (Core.Text)
-            let varListExprs = [(k, Core.makeRecordField (textExpr v)) | (k, v) <- env.vars]
-            let varsExprc =
-                    Core.RecordLit
-                        (DhallMap.fromList varListExprs)
-            let pathPrefixExpr = Core.Annot (Core.TextLit (Core.Chunks [] env.pathPrefix)) (Core.Text)
-            let ksExpr =
-                    Core.RecordLit
-                        $ DhallMap.fromList
-                            [ ("file", Core.makeRecordField pathExpr)
-                            , ("sectionNum", Core.makeRecordField sectionNumExpr)
-                            , ("pathPrefix", Core.makeRecordField pathPrefixExpr)
-                            , ("datasets", Core.makeRecordField $ fromRight errorExpr dhallDataset)
-                            , ("vars", Core.makeRecordField varsExprc)
-                            ]
-            let ctx0 =
-                    Context.empty
-                        & Context.insert "kitchensink" ksExpr
-            let sub0 = Dhall.fromList [("kitchensink", ksExpr)]
-            -- eval dhall expression
-            let setts =
-                    defaultInputSettings
-                        & Dhall.sourceName .~ (env.path <> " (section)")
-                        & Dhall.rootDirectory .~ env.dhallRoot
-                        & Dhall.evaluateSettings . substitutions .~ sub0
-                        & Dhall.evaluateSettings . startingContext .~ ctx0
-            de <- liftIO $ inputExprWithSettings setts (Text.unlines body) :: Eval (Core.Expr Src Void)
-
-            -- turn expression into a parsed result, using JSON as an intermediary parser
-            dj <- case dhallToJSON de of
-                Left err -> liftIO $ throwIO $ DhallRuntimeError err
-                Right jvalue -> pure $ jvalue
-            case Aeson.fromJSON dj of
-                Aeson.Error err ->
-                    liftIO $ throwIO $ DhallResultJsonDecodeError err
-                Aeson.Success result ->
-                    rewriteSection "Dhall" result
+        (_, Dhall) ->
+            liftIO
+                $ ioError
+                $ userError
+                $ env.path
+                <> ": the dhall section format was removed; rewrite this section as a tramaj section (tramaj-json for a value, tramaj-doc for HTML), see /sections-templating.html"
         (_, TramajJson) -> do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.pathPrefix env.vars st0.datasets
             case Templating.evalJsonSection st0.templatingLibraryTable ctx (Text.unlines body) of
@@ -320,12 +268,11 @@ sectionStep env x@(Section t fmt body) = do
             pure x
 
     {- | Rewrites an evaluated section into the concrete format its result asked
-    for. Shared by the Dhall and the templating backends; @backend@ only names
-    which one for the error message.
+    for; @backend@ names the section format for the error message.
 
     A generated dataset cell is registered here too: the format-dispatching
     branches above match before @(Dataset name, Json)@ does, so without this a
-    @=base:dataset.dhall my-name@ (or @.templating@) cell would be rewritten to
+    @=base:dataset.tramaj-json my-name@ cell would be rewritten to
     JSON and then stay invisible to every later section.
     -}
     rewriteSection :: Text -> SectionEvalResult -> Eval (Section ext [Text])
@@ -396,14 +343,13 @@ loadDotSource trace path = do
     pure $ (Sourced (FileSource path) DotSourceFile)
 
 loadSite ::
-    FilePath ->
     [(Text, Text)] ->
     Text ->
     [ExtraSectionType ext] ->
     (LogMsg ext -> IO ()) ->
     FilePath ->
     IO (Site ext)
-loadSite dhallRoot vars pathPrefix extras trace dir = do
+loadSite vars pathPrefix extras trace dir = do
     paths <- listDirectory dir
     globalLibs <- loadTemplatingLibraries trace extras (libraryPaths paths)
     Site
@@ -430,7 +376,7 @@ loadSite dhallRoot vars pathPrefix extras trace dir = do
     -- not otherwise matter (see 'loadTemplatingLibraries').
     libraryPaths paths = List.sort [dir </> p | p <- paths, takeExtension p == ".cmark-tramaj"]
     articlesM globalLibs paths =
-        traverse (loadArticle dhallRoot vars pathPrefix extras globalLibs trace)
+        traverse (loadArticle vars pathPrefix extras globalLibs trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark"]]
     imagesM paths =
         traverse (loadImage trace)

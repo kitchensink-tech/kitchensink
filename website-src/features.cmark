@@ -451,9 +451,9 @@ which prints a saved result committed in the repository when the command fails,
 so the build does not depend on the LLM being reachable.
 
 
-### microscriptable in Dhall
+### microscriptable with tramaj
 
-I have written a [full article](https://dicioccio.fr/dhall-section-demo.html) on my personal blog a while ago to motivate the whole usage of [Dhall](https://dhall-lang.org/). Keep in mind that I'm still happy about the choice. Dhall "powers" my photo galleries and my [stream of notes](https://lucasdicioccio.github.io/notes.html) on my personal blog.
+Sections can be pre-processed by a [tramaj](/sections-templating.html) expression: a small typed template language whose result is a value (`tramaj-json`) or a document tree rendered to HTML (`tramaj-doc`). This is how repeated structures, such as a photo gallery or a stream of notes built from JSON datasets, are generated statically. (Kitchen-Sink used to do this with Dhall, motivated in a [past article on my personal blog](https://dicioccio.fr/dhall-section-demo.html); that format was removed.)
 
 
 
@@ -603,31 +603,3 @@ defined an entry for WikiPedia.
 Think of this feature like a revisit of the good-old webrings.
 
 <script src="js/copy-snippets.js"></script>
-
-=base:taken-off.cmark
-
-    =base:main-content.dhall
-    
-    let
-        prelude = ./dhall/Prelude.dhall
-    let
-        cat = prelude.Text.concat
-    let
-        bracketz =
-          \(x : Text) -> cat [ "[", x, "]" ]
-    let
-        parenz =
-          \(x : Text) -> cat [ "(", x, ")" ]
-    let
-        linkz =
-          \(x : Text) -> \(y : Text) -> cat [ bracketz x, parenz y ]
-    let
-        body =
-         [ linkz "text file for AI" (cat ["/text/" , kitchensink.file , ".text" ])
-         , linkz "JSON file for scripts" (cat ["/text/" , kitchensink.file , ".text" ])
-         ]
-    in
-    { contents = body
-    , format = "cmark"
-    }
-    

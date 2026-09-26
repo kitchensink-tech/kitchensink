@@ -200,7 +200,7 @@ The way KitchenSink divides work operates in two phases:
 - load the `Site` object
   - read articles from disk (we discuss only `.cmark`, but other files like `.png` are listed too)
   - parsing content of `.cmark` as section format
-  - evaluating `.dhall` sections
+  - evaluating `tramaj-json`/`tramaj-doc` sections
 - assemble targets
   - compute all the siteTargets (cf. above)
   - evaluate all the targets

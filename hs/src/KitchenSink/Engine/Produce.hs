@@ -45,7 +45,6 @@ run cmd = do
     serveMetadata <- loadMetadata kitchensinkFilePath
     let handleLoadSite =
             loadSite
-                "."
                 cmd.variables
                 serveMetadata.pathPrefix
                 (extraSectiontypes Blog.layout)

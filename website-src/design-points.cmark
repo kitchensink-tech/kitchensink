@@ -70,7 +70,7 @@ Besides convenience, having a large kitchen sink means:
 
 # Lack of overloading (repeating many things across articles)
 
-:bulb: Much of this concerned is now addressable using [Dhall-sections](/sections-dhall.html) sections because Dhall has local (and even remote) imports. However we keep the discussion below for archival reasons.
+:bulb: Much of this concerned is now addressable using [tramaj sections](/sections-templating.html), which have local imports of shared templates. However we keep the discussion below for archival reasons.
 
 Oftentimes you would like one parameter to take effect on multiple pages (e.g., the social links).
 KitchenSink edges on the side of caution where we prefer to repeat the same small bit of information many times rather than forcing an overloading hierarchy:
