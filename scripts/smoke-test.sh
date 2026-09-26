@@ -243,6 +243,45 @@ else
   failures=$((failures + 1))
 fi
 
+# 4. multisite reads its configuration as JSON (the Dhall format is gone).
+echo "== multisite: JSON config"
+ms="${workdir}/multisite"
+mkdir -p "${ms}"
+port=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+cat > "${ms}/sites.json" <<JSON
+{ "services":
+  [ { "domain": "localhost", "extraDomains": [], "tls": []
+    , "site": { "tag": "KitchenSinkDirectorySource"
+              , "contents": { "path": "${scaffold}/src"
+                            , "metadata": { "title": "Multisite", "publishURL": "http://localhost" }
+                            , "dhallRoot": null, "execRoot": null } }
+    , "api": { "tag": "NoProxying" } } ]
+, "fallback": { "tag": "FallbackWithOminousError" } }
+JSON
+"${KITCHEN_SINK}" multisite --configFile "${ms}/sites.json" --httpPort "${port}" > "${ms}/multisite.log" 2>&1 &
+ms_pid=$!
+served=no
+for _ in $(seq 1 30); do
+  if curl -sf -H "Host: localhost" "http://127.0.0.1:${port}/index.html" > "${ms}/index.html" 2>/dev/null; then served=yes; break; fi
+  sleep 0.5
+done
+kill "${ms_pid}" 2> /dev/null || true
+wait "${ms_pid}" 2> /dev/null || true
+if [ "${served}" = yes ] && grep -q "<title>Multisite" "${ms}/index.html"; then
+  echo "  ok   multisite serves a site from a JSON config"
+else
+  echo "  FAIL multisite did not serve the site from a JSON config, last lines:"
+  tail -n 10 "${ms}/multisite.log" | sed 's/^/    /'
+  failures=$((failures + 1))
+fi
+touch "${ms}/sites.dhall"
+if "${KITCHEN_SINK}" multisite --configFile "${ms}/sites.dhall" --httpPort "${port}" > "${ms}/dhall.log" 2>&1; then
+  echo "  FAIL a .dhall multisite config must be rejected"
+  failures=$((failures + 1))
+else
+  check_grep "Dhall configuration files are no longer supported" "${ms}/dhall.log"
+fi
+
 if [ "${failures}" -ne 0 ]; then
   echo "smoke-test: ${failures} check(s) failed"
   exit 1

@@ -4,7 +4,6 @@
 module KitchenSink.Engine.Config where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Dhall qualified
 import GHC.Generics (Generic)
 
 import KitchenSink.Prelude
@@ -17,7 +16,6 @@ data Command = Command
     deriving (Generic, Show)
 instance FromJSON Command
 instance ToJSON Command
-instance Dhall.FromDhall Command
 
 type HostName = Text
 type PortNum = Int
@@ -29,7 +27,6 @@ data TransportSecurity
     deriving (Eq, Generic, Show)
 instance FromJSON TransportSecurity
 instance ToJSON TransportSecurity
-instance Dhall.FromDhall TransportSecurity
 
 data RewriteRule
     = NoRewrite
@@ -39,7 +36,6 @@ data RewriteRule
     deriving (Eq, Generic, Show)
 instance FromJSON RewriteRule
 instance ToJSON RewriteRule
-instance Dhall.FromDhall RewriteRule
 
 data SlashApiProxyDirective
     = SlashApiProxyDirective
@@ -52,7 +48,6 @@ data SlashApiProxyDirective
     deriving (Generic, Show)
 instance FromJSON SlashApiProxyDirective
 instance ToJSON SlashApiProxyDirective
-instance Dhall.FromDhall SlashApiProxyDirective
 
 data ApiProxyConfig
     = NoProxying
@@ -61,7 +56,6 @@ data ApiProxyConfig
     deriving (Generic, Show)
 instance FromJSON ApiProxyConfig
 instance ToJSON ApiProxyConfig
-instance Dhall.FromDhall ApiProxyConfig
 
 data Config = Config
     { publishScript :: Maybe FilePath
@@ -71,4 +65,3 @@ data Config = Config
     deriving (Generic, Show)
 instance FromJSON Config
 instance ToJSON Config
-instance Dhall.FromDhall Config

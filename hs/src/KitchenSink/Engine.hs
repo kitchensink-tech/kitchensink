@@ -45,7 +45,7 @@ data Action
         , author :: Maybe Text <?> "author name"
         }
     | MultiSite
-        { configFile :: FilePath <?> "dhall config file"
+        { configFile :: FilePath <?> "multisite config file (JSON)"
         , var :: [Text] <?> "variables in --var varname=value format"
         , httpPort :: Maybe Int <?> "port-num"
         , httpsPort :: Maybe Int <?> "port-num"
