@@ -16,7 +16,7 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601Show)
 import Lucid as Lucid
 import Lucid.Base qualified as Lucid
-import Prelude ((&&), (+), (||))
+import Prelude ((&&), (+), (||), maxBound)
 
 import Text.Atom.Feed qualified as Atom
 
@@ -824,3 +824,94 @@ articleCompactSummary =
 articleTitle :: Article [Text] -> Maybe Text
 articleTitle =
     join . hush . runAssembler . assembleTitle
+
+-- | A heading of a documentation page, as listed in its table of contents.
+data OutlineEntry = OutlineEntry
+    { outlineLevel :: Int
+    , outlineId :: Text
+    , outlineLabel :: Text
+    -- ^ the heading text as HTML (already escaped by the markdown renderer)
+    }
+    deriving (Show, Eq)
+
+{- | The @h2@ and @h3@ headings that carry an @id@ (as given by the markdown
+renderer's automatic identifiers) in an already-rendered HTML fragment.
+-}
+headingOutline :: Text -> [OutlineEntry]
+headingOutline t =
+    case Text.breakOn "<h" t of
+        (_, rest) | Text.null rest -> []
+        (_, rest) ->
+            let afterTag = Text.drop 2 rest
+             in case Text.uncons afterTag of
+                    Just (c, attrsAndBody)
+                        | c == '2' || c == '3' ->
+                            let (attrs, afterOpen) = Text.breakOn ">" attrsAndBody
+                                (body, afterClose) = Text.breakOn ("</h" <> Text.singleton c <> ">") (Text.drop 1 afterOpen)
+                                entry = OutlineEntry (if c == '2' then 2 else 3) <$> attributeValue "id" attrs <*> pure (stripTags body)
+                             in maybe (headingOutline afterClose) (: headingOutline afterClose) entry
+                    _ -> headingOutline afterTag
+  where
+    attributeValue :: Text -> Text -> Maybe Text
+    attributeValue name attrs =
+        case Text.breakOn (name <> "=\"") attrs of
+            (_, r) | Text.null r -> Nothing
+            (_, r) -> Just $ Text.takeWhile (/= '"') $ Text.drop (Text.length name + 2) r
+
+stripTags :: Text -> Text
+stripTags t =
+    case Text.breakOn "<" t of
+        (before, rest)
+            | Text.null rest -> before
+            | otherwise -> before <> stripTags (Text.drop 1 (Text.dropWhile (/= '>') rest))
+
+-- | The sidebar of a documentation page: the headings of its @main-content@.
+assembleDocumentationToc :: Article [Text] -> Assembler (Lucid.Html ())
+assembleDocumentationToc art = do
+    sections <- getSections art isMainContent
+    rendered <- traverse renderSection sections
+    let outline = List.concatMap (headingOutline . extract') rendered
+    pure $ case outline of
+        [] -> nav_ [class_ "doc-toc"] mempty
+        _ ->
+            nav_ [class_ "doc-toc"] $ do
+                p_ [class_ "doc-toc-title"] "On this page"
+                ul_ $ mconcat [entry e | e <- outline]
+  where
+    entry :: OutlineEntry -> Lucid.Html ()
+    entry e =
+        li_ [class_ ("doc-toc-level-" <> Text.pack (show e.outlineLevel))]
+            $ a_ [href_ ("#" <> e.outlineId)] (toHtmlRaw e.outlineLabel)
+
+{- | Documentation pages are ordered by the @order@ of their build-info, then
+by title.
+-}
+documentationOrder :: Article [Text] -> (Int, Text)
+documentationOrder art =
+    (fromMaybe maxBound (order =<< buildinfo art), fromMaybe "" (articleTitle art))
+
+-- | Links to the previous and next pages among those of the documentation layout.
+documentationPager :: [(Target a, Article [Text])] -> DestinationLocation -> Lucid.Html ()
+documentationPager targets current =
+    nav_ [class_ "doc-pager"] $ do
+        maybe mempty (link "doc-prev" "Previous: ") previous
+        maybe mempty (link "doc-next" "Next: ") next
+  where
+    pages =
+        List.sortOn (documentationOrder . snd)
+            $ List.filter ((== DocumentationPage) . layoutNameFor . snd) targets
+
+    isCurrent :: (Target a, Article [Text]) -> Bool
+    isCurrent (t, _) = destinationUrl (destination t) == destinationUrl current
+
+    (before, fromCurrent) = List.break isCurrent pages
+
+    previous = if List.null before then Nothing else Just (List.last before)
+    next = case fromCurrent of
+        (_ : n : _) -> Just n
+        _ -> Nothing
+
+    link :: Text -> Text -> (Target b, Article [Text]) -> Lucid.Html ()
+    link cls lbl (t, art) = div_ [class_ cls] $ do
+        span_ [class_ "doc-pager-label"] (toHtml lbl)
+        articleLink t art

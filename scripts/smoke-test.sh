@@ -164,6 +164,11 @@ check_grep "<entry" "${web}/atom.xml"
 check_grep "/index.html" "${web}/sitemap.txt"
 check_json '.paths | length > 0' "${web}/json/paths.json"
 check_json 'type == "object"' "${web}/json/topicsgraph.json"
+# the documentation layout: a table of contents, and previous/next links between its pages
+check_grep 'class="doc-toc"' "${web}/documentation-layout.html"
+check_grep 'href="#using-the-layout"' "${web}/documentation-layout.html"
+check_grep 'class="doc-next"' "${web}/documentation-layout.html"
+check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
 check_file "${web}/gen/out/sections-dhall.cmark__cat-this-file-templating"
 

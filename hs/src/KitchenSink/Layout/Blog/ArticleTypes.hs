@@ -23,6 +23,7 @@ data ArticleLayout
     | SinglePageApp
     | ImageGallery
     | VariousListing
+    | DocumentationPage
     deriving (Show, Eq)
 
 {- | Layouts of the special articles: the consolidated listings (topics,
@@ -52,11 +53,13 @@ effectiveLayout Public "glossary" = GlossaryPage
 effectiveLayout Public "application" = SinglePageApp
 effectiveLayout Public "gallery" = ImageGallery
 effectiveLayout Public "listing" = VariousListing
+effectiveLayout Public "documentation" = DocumentationPage
 effectiveLayout Public t = UnknownLayout t
 effectiveLayout Upcoming "article" = UpcomingArticle
 effectiveLayout Upcoming "application" = SinglePageApp
 effectiveLayout Upcoming "gallery" = ImageGallery
 effectiveLayout Upcoming "listing" = VariousListing
+effectiveLayout Upcoming "documentation" = DocumentationPage
 effectiveLayout Upcoming t = UnknownLayout t
 effectiveLayout Archived "article" = ArchivedArticle
 effectiveLayout Archived t = UnknownLayout t

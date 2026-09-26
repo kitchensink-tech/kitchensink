@@ -1,0 +1,95 @@
+/* Layout of the `documentation` article layout: a table of contents next to
+   the page, previous/next links below it. */
+
+.main.doc-layout {
+  max-width: 105ch;
+  display: grid;
+  grid-template-columns: 15em minmax(0, 1fr);
+  gap: 2.5em;
+  align-items: start;
+}
+
+.doc-toc {
+  position: sticky;
+  top: 1em;
+  max-height: calc(100vh - 2em);
+  overflow-y: auto;
+  padding: 0.5em 1em 0.5em 0;
+  border-right: 1px solid var(--border);
+  font-size: 0.85em;
+  line-height: 1.4;
+  font-family: var(--font-sans);
+}
+
+.doc-toc:empty {
+  border-right: none;
+}
+
+.doc-toc-title {
+  margin: 0 0 0.6em;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.8em;
+}
+
+.doc-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-toc li {
+  margin: 0.35em 0;
+}
+
+.doc-toc-level-3 {
+  padding-left: 1em;
+}
+
+.doc-toc a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.doc-toc a:hover {
+  color: var(--accent);
+}
+
+.doc-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  margin-top: 3em;
+  padding-top: 1em;
+  border-top: 1px solid var(--border);
+  font-size: 0.9em;
+}
+
+.doc-pager .doc-next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.doc-pager-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+/* single column on narrow screens, the table of contents comes first */
+@media (max-width: 800px) {
+  .main.doc-layout {
+    display: block;
+  }
+
+  .doc-toc {
+    position: static;
+    max-height: none;
+    margin-bottom: 1.5em;
+    padding: 0 0 1em;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}

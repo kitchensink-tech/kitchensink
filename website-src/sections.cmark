@@ -139,10 +139,15 @@ end up reading this piece of documentation).
 An important section to let Kitchen-Sink know which __layout__ to apply.  Known
 layouts are `article`, `index` (for `index.cmark`), `glossary` (for
 `glossary.cmark`), `topics` (for `topics.cmark`), `application` for JavaScript
-single-page apps, `gallery` for content galleries, and `listing` for various
-listings. Overall, except for index and topics, the layout of content does not
+single-page apps, `gallery` for content galleries, `listing` for various
+listings, and `documentation` for [technical documentation](/documentation-layout.html)
+(a sidebar table of contents and previous/next links between pages). Overall,
+except for index, topics and documentation, the layout of content does not
 change significantly besides the HTML-nesting (which then allows you to modify
 CSS or hijack DOM elements for single-page apps).
+
+An optional `order` number sorts the pages of the `documentation` layout (see
+[ordering documentation pages](/documentation-ordering.html)).
 
 The publicationStatus is either: `Public`, `Upcoming`, or `Archived`. Upcoming
 and Archived articles are treated slightly differently from Public articles in
