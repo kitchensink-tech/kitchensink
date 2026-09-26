@@ -7,7 +7,6 @@ module KitchenSink.Engine.SiteConfig where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Maybe (fromMaybe)
 import Data.Text qualified as Text
-import Dhall qualified
 import GHC.Generics (Generic)
 
 import KitchenSink.Layout.Blog.Metadata (HomeLinkSpec (..), defaultHomeLink)
@@ -21,7 +20,6 @@ data LinkedSite = LinkedSite
     deriving (Generic, Show)
 instance FromJSON LinkedSite
 instance ToJSON LinkedSite
-instance Dhall.FromDhall LinkedSite
 
 -- | The optional @homeLink@ object of @kitchen-sink.json@: the label (default
 -- @"Home"@) and an optional icon image of the link back to the site root.
@@ -32,7 +30,6 @@ data HomeLink = HomeLink
     deriving (Generic, Show)
 instance FromJSON HomeLink
 instance ToJSON HomeLink
-instance Dhall.FromDhall HomeLink
 
 data SiteInfo = SiteInfo
     { title :: Text
@@ -45,7 +42,6 @@ data SiteInfo = SiteInfo
     deriving (Generic, Show)
 instance FromJSON SiteInfo
 instance ToJSON SiteInfo
-instance Dhall.FromDhall SiteInfo
 
 defaultSiteInfo :: SiteInfo
 defaultSiteInfo =

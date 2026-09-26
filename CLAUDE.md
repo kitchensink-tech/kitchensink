@@ -40,8 +40,8 @@ kitchen-sink serve --srcDir website-src --outDir www --servMode DEV --httpPort 7
 # production-ish serving of a single site
 kitchen-sink serve --srcDir website-src --servMode SERVE --httpPort 7655
 
-# many sites behind one daemon, configured in Dhall (SNI + per-domain proxying)
-kitchen-sink multisite --configFile sites.dhall --httpPort 80
+# many sites behind one daemon, configured in JSON (SNI + per-domain proxying)
+kitchen-sink multisite --configFile sites.json --httpPort 80
 ```
 
 Flags are derived by `optparse-generic` from the `Action` record fields in `KitchenSink/Engine.hs` — that file is the authority when a flag name in the website docs looks stale.
@@ -100,7 +100,7 @@ The pipeline is `Site → [Target] → bytes`, and both `produce` and `serve` re
   - `Engine.Runtime.Runtime` adds dev-server concerns: fsnotify watch with debounce, a `BackgroundVal (Site ext)` that gets swapped on reload, a fan-out watch queue backing long-poll auto-reload, prometheus counters, and an optional proxy runtime.
   - `Engine.OnTheFly` serves a request by evaluating targets *for that request* and matching on `destinationUrl` — nothing is written to disk in serve mode.
   - `Engine.Api` / `Engine.Handlers` — servant API. `DevApi` adds `/dev/watch`, `/dev/targets`, `/dev/produce`, `/dev/publish`, `/dev/commands`, `/dev/command`, `/dev/reload` on top of the `/api` proxy and the raw on-the-fly handler. The `commands` array in `kitchen-sink.json` is what `/dev/commands` exposes (the `scripts/*.sh` above).
-  - `Engine.MultiSite` + `MultiSiteConfig` — Dhall-configured multi-tenant serving with per-domain TLS/SNI and proxy directives.
+  - `Engine.MultiSite` + `MultiSiteConfig` — JSON-configured multi-tenant serving with per-domain TLS/SNI and proxy directives. The stanzas are the Generic-derived aeson encodings of the `MultiSiteConfig` types: sum types are `{"tag": ..., "contents": ...}` objects (see the multisite check in `scripts/smoke-test.sh` for a minimal file). A `.dhall` config is rejected with a message.
 
 The DEV vs SERVE distinction is a metadata swap, not a separate code path: `Serve.run` builds `prodengine`, then `devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData … }`, which injects `autoreload.js` / `add-dev-route.js` / echarts into every page's headers.
 

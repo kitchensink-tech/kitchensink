@@ -37,6 +37,8 @@ import Prod.Tracer
 import Prometheus qualified as Prometheus
 import Servant
 import System.Directory (doesFileExist)
+import System.Exit (exitFailure)
+import System.IO (hPutStrLn, stderr)
 import Prelude (id, (&&))
 
 import KitchenSink.Core.Build.Target (Target)
@@ -126,8 +128,8 @@ run cmd = do
     mcfg <- loadConfigFile @MultiSiteConfig cmd.configFile
     rt <- initRuntime cmd
     case mcfg of
-        Nothing -> print ("could not load config app" :: Text)
-        Just cfg -> do
+        Left err -> hPutStrLn stderr ("could not load config: " <> err) >> exitFailure
+        Right cfg -> do
             mfallback <- buildFallbackApp rt cfg
             mapps <- buildApplicationMap rt cfg
             mtls <- buildTLSMap cfg
