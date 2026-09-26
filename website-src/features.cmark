@@ -445,6 +445,11 @@ Another fun usage is to roast your articles, provided agents-exe is installed, t
         }
     }
 
+The LLM call can fail (rate limits, no network). This very site runs it through
+[`website-scripts/with-fallback.sh`](https://github.com/kitchensink-tech/kitchensink/blob/main/website-scripts/with-fallback.sh),
+which prints a saved result committed in the repository when the command fails,
+so the build does not depend on the LLM being reachable.
+
 
 ### microscriptable in Dhall
 
