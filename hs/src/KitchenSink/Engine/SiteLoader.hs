@@ -165,7 +165,8 @@ data EvalError
     | DhallRuntimeError CompileError
     | DhallResultJsonDecodeError String
     | MalformedJSONDataset Name String
-    | MalformedJSONGeneratorInstructions String
+    | -- | the file holding the section, and what the JSON decoder said
+      MalformedJSONGeneratorInstructions FilePath String
     | MustacheCompileError Parsec.ParseError
     | TemplatingSectionError FilePath TemplatingError
     | TemplatingResultJsonDecodeError FilePath String
@@ -305,7 +306,7 @@ sectionStep env x@(Section t fmt body) = do
         (GeneratorInstructions, Json) -> do
             let jsonDataset = Aeson.toJSON st0.datasets
             case (Aeson.eitherDecode @GeneratorInstructionsData $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
-                Left err -> liftIO $ throwIO $ MalformedJSONGeneratorInstructions err
+                Left err -> liftIO $ throwIO $ MalformedJSONGeneratorInstructions env.path err
                 Right gen ->
                     if isJust gen.stdin_json || isJust gen.stdin
                         then pure x

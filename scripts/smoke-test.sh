@@ -67,6 +67,17 @@ check_grep() {
   fi
 }
 
+check_no_grep() {
+  local pattern=$1 file=$2
+  if grep -q -- "${pattern}" "${file}" 2> /dev/null; then
+    echo "  FAIL ${file#"${workdir}/"} contains ${pattern}:"
+    grep -- "${pattern}" "${file}" | head -n 5 | sed 's/^/    /'
+    failures=$((failures + 1))
+  else
+    echo "  ok   ${file#"${workdir}/"} has no ${pattern}"
+  fi
+}
+
 check_json() {
   if jq -e "$1" "$2" > /dev/null 2>&1; then
     echo "  ok   ${2#"${workdir}/"} satisfies $1"
@@ -100,8 +111,35 @@ check_grep "<entry" "${www}/atom.xml"
 check_file "${www}/sitemap.txt"
 check_json '.paths | length > 0' "${www}/json/paths.json"
 check_file "${www}/topics/some-topic.html"
+# a freshly scaffolded site builds without warnings (unknown layouts, unreadable sections)
+check_no_grep ": warning: " "${workdir}/scaffold.log"
 # a site without a `homeLink` config renders the default "Home" link
 check_grep 'class="home-link">Home</a>' "${www}/index.html"
+
+# 1b. Problems in the sources are reported with their file: an unknown layout
+# warns (and falls back to the default layout), a malformed generator section
+# fails the command.
+broken="${workdir}/broken"
+cp -r "${scaffold}" "${broken}"
+sed 's/"layout":"article"/"layout":"no-such-layout"/' "${broken}/src/first-article.cmark" > "${broken}/src/unknown-layout.cmark"
+echo "== broken: unknown layout"
+if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${broken}/src" --outDir "${broken}/www" > "${workdir}/broken-layout.log" 2>&1; then
+  check_grep "unknown-layout.cmark: warning: unknown layout" "${workdir}/broken-layout.log"
+  check_file "${broken}/www/unknown-layout.html"
+else
+  echo "  FAIL an unknown layout must not fail produce, last lines:"
+  tail -n 5 "${workdir}/broken-layout.log" | sed 's/^/    /'
+  failures=$((failures + 1))
+fi
+rm "${broken}/src/unknown-layout.cmark"
+printf '=base:build-info.json\n{"layout":"article"}\n\n=generator:cmd.json\n{"nope": true}\n' > "${broken}/src/broken-generator.cmark"
+echo "== broken: malformed generator section"
+if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${broken}/src" --outDir "${broken}/www" > "${workdir}/broken-generator.log" 2>&1; then
+  echo "  FAIL a malformed generator section must fail produce"
+  failures=$((failures + 1))
+else
+  check_grep "broken-generator.cmark" "${workdir}/broken-generator.log"
+fi
 
 # 2. The project website, which exercises most section types.
 web="${workdir}/website"

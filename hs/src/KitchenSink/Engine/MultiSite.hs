@@ -42,6 +42,7 @@ import Prelude (id, (&&))
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.Config (ApiProxyConfig (..), Prefix, RewriteRule (..), SlashApiProxyDirective (..), TransportSecurity (..))
 import KitchenSink.Engine.Counters (timeItWithLabel)
+import KitchenSink.Engine.Diagnostics (reportDiagnostics)
 import KitchenSink.Engine.MultiSiteConfig
 import KitchenSink.Engine.OnTheFly (OnTheFlyCounters (..), findTarget, handleOnTheFlyProduction)
 import KitchenSink.Engine.Runtime (Engine (..))
@@ -327,14 +328,17 @@ buildDirectorySourceApp rt src cfg = do
             $ (siteTargets Blog.layout) (src.execRoot) unusedPrefix med site
 
     loadSource :: MetaData -> IO (SiteLoader.Site ())
-    loadSource med =
-        SiteLoader.loadSite
-            (fromMaybe "." src.dhallRoot)
-            rt.vars
-            med.pathPrefix
-            (extraSectiontypes Blog.layout)
-            (runTracer $ contramap Loading $ tracePrint)
-            src.path
+    loadSource med = do
+        site <-
+            SiteLoader.loadSite
+                (fromMaybe "." src.dhallRoot)
+                rt.vars
+                med.pathPrefix
+                (extraSectiontypes Blog.layout)
+                (runTracer $ contramap Loading $ tracePrint)
+                src.path
+        reportDiagnostics (siteDiagnostics Blog.layout site)
+        pure site
 
 buildFallbackApp :: Runtime -> MultiSiteConfig -> IO (Maybe (TLS.HostName, Wai.Application))
 buildFallbackApp rt cfg = case cfg.fallback of

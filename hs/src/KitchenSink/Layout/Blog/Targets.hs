@@ -4,6 +4,7 @@
 
 module KitchenSink.Layout.Blog.Targets (
     siteTargets,
+    siteDiagnostics,
     PathList,
     TargetType,
     PreambleSummary,
@@ -13,6 +14,7 @@ module KitchenSink.Layout.Blog.Targets (
 ) where
 
 import Data.Aeson (ToJSON, encode)
+import Data.Foldable (concatMap)
 import Data.ByteString.Lazy qualified as LByteString
 import Data.List qualified as List
 import Data.Map.Strict qualified as Map
@@ -35,6 +37,7 @@ import KitchenSink.Core.Build.Target (DestinationLocation, ExecRoot, OutputPrefi
 import KitchenSink.Core.Build.Target qualified as Core
 import KitchenSink.Core.Generator
 import KitchenSink.Core.Section hiding (target)
+import KitchenSink.Layout.Base (Diagnostic (..), Severity (..))
 import KitchenSink.Layout.Blog.Analyses
 import KitchenSink.Layout.Blog.Analyses.TextRender qualified as TextRender
 import KitchenSink.Layout.Blog.ArticleTypes
@@ -121,6 +124,40 @@ rootDataTarget urlPrefix prefix v loc =
     simpleTarget RootFileTarget (destRootDataFile urlPrefix prefix loc) (Core.ProduceGenerator f)
   where
     f _ = Generator $ pure $ Right $ Text.encodeUtf8 v
+
+generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]
+generatorInstructions art =
+    getSections art isGeneratorInstructions
+        >>= traverse (fmap extract . jsonSection)
+
+-- | What 'siteTargets' silently works around: an article whose @layout@ is not
+-- one we know (or whose build-info section cannot be read) is rendered with the
+-- default layout, and an article whose generator sections cannot be read gets no
+-- generator targets.
+siteDiagnostics :: Site -> [Diagnostic]
+siteDiagnostics site = concatMap articleDiagnostics site.articles
+  where
+    articleDiagnostics :: Sourced (Article [Text]) -> [Diagnostic]
+    articleDiagnostics (Sourced loc art) =
+        layoutDiagnostics loc art <> generatorDiagnostics loc art
+
+    layoutDiagnostics :: SourceLocation -> Article [Text] -> [Diagnostic]
+    layoutDiagnostics loc art
+        | not (isConcreteTarget art) = []
+        | otherwise = case layoutNameFor art of
+            UnknownLayout name ->
+                [Diagnostic Warning loc ("unknown layout " <> Text.pack (show name) <> " (with this publicationStatus), rendered with the default layout")]
+            ErrorLayout err ->
+                [Diagnostic Warning loc ("unreadable build-info section (" <> Text.pack (show err) <> "), rendered with the default layout")]
+            _ -> []
+
+    generatorDiagnostics :: SourceLocation -> Article [Text] -> [Diagnostic]
+    generatorDiagnostics loc art =
+        either
+            (\err -> [Diagnostic Failure loc ("unreadable generator section (" <> Text.pack (show err) <> "), no generator target produced")])
+            (const [])
+            $ runAssembler
+            $ generatorInstructions art
 
 siteTargets :: ExecRoot -> OutputPrefix -> MetaData -> Site -> [Target]
 siteTargets execRoot prefix extra site = allTargets
@@ -224,7 +261,7 @@ siteTargets execRoot prefix extra site = allTargets
         , isConcreteTarget srca.obj
         ]
 
-    -- TODO: raise errors here
+    -- a section that cannot be read yields no target here; 'siteDiagnostics' reports it
     embeddedGeneratorTargets :: [Target]
     embeddedGeneratorTargets =
         [ tgt
@@ -234,7 +271,7 @@ siteTargets execRoot prefix extra site = allTargets
       where
         getTargets :: SourceLocation -> Article [Text] -> [Target]
         getTargets loc art =
-            either (error . show) (fmap (generatorTarget loc))
+            either (const []) (fmap (generatorTarget loc))
                 $ runAssembler
                 $ generatorInstructions art
 
@@ -247,11 +284,6 @@ siteTargets execRoot prefix extra site = allTargets
                         (fmap Text.unpack g.args)
                         (fromMaybe "" $ (fmap Text.encodeUtf8 g.stdin) <|> (fmap (LByteString.toStrict . encode) g.stdin_json))
              in simpleTarget GeneratedTarget (destGenArbitrary urlPrefix prefix loc g) rule
-
-        generatorInstructions :: Article [Text] -> Assembler [GeneratorInstructionsData]
-        generatorInstructions art =
-            getSections art isGeneratorInstructions
-                >>= traverse (fmap extract . jsonSection)
 
     embeddedDataTargets :: [Target]
     embeddedDataTargets =
@@ -606,7 +638,7 @@ siteTargets execRoot prefix extra site = allTargets
                         ]
                 ]
 
-    -- TODO: add warning on default layout
+    -- see 'siteDiagnostics' for the build-time report of the fallback
     defaultLayout ::
         DestinationLocation ->
         DestinationLocation ->

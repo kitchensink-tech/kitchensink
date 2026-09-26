@@ -24,6 +24,7 @@ import Prelude (Read, error)
 import KitchenSink.Core.Assembler (Assembler)
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
+import KitchenSink.Engine.Diagnostics (reportDiagnostics)
 import KitchenSink.Engine.Handlers
 import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.SiteBuilder (produceTarget)
@@ -60,14 +61,18 @@ run cmd = do
     let kitchensinkFilePath = kitshenSinkJsonFilePath cmd.srcDir cmd.ksFile
     serveMetadata <- loadServeModeExtraData kitchensinkFilePath
     let adaptTargets = fmap (fmap (const ()))
-    let handleLoadSite =
-            loadSite
-                "."
-                cmd.variables
-                serveMetadata.pathPrefix
-                (extraSectiontypes Blog.layout)
-                (runTracer $ contramap Loading $ tracePrint)
-                srcPath
+    let handleLoadSite = do
+            site <-
+                loadSite
+                    "."
+                    cmd.variables
+                    serveMetadata.pathPrefix
+                    (extraSectiontypes Blog.layout)
+                    (runTracer $ contramap Loading $ tracePrint)
+                    srcPath
+            -- also on every reload, so an edit that introduces a problem shows up
+            reportDiagnostics (siteDiagnostics Blog.layout site)
+            pure site
     let prodengine =
             Engine
                 handleLoadSite

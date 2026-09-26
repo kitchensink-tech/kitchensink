@@ -153,3 +153,10 @@
   max-height: 100%;
   border-radius: var(--radius);
 }
+
+/* the link back to the site root: see `homeLink` in kitchen-sink.json */
+a.home-link img {
+  height: 1em;
+  vertical-align: middle;
+  margin-right: 0.4em;
+}
