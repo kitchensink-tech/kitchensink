@@ -194,6 +194,55 @@ check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
 check_file "${web}/gen/out/sections-dhall.cmark__cat-this-file-templating"
 
+# 3. The roast-me generator falls back to its committed saved result when agents-exe
+# fails (rate limit, no network); its stub above succeeds, so use a failing one.
+fb=website-scripts/with-fallback.sh
+saved=website-scripts/fallbacks/philosophy.roast-me.txt
+echo "== with-fallback.sh"
+check_file "${saved}"
+fbdir="${workdir}/fallback"
+mkdir -p "${fbdir}"
+if cmp -s <(bash "${fb}" "${saved}" false 2>/dev/null) "${saved}" && cmp -s <(bash "${fb}" "${saved}" true 2>/dev/null) "${saved}"; then
+  echo "  ok   a failing or silent command prints the saved result"
+else
+  echo "  FAIL a failing or silent command must print the saved result"
+  failures=$((failures + 1))
+fi
+if bash "${fb}" "${fbdir}/missing.txt" false > /dev/null 2>&1; then
+  echo "  FAIL a failing command with no saved result must fail"
+  failures=$((failures + 1))
+else
+  echo "  ok   a failing command with no saved result fails"
+fi
+printf 'old\n' > "${fbdir}/saved.txt"
+if [ "$(bash "${fb}" "${fbdir}/saved.txt" echo fresh)" = fresh ] && [ "$(cat "${fbdir}/saved.txt")" = old ] \
+  && [ "$(KS_SAVE_FALLBACK=1 bash "${fb}" "${fbdir}/saved.txt" echo fresh)" = fresh ] && [ "$(cat "${fbdir}/saved.txt")" = fresh ]; then
+  echo "  ok   a working command wins; KS_SAVE_FALLBACK=1 refreshes the saved result"
+else
+  echo "  FAIL a working command must win and only KS_SAVE_FALLBACK=1 refreshes the saved result"
+  failures=$((failures + 1))
+fi
+failing="${workdir}/stubs-failing"
+mkdir -p "${failing}"
+printf '#!/bin/sh\necho "agents-exe: HTTP 429" >&2\nexit 1\n' > "${failing}/agents-exe"
+chmod +x "${failing}/agents-exe"
+webfb="${workdir}/website-fallback"
+bash scaffolding/outputdir.sh "${webfb}" > /dev/null
+echo "== website: produce with a failing agents-exe"
+if PATH="${failing}:${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir website-src --outDir "${webfb}" \
+  > "${workdir}/website-fallback.log" 2>&1; then
+  if cmp -s "${webfb}/gen/out/philosophy.cmark__roast-me" "${saved}"; then
+    echo "  ok   gen/out/philosophy.cmark__roast-me is the saved result"
+  else
+    echo "  FAIL gen/out/philosophy.cmark__roast-me differs from the saved result"
+    failures=$((failures + 1))
+  fi
+else
+  echo "  FAIL produce must succeed with a failing agents-exe, last lines:"
+  tail -n 10 "${workdir}/website-fallback.log" | sed 's/^/    /'
+  failures=$((failures + 1))
+fi
+
 if [ "${failures}" -ne 0 ]; then
   echo "smoke-test: ${failures} check(s) failed"
   exit 1

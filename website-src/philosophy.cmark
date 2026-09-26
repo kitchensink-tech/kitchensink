@@ -1,9 +1,12 @@
 =generator:cmd.tramaj-json
 { "format": "json"
 , "contents":
-    { "cmd": "agents-exe"
+    { "cmd": "bash"
     , "args":
-      [ "--agent-file"
+      [ "./website-scripts/with-fallback.sh"
+      , "website-scripts/fallbacks/philosophy.roast-me.txt"
+      , "agents-exe"
+      , "--agent-file"
       , "agents/critique.json"
       , "run"
       , "-p"
