@@ -1,9 +1,6 @@
 packages: .
 
-allow-newer: dhall-json:bytestring
-           , dhall-json:text
-           , dhall:text
-           , prometheus-client:*
+allow-newer: prometheus-client:*
 
 source-repository-package
     type: git
@@ -28,8 +25,7 @@ source-repository-package
     location: https://github.com/lucasdicioccio/purescript-bridge.git
     tag: 76d8b4c53b0bbfd609a327857b1e09657cf1fc23
 
--- Backend for `templating`/`templating-doc` sections; the alternative to
--- dhall/dhall-json, which it should eventually replace. Formerly
+-- Backend for the tramaj-json/tramaj-doc/tramaj-lib sections. Formerly
 -- "templating-lang" / "templating-hs"; renamed to "tramaj" / "tramaj-hs".
 source-repository-package
     type: git

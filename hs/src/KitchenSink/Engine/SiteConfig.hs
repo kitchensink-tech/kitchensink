@@ -41,7 +41,6 @@ data NavLink = NavLink
     deriving (Generic, Show)
 instance FromJSON NavLink
 instance ToJSON NavLink
-instance Dhall.FromDhall NavLink
 
 -- | An entry of the @menu@ array of @kitchen-sink.json@: a link, optionally
 -- with a sub-menu of plain links (one level only).
@@ -53,7 +52,6 @@ data NavEntry = NavEntry
     deriving (Generic, Show)
 instance FromJSON NavEntry
 instance ToJSON NavEntry
-instance Dhall.FromDhall NavEntry
 
 data FooterColumnConfig = FooterColumnConfig
     { heading :: Maybe Text
@@ -62,7 +60,6 @@ data FooterColumnConfig = FooterColumnConfig
     deriving (Generic, Show)
 instance FromJSON FooterColumnConfig
 instance ToJSON FooterColumnConfig
-instance Dhall.FromDhall FooterColumnConfig
 
 -- | The optional @footer@ object of @kitchen-sink.json@: columns of links and
 -- a legal line.
@@ -73,7 +70,6 @@ data FooterConfig = FooterConfig
     deriving (Generic, Show)
 instance FromJSON FooterConfig
 instance ToJSON FooterConfig
-instance Dhall.FromDhall FooterConfig
 
 data SiteInfo = SiteInfo
     { title :: Text

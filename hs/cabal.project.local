@@ -1,2 +1,1 @@
-allow-newer: dhall-json:aeson
 ignore-project: False
