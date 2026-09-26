@@ -149,6 +149,28 @@ else
   check_grep "broken-generator.cmark" "${workdir}/broken-generator.log"
 fi
 
+# A generator that runs and fails: by default it is reported, everything else
+# is still produced and the command exits non-zero; --abortOnError stops at it.
+rm "${broken}/src/broken-generator.cmark"
+{ cat "${broken}/src/first-article.cmark"; printf '\n=generator:cmd.json\n{"cmd":"false","args":[],"target":"failing.txt"}\n'; } > "${broken}/src/failing-generator.cmark"
+find "${broken}/www" -name '*.html' -delete
+echo "== broken: generator that fails"
+if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${broken}/src" --outDir "${broken}/www" > "${workdir}/failing-generator.log" 2>&1; then
+  echo "  FAIL a failing generator must make produce exit non-zero"
+  failures=$((failures + 1))
+else
+  check_grep "1 target(s) failed to produce" "${workdir}/failing-generator.log"
+  check_grep "failing.txt: error:" "${workdir}/failing-generator.log"
+  check_file "${broken}/www/first-article.html"
+fi
+echo "== broken: generator that fails, --abortOnError"
+if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --abortOnError --srcDir "${broken}/src" --outDir "${broken}/www" > "${workdir}/failing-generator-abort.log" 2>&1; then
+  echo "  FAIL --abortOnError with a failing generator must exit non-zero"
+  failures=$((failures + 1))
+else
+  check_no_grep "target(s) failed to produce" "${workdir}/failing-generator-abort.log"
+fi
+
 # 2. The project website, which exercises most section types.
 web="${workdir}/website"
 bash scaffolding/outputdir.sh "${web}" > /dev/null
