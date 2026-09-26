@@ -64,7 +64,6 @@ run cmd = do
     let handleLoadSite = do
             site <-
                 loadSite
-                    "."
                     cmd.variables
                     serveMetadata.pathPrefix
                     (extraSectiontypes Blog.layout)

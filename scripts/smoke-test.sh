@@ -171,6 +171,19 @@ else
   check_no_grep "target(s) failed to produce" "${workdir}/failing-generator-abort.log"
 fi
 
+# 1c. The dhall section format is gone: a .dhall section is a located error that
+# points at tramaj sections.
+dhallcase="${workdir}/dhall-section"
+cp -r "${scaffold}" "${dhallcase}"
+{ cat "${dhallcase}/src/first-article.cmark"; printf '\n=base:main-content.dhall\n"hello"\n'; } > "${dhallcase}/src/dhall-section.cmark"
+echo "== dhall section is rejected"
+if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${dhallcase}/src" --outDir "${dhallcase}/www" > "${workdir}/dhall-section.log" 2>&1; then
+  echo "  FAIL a .dhall section must fail produce"
+  failures=$((failures + 1))
+else
+  check_grep "dhall-section.cmark: the dhall section format was removed" "${workdir}/dhall-section.log"
+fi
+
 # 2. The project website, which exercises most section types.
 web="${workdir}/website"
 bash scaffolding/outputdir.sh "${web}" > /dev/null
@@ -181,7 +194,6 @@ check_grep "<title>The Kitchen Sink Blog Generator - Home</title>" "${web}/index
 check_grep 'class="home-link"><img src="/images/logo.png" alt>Home</a>' "${web}/index.html"
 check_file "${web}/features.html"
 check_file "${web}/sections-templating.html"
-check_file "${web}/sections-dhall.html"
 check_grep "<entry" "${web}/atom.xml"
 check_grep "/index.html" "${web}/sitemap.txt"
 check_json '.paths | length > 0' "${web}/json/paths.json"
@@ -192,7 +204,6 @@ check_grep 'href="#using-the-layout"' "${web}/documentation-layout.html"
 check_grep 'class="doc-next"' "${web}/documentation-layout.html"
 check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
-check_file "${web}/gen/out/sections-dhall.cmark__cat-this-file-templating"
 
 # 3. The roast-me generator falls back to its committed saved result when agents-exe
 # fails (rate limit, no network); its stub above succeeds, so use a failing one.

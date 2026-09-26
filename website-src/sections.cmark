@@ -459,61 +459,15 @@ __example with datasets__
 
 =base:main-content.cmark
 
-## dhall [advanced]
+## dhall [removed]
 
 ::: {.section-details}
 
-There is one difficult design point when statically-generating website is when
-we have datasets of repeated structure (e.g., an image list with title, date,
-sizes, filepath, preferred corner thickness etc.) and you want to generate some
-content on a page in a static form. I touch on this difficult use-case in a [past article on my blog](https://dicioccio.fr/dhall-section-demo.html).
-
-In this specific case, the section consists of a
-[Dhall](https://dhall-lang.org/) expression typed so that it returns a page
-content.
-
-The returned object must be of `Type`
-
-```dhall
-{ contents : Text
-, format : Text
-}
-```
-
-Where `format` is either `cmark` or `html` and `contents` is formatted in the
-appropriate format. The return type is currently rather primitive and will
-likely change in the future. Changes and specifications are tracked in a
-[WIP-page](/sections-dhall.html).
-
-The same `{format, contents}` contract is also answered by `templating`
-sections, which pre-process sections with [tramaj](/sections-templating.html)
-rather than Dhall. Both backends are supported; tramaj is the lighter-weight
-one and the one likely to outlive the other, since `dhall-json` is a recurring
-obstacle to upgrading GHC.
-
-__example__
-
-    =base:main-content.dhall
-    
-    let map =  https://prelude.dhall-lang.org/List/map
-    
-    let alphabet : List Text =
-      [ "Applicative"
-      , "Bisiumulation"
-      , "Closure"
-      , "Distributive"
-      , "..."
-      ]
-    
-    let toCmarkListItem = \(v : Text) -> "- ${v}"
-    
-    let cmarkContents : List Text =
-      map Text Text toCmarkListItem alphabet
-    
-    in
-    { contents =  cmarkContents
-    , format = "cmark"
-    }
+Kitchen-Sink used to pre-process sections with [Dhall](https://dhall-lang.org/)
+expressions. That format was removed: a `.dhall` section is now rejected at
+load time with an error naming the file. Use a `tramaj-json` section (a value
+answering `{format, contents}`) or a `tramaj-doc` section (a document tree
+rendered to HTML) instead, see [tramaj sections](/sections-templating.html).
 
 :::
 
@@ -555,7 +509,7 @@ Kitchen-Sink directory. However you may not want to multiply files.  Rather,
 sometimes you just want to inline some dataset in a document.
 
 Datasets are useful if you write a small JavaScript demo tool. Datasets also
-are useful as templating mechanisms as JSON datasets are input of Dhall and
+are useful as templating mechanisms as JSON datasets are input of tramaj and
 Mustache sections.
 
 The `dataset` section addresses such needs, by generating.  :warning: The

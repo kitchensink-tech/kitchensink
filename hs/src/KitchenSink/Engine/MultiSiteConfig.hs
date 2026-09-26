@@ -16,7 +16,6 @@ data KitchenSinkDirectorySourceStanza
     = KitchenSinkDirectorySourceStanza
     { path :: FilePath
     , metadata :: SiteInfo
-    , dhallRoot :: Maybe FilePath
     , execRoot :: Maybe FilePath
     }
     deriving (Generic, Show)

@@ -14,7 +14,7 @@ import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NEList
 import Data.Map.Strict qualified as Map
-import Data.Maybe (catMaybes, fromMaybe)
+import Data.Maybe (catMaybes)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Time.Clock (getCurrentTime)
@@ -356,7 +356,6 @@ buildDirectorySourceApp rt src cfg = do
     loadSource med = do
         site <-
             SiteLoader.loadSite
-                (fromMaybe "." src.dhallRoot)
                 rt.vars
                 med.pathPrefix
                 (extraSectiontypes Blog.layout)

@@ -12,7 +12,6 @@ purs/         PureScript frontend widgets (graphexplorer, search-box, kitchen-si
 scaffolding/  Templates + shell scripts to bootstrap a new site
 website-src/  Kitchen-Sink sources for the project website (doubles as a fixture)
 scripts/      Dev helpers exposed as "commands" in the dev-server UI
-dhall/        Dhall prelude pin used when evaluating `.dhall` sections
 ```
 
 ## Build & run
