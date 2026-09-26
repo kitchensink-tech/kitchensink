@@ -100,5 +100,7 @@ serveMetadataFromSiteInfo config = do
         <*> pure (maybe [] (fmap baseURL) $ linkedSites config)
         <*> pure (normalizedBasePath config)
         <*> pure (resolveHomeLink config)
+        <*> pure (resolveMenu config)
+        <*> pure (resolveFooter config)
   where
     noExtraHeaders _ = pure mempty

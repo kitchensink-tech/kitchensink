@@ -115,6 +115,13 @@ check_file "${www}/topics/some-topic.html"
 check_no_grep ": warning: " "${workdir}/scaffold.log"
 # a site without a `homeLink` config renders the default "Home" link
 check_grep 'class="home-link">Home</a>' "${www}/index.html"
+# ... and no menu or footer
+if grep -q 'site-menu\|site-footer' "${www}/index.html"; then
+  echo "  FAIL scaffold index.html renders a menu or footer without configuration"
+  failures=$((failures + 1))
+else
+  echo "  ok   scaffold index.html has no menu or footer"
+fi
 
 # 1a. The topics listing is the article whose layout is "topics", whatever its
 # file is named.
@@ -192,6 +199,11 @@ check_file "${web}/index.html"
 check_grep "<title>The Kitchen Sink Blog Generator - Home</title>" "${web}/index.html"
 # website-src configures `homeLink` with a label and an icon
 check_grep 'class="home-link"><img src="/images/logo.png" alt>Home</a>' "${web}/index.html"
+# website-src configures `menu` and `footer`
+check_grep '<ul class="site-menu"><li><a href="/features.html">Features</a>' "${web}/index.html"
+check_grep '<ul class="site-submenu"><li><a href="/sections-dhall.html">Dhall</a>' "${web}/index.html"
+check_grep '<footer class="site-footer"><div class="footer-columns"><div class="footer-column"><h2>Docs</h2>' "${web}/index.html"
+check_grep '<p class="footer-legal">Kitchen-Sink is open source.</p>' "${web}/features.html"
 check_file "${web}/features.html"
 check_file "${web}/sections-templating.html"
 check_grep "<entry" "${web}/atom.xml"

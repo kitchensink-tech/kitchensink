@@ -402,6 +402,7 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -413,6 +414,7 @@ siteTargets execRoot prefix extra site = allTargets
                                 , const $ pure $ mainArticleLinks urlPrefix articleTargets
                                 , const $ pure $ topicsListings stats
                                 ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]
 
@@ -431,6 +433,7 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -440,6 +443,7 @@ siteTargets execRoot prefix extra site = allTargets
                                 , assembleArchivedMain urlPrefix
                                 , assembleFooter
                                 ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]
 
@@ -458,6 +462,7 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -467,6 +472,7 @@ siteTargets execRoot prefix extra site = allTargets
                                 , assembleUpcomingMain urlPrefix
                                 , assembleFooter
                                 ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]
 
@@ -485,6 +491,7 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -495,6 +502,7 @@ siteTargets execRoot prefix extra site = allTargets
                                 , assembleGlossary
                                 , assembleFooter
                                 ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]
 
@@ -607,6 +615,7 @@ siteTargets execRoot prefix extra site = allTargets
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                                 $ mconcat
                                     [ const $ pure $ homeLink extra
+                                    , const $ pure $ siteMenu extra
                                     , const $ pure $ searchBox urlPrefix
                                     ]
                             , wrap (div_ [class_ "main"])
@@ -614,6 +623,7 @@ siteTargets execRoot prefix extra site = allTargets
                                 $ mconcat
                                     [ const (assembleTopicListing urlPrefix prefix stats topic articles)
                                     ]
+                            , const $ pure $ siteFooter extra
                             ]
                     ]
 
@@ -635,6 +645,7 @@ siteTargets execRoot prefix extra site = allTargets
                             [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                                 $ mconcat
                                     [ const $ pure $ homeLink extra
+                                    , const $ pure $ siteMenu extra
                                     , const $ pure $ searchBox urlPrefix
                                     ]
                             , wrap (div_ [class_ "main"])
@@ -642,6 +653,7 @@ siteTargets execRoot prefix extra site = allTargets
                                 $ mconcat
                                     [ const (assembleHashtagListing urlPrefix (hashtagValue tag) articles)
                                     ]
+                            , const $ pure $ siteFooter extra
                             ]
                     ]
 
@@ -661,6 +673,7 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -668,6 +681,7 @@ siteTargets execRoot prefix extra site = allTargets
                             $ mconcat
                                 [ const (assembleGlossaryListing prefix wholeGlossary articles)
                                 ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]
 
@@ -687,6 +701,7 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main"])
@@ -698,5 +713,6 @@ siteTargets execRoot prefix extra site = allTargets
                                 , assembleGlossary
                                 , assembleFooter
                                 ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]

@@ -532,11 +532,44 @@ homeLink meta =
         toHtml spec.homeLabel
   where
     spec = meta.homeLinkSpec
-    -- only a root-relative URL follows the site's basePath; absolute
-    -- (https://..., //...) and relative URLs are left alone
-    iconUrl icon
-        | "/" `Text.isPrefixOf` icon && not ("//" `Text.isPrefixOf` icon) = meta.pathPrefix <> icon
-        | otherwise = icon
+    iconUrl = siteUrl meta
+
+-- | Only a root-relative URL follows the site's basePath; absolute
+-- (https://..., //...) and relative URLs are left alone.
+siteUrl :: MetaData -> Text -> Text
+siteUrl meta u
+    | "/" `Text.isPrefixOf` u && not ("//" `Text.isPrefixOf` u) = meta.pathPrefix <> u
+    | otherwise = u
+
+-- | The site-wide header menu, from the @menu@ of @kitchen-sink.json@ (nothing
+-- when unset).
+siteMenu :: MetaData -> Lucid.Html ()
+siteMenu meta
+    | null meta.menuSpec = mempty
+    | otherwise = ul_ [class_ "site-menu"] $ traverse_ item meta.menuSpec
+  where
+    item :: MenuItem -> Lucid.Html ()
+    item i = li_ $ do
+        a_ [href_ (siteUrl meta i.menuUrl)] (toHtml i.menuLabel)
+        when (not (null i.menuChildren))
+            $ ul_ [class_ "site-submenu"]
+            $ traverse_ item i.menuChildren
+
+-- | The site-wide footer, from the @footer@ of @kitchen-sink.json@ (nothing
+-- when unset).
+siteFooter :: MetaData -> Lucid.Html ()
+siteFooter meta = case meta.footerSpec of
+    Nothing -> mempty
+    Just spec -> footer_ [class_ "site-footer"] $ do
+        when (not (null spec.footerColumns))
+            $ div_ [class_ "footer-columns"]
+            $ traverse_ column spec.footerColumns
+        traverse_ (\t -> p_ [class_ "footer-legal"] (toHtml t)) spec.footerLegal
+  where
+    column :: FooterColumn -> Lucid.Html ()
+    column c = div_ [class_ "footer-column"] $ do
+        traverse_ (h2_ . toHtml) c.footerHeading
+        ul_ $ traverse_ (\l -> li_ $ a_ [href_ (siteUrl meta l.menuUrl)] (toHtml l.menuLabel)) c.footerLinks
 
 -- | The `data-base-path` attribute is read by search-box.js at startup
 -- (see @KitchenSink.getBasePath@ in purs/kitchen-sink-compat) so it fetches

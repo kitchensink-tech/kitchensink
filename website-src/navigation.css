@@ -160,3 +160,45 @@ a.home-link img {
   vertical-align: middle;
   margin-right: 0.4em;
 }
+
+/* the site-wide menu and footer: see `menu` and `footer` in kitchen-sink.json */
+ul.site-menu {
+  display: inline-block;
+  list-style: none;
+  margin: 0 1em;
+  padding: 0;
+}
+
+ul.site-menu > li {
+  display: inline-block;
+  position: relative;
+  margin-right: 1em;
+}
+
+ul.site-submenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+footer.site-footer {
+  margin: 2em 1em 1em;
+  padding-top: 1em;
+  border-top: 1px solid currentColor;
+}
+
+footer.site-footer .footer-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2em;
+}
+
+footer.site-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+footer.site-footer .footer-legal {
+  font-size: 0.8em;
+}
