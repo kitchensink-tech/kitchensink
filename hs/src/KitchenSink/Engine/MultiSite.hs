@@ -72,6 +72,7 @@ data Counters
     = Counters
     { count_Requests :: Prometheus.Vector (Text, Text, Text) Prometheus.Counter
     , duration_Build :: Prometheus.Vector (Text, Text) Prometheus.Summary
+    , count_ProxiedRequests :: Prometheus.Vector (Text, Text) Prometheus.Counter
     }
 
 initCounters :: IO Counters
@@ -79,6 +80,7 @@ initCounters =
     Counters
         <$> reg1c "ks_targets_requests" ("app", "status", "path") "number of queries per blog target"
         <*> reg1s "ks_ontheflybuild_time" ("app", "path") "time spent building targets on disk"
+        <*> reg1c "ks_proxied_requests" ("app", "route") "number of requests proxied, per site and api route"
   where
     reg1c k t h =
         Prometheus.register
@@ -211,7 +213,7 @@ type SiteAndProxyApi =
 
 buildSiteApplication :: Runtime -> SiteStanza -> IO (Maybe (NEList.NonEmpty TLS.HostName, Wai.Application))
 buildSiteApplication rt cfg = do
-    proxyApp <- fmap ProdProxy.handleProxy <$> buildProxyBackend rt cfg.api
+    proxyApp <- fmap (countProxied rt.counters cfg.domain cfg.api . ProdProxy.handleProxy) <$> buildProxyBackend rt cfg.api
     ksApp <- case cfg.site of
         NoFiles -> pure Nothing
         KitchenSinkDirectorySource src ->
@@ -234,7 +236,30 @@ buildSiteApplication rt cfg = do
         let ks = fmap Text.unpack cfg.extraDomains
         (k :| ks, v)
 
--- | TODO: modify ProdProxy to use keyed counters somehow
+{- | The route a proxied request falls under, used as a metric label: the
+prefix of the first matching directive, "no-route" when none matches, and "*"
+for a site proxying everything to one backend.
+-}
+proxyRouteLabel :: ApiProxyConfig -> Wai.Request -> Text
+proxyRouteLabel cfg req =
+    case cfg of
+        NoProxying -> "none"
+        SlashApiProxy _ _ -> "*"
+        SlashApiProxyList directives ->
+            maybe "no-route" (\d -> d.prefix) (List.find (matchesDirective req) directives)
+
+matchesDirective :: Wai.Request -> SlashApiProxyDirective -> Bool
+matchesDirective req directive = Text.encodeUtf8 directive.prefix `ByteString.isPrefixOf` Wai.rawPathInfo req
+
+{- | Counts each proxied request under its site and route. The proxy library
+only has a single unlabeled counter (still exposed as `cnt_proxied_requests`,
+the total), so the keyed one lives here, around the proxy application.
+-}
+countProxied :: Counters -> Text -> ApiProxyConfig -> Wai.Application -> Wai.Application
+countProxied cntrs domain cfg app req rsp = do
+    Prometheus.withLabel cntrs.count_ProxiedRequests (domain, proxyRouteLabel cfg req) Prometheus.incCounter
+    app req rsp
+
 mkProdProxyRuntime :: Runtime -> ProdProxy.Backends -> ProdProxy.Runtime
 mkProdProxyRuntime rt backends =
     ProdProxy.Runtime
@@ -295,11 +320,9 @@ buildProxyBackend rt cfg =
         ProdProxy.WaiProxyBackend (\_ -> pure $ dest host port)
     prefixed directives =
         let
-            matchPrefix req directive = Text.encodeUtf8 directive.prefix `ByteString.isPrefixOf` Wai.rawPathInfo req
-
             destinations = [(directive, mkdest directive) | directive <- directives]
             noDest = WaiProxy.WPRResponse $ Wai.responseLBS status404 [] "no such api route"
-            findDestination req = fmap (\mk -> mk req) <$> List.find (matchPrefix req . fst) destinations
+            findDestination req = fmap (\mk -> mk req) <$> List.find (matchesDirective req . fst) destinations
             getDestination req = maybe noDest snd (findDestination req)
          in
             ProdProxy.WaiProxyBackend (\req -> pure $ getDestination req)
