@@ -5,10 +5,13 @@
 
 module KitchenSink.Engine.Produce where
 
+import Control.Monad (when)
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock (getCurrentTime)
 import Prod.Tracer
+import System.Exit (exitFailure)
 
+import KitchenSink.Engine.Diagnostics (hasFailures, reportDiagnostics)
 import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.SiteBuilder (produceTarget)
 import KitchenSink.Engine.SiteConfig
@@ -47,8 +50,12 @@ run cmd = do
                 (produceTarget print)
     site <- execLoadSite prodengine
     meta <- execLoadMetaExtradata prodengine
+    let diagnostics = siteDiagnostics Blog.layout site
+    reportDiagnostics diagnostics
     let tgts = evalTargets prodengine meta site
     traverse_ (execProduceTarget prodengine) tgts
+    -- everything that could be produced has been; still fail the command
+    when (hasFailures diagnostics) exitFailure
 
 loadMetadata :: FilePath -> IO MetaData
 loadMetadata path = do

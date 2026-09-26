@@ -12,5 +12,6 @@ layout :: Layout () MetaData Targets.TargetSummary
 layout =
     Layout
         { siteTargets = Targets.siteTargets
+        , siteDiagnostics = Targets.siteDiagnostics
         , extraSectiontypes = []
         }

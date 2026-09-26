@@ -67,6 +67,7 @@ library
                  , KitchenSink.Commonmark.Free
                  , KitchenSink.Engine
                  , KitchenSink.Engine.Api
+                 , KitchenSink.Engine.Diagnostics
                  , KitchenSink.Engine.Config
                  , KitchenSink.Engine.Counters
                  , KitchenSink.Engine.Handlers
