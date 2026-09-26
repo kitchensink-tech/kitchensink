@@ -155,5 +155,10 @@ kitchen-sink produce --srcDir site-source/ --outDir www/
 
 At this point the `www` output dir should have the content for your website.
 
+If one target cannot be produced (for example a `generator` command that exits
+with an error), `produce` reports it on stderr, still writes everything else,
+and exits non-zero at the end. Pass `--abortOnError` to stop at the first
+failing target instead.
+
 
 <script src="js/copy-snippets.js"></script>

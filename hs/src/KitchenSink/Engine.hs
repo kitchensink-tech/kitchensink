@@ -25,6 +25,7 @@ data Action
         , outDir :: Maybe FilePath <?> "output directory"
         , ksFile :: Maybe FilePath <?> "kitchen-sink.json file"
         , var :: [Text] <?> "variables in --var varname=value format"
+        , abortOnError :: Bool <?> "stop at the first target that fails (default: report it, produce the rest, exit non-zero)"
         }
     | Serve
         { srcDir :: FilePath <?> "source directory"
@@ -63,9 +64,9 @@ defaultMain = do
         Init a b ->
             let (a', b') = coerce (a, b)
              in Init.run (Init.Args a' b')
-        Produce a b c vars ->
-            let (a', b', c') = coerce (a, b, c)
-             in Produce.run (Produce.Args a' b' c' (parseVars (coerce vars)))
+        Produce a b c vars d ->
+            let (a', b', c', d') = coerce (a, b, c, d)
+             in Produce.run (Produce.Args a' b' c' (parseVars (coerce vars)) d')
         Serve a b c d vars e f g h ->
             let (a', b', c', d', e', f', g', h') = coerce (a, b, c, d, e, f, g, h)
              in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h')
