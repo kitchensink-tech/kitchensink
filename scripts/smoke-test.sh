@@ -116,6 +116,14 @@ check_no_grep ": warning: " "${workdir}/scaffold.log"
 # a site without a `homeLink` config renders the default "Home" link
 check_grep 'class="home-link">Home</a>' "${www}/index.html"
 
+# 1a. The topics listing is the article whose layout is "topics", whatever its
+# file is named.
+renamed="${workdir}/renamed-topics"
+"${KITCHEN_SINK}" init --dir "${renamed}" > /dev/null
+mv "${renamed}/src/topics.cmark" "${renamed}/src/my-tags.cmark"
+produce renamed-topics "${renamed}/src" "${renamed}/www"
+check_file "${renamed}/www/topics/some-topic.html"
+
 # 1b. Problems in the sources are reported with their file: an unknown layout
 # warns (and falls back to the default layout), a malformed generator section
 # fails the command.

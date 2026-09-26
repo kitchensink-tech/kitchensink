@@ -502,7 +502,7 @@ shouldShowStatsForArticle art =
     not (layoutNameFor art `List.elem` [IndexPage, HashTagListingTemplate, TopicListingTemplate, ImageGallery, VariousListing, SinglePageApp])
 
 isConcreteTarget :: Article [Text] -> Bool
-isConcreteTarget art = not (layoutNameFor art `List.elem` [HashTagListingTemplate, TopicListingTemplate, GlossaryPage])
+isConcreteTarget art = not (isSpecialLayout (layoutNameFor art))
 
 compactTitle :: PreambleData -> Text
 compactTitle p = mconcat [title p]

@@ -1,5 +1,7 @@
 module KitchenSink.Layout.Blog.ArticleTypes where
 
+import Data.List qualified as List
+
 import KitchenSink.Core.Assembler (runAssembler)
 import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Site ()
@@ -22,6 +24,13 @@ data ArticleLayout
     | ImageGallery
     | VariousListing
     deriving (Show, Eq)
+
+{- | Layouts of the special articles: the consolidated listings (topics,
+hashtags, glossary) are built from the whole site by dedicated targets rather
+than rendered as an ordinary article target.
+-}
+isSpecialLayout :: ArticleLayout -> Bool
+isSpecialLayout l = l `List.elem` [TopicListingTemplate, HashTagListingTemplate, GlossaryPage]
 
 layoutNameFor :: Article [Text] -> ArticleLayout
 layoutNameFor art =
