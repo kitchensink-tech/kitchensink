@@ -83,6 +83,7 @@ library
                  , KitchenSink.Engine.SiteLoader
                  , KitchenSink.Engine.SiteBuilder
                  , KitchenSink.Engine.Templating
+                 , KitchenSink.Engine.Dynamic
                  , KitchenSink.Engine.Track
                  , KitchenSink.Engine.Utils
                  , KitchenSink.Prelude
@@ -139,6 +140,8 @@ library
                     , wai-extra
                     , xml-conduit
                     , fsnotify >= 0.4.0.0
+                    , direct-sqlite
+                    , base64-bytestring
 
     hs-source-dirs:   src
     default-language: GHC2021

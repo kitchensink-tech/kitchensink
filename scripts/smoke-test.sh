@@ -191,6 +191,44 @@ else
   check_grep "dhall-section.cmark: the dhall section format was removed" "${workdir}/dhall-section.log"
 fi
 
+# 1d. A dynamic page (route in build-info + a .sql dataset) is skipped
+# entirely by `produce`: no static page, no leaked raw SQL, no warning.
+dyncase="${workdir}/dynamic-page"
+cp -r "${scaffold}" "${dyncase}"
+cat > "${dyncase}/src/user-profile.cmark" <<'CMARK'
+=base:build-info.json
+{"layout":"dynamic","route":"/users/:id"}
+
+=base:preamble.json
+{"author":"Smoke Test","title":"User profile"}
+
+=base:dataset.sql user
+SELECT id, name FROM users WHERE id = :id
+
+=base:main-content.tramaj-doc
+.div(.h1("User ", $ctx.request.params.id))
+CMARK
+echo "== dynamic page: produce skips it"
+if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${dyncase}/src" --outDir "${dyncase}/www" > "${workdir}/dynamic-page.log" 2>&1; then
+  if [ -e "${dyncase}/www/user-profile.html" ]; then
+    echo "  FAIL produce must not render a dynamic page statically"
+    failures=$((failures + 1))
+  else
+    echo "  ok   produce did not render user-profile.html"
+  fi
+  if find "${dyncase}/www" -name '*user-profile*sql*' | grep -q .; then
+    echo "  FAIL produce must not publish a .sql dataset's raw source"
+    failures=$((failures + 1))
+  else
+    echo "  ok   produce did not publish the .sql dataset as a raw file"
+  fi
+  check_no_grep ": warning: " "${workdir}/dynamic-page.log"
+else
+  echo "  FAIL produce must succeed with a dynamic page present, last lines:"
+  tail -n 20 "${workdir}/dynamic-page.log" | sed 's/^/    /'
+  failures=$((failures + 1))
+fi
+
 # 2. The project website, which exercises most section types.
 web="${workdir}/website"
 bash scaffolding/outputdir.sh "${web}" > /dev/null
