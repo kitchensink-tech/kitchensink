@@ -16,6 +16,7 @@ import Network.Wai.Middleware.RequestLogger qualified as RequestLogger
 import Options.Generic
 import Paths_prodapi_core qualified
 import Prod.App qualified as Prod
+import Prod.Background (readBackgroundVal)
 import Prod.Status
 import Prod.Tracer
 import Servant
@@ -25,6 +26,7 @@ import KitchenSink.Core.Assembler (Assembler)
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Diagnostics (reportDiagnostics)
+import KitchenSink.Engine.Dynamic (dynamicMiddleware, dynamicOptionsFromConfig)
 import KitchenSink.Engine.Handlers
 import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.SiteBuilder (produceTarget)
@@ -53,6 +55,7 @@ data Args
     , httpsPort :: Maybe Int
     , tlsKeyFile :: Maybe FilePath
     , tlsCertFile :: Maybe FilePath
+    , dynamic :: Bool
     }
 
 run :: Args -> IO ()
@@ -114,7 +117,7 @@ run cmd = do
                     (statusPage <> versionsSection [("prodapi", Paths_prodapi_core.version)] <> metricsSection "js/metrics.js")
                     (serveDevApi ksconfig devengine prodengine rt)
                     (Proxy @DevApi)
-        pure webapp
+        pure $ withDynamicRouting ksconfig rt webapp
 
     runServe ksconfig engine path = do
         let apiStatus = pure ("ok" :: Text)
@@ -128,7 +131,13 @@ run cmd = do
                     (statusPage <> versionsSection [("prodapi", Paths_prodapi_core.version)] <> metricsSection "js/metrics.js")
                     (serveApi engine rt)
                     (Proxy @ServeApi)
-        pure webapp
+        pure $ withDynamicRouting ksconfig rt webapp
+
+    -- opt-in (--dynamic): tries every request-time dynamic route before
+    -- falling back to the site's ordinary (static / on-the-fly) production;
+    -- see "KitchenSink.Engine.Dynamic"
+    withDynamicRouting ksconfig rt webapp =
+        dynamicMiddleware (dynamicOptionsFromConfig cmd.dynamic ksconfig) (readBackgroundVal (liveSite rt)) webapp
 
 loadServeModeExtraData :: FilePath -> IO MetaData
 loadServeModeExtraData path = do

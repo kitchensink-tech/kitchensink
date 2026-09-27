@@ -77,7 +77,7 @@ headers extras =
         [ext k (Extension v) | ExtraSectionType k v <- extras]
 
 format :: Parser Format
-format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> tramajDoc <|> tramajLib <|> tramajJson
+format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> tramajDoc <|> tramajLib <|> tramajJson <|> sql
   where
     cmark = string "cmark" *> pure Cmark
     json = string "json" *> pure Json
@@ -85,6 +85,7 @@ format = cmark <|> json <|> css <|> csv <|> dhall <|> mustache <|> tramajDoc <|>
     csv = string "csv" *> pure Csv
     dhall = string "dhall" *> pure Dhall
     mustache = string "mustache" *> pure Mustache
+    sql = string "sql" *> pure Sql
     -- all three tramaj modes carry a suffix ("-json"/"-doc"/"-lib"), so none
     -- is a prefix of another and there is no ordering hazard between them
     tramajDoc = string "tramaj-doc" *> pure TramajDoc

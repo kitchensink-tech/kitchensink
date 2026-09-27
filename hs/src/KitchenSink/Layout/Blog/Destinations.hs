@@ -91,6 +91,7 @@ destinationExtension fmt = FileExtension $ case fmt of
     Core.Css -> "css"
     Core.Csv -> "csv"
     Core.InMemory -> "mem"
+    Core.Sql -> "sql"
 
 destEmbeddedData :: UrlPrefix -> OutputPrefix -> SourceLocation -> FileExtension -> Name -> Int -> DestinationLocation
 destEmbeddedData urlPrefix prefix (FileSource path) (FileExtension ext) name index =

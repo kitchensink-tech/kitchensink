@@ -39,6 +39,10 @@ data Format
     | Css
     | Csv
     | InMemory
+    | -- | a dataset backed by a SQL query, evaluated per-request against a
+      -- read-only sqlite datasource (dynamic pages only); deliberately never
+      -- evaluated at load time, see 'KitchenSink.Engine.SiteLoader'
+      Sql
     deriving (Show, Eq, Ord)
 
 data Section ext payload

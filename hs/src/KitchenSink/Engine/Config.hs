@@ -4,6 +4,7 @@
 module KitchenSink.Engine.Config where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Map (Map)
 import GHC.Generics (Generic)
 
 import KitchenSink.Prelude
@@ -57,10 +58,26 @@ data ApiProxyConfig
 instance FromJSON ApiProxyConfig
 instance ToJSON ApiProxyConfig
 
+{- | One entry of the @datasources@ object of @kitchen-sink.json@: for now,
+the only backend is a read-only sqlite file, bound as @sqlite@; a page's
+@.sql@ datasets all query the datasource named @\"main\"@ (see
+"KitchenSink.Engine.Dynamic" -- per-dataset datasource selection is not
+implemented yet).
+-}
+newtype DatasourceConfig = DatasourceConfig
+    { sqlite :: FilePath
+    }
+    deriving (Generic, Show)
+instance FromJSON DatasourceConfig
+instance ToJSON DatasourceConfig
+
 data Config = Config
     { publishScript :: Maybe FilePath
     , commands :: [Command]
     , api :: ApiProxyConfig
+    , datasources :: Maybe (Map Text DatasourceConfig)
+    -- ^ request-time dynamic pages (@kitchen-sink serve --dynamic@); see
+    -- "KitchenSink.Engine.Dynamic"
     }
     deriving (Generic, Show)
 instance FromJSON Config

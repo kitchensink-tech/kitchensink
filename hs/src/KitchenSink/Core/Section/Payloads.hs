@@ -28,6 +28,16 @@ data BuildInfoData = BuildInfoData
     , robots :: Maybe Text
     , order :: Maybe Int
     -- ^ position among the pages of a same layout (used by the documentation layout)
+    , route :: Maybe Text
+    -- ^ SQLPage-style request path pattern (e.g. @\"\/users\/:id\"@) that turns
+    -- this article into a request-time dynamic page (@layout: \"dynamic\"@),
+    -- served only when @kitchen-sink serve --dynamic@ is used
+    , rowCap :: Maybe Int
+    -- ^ per-page cap on the number of rows a @.sql@ dataset of this page may
+    -- return (default 1000); a dynamic-page-only setting
+    , blobs :: Maybe Text
+    -- ^ how @BLOB@ columns of this page's @.sql@ datasets are rendered into
+    -- JSON: @\"base64\"@ (the default) or @\"omit\"@; a dynamic-page-only setting
     }
     deriving (Show, Eq, Generic)
 instance FromJSON BuildInfoData

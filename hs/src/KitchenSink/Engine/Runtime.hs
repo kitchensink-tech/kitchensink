@@ -25,6 +25,7 @@ import Prod.Tracer
 import Prometheus qualified as Prometheus
 import System.FSNotify qualified as FSNotify
 import System.FilePath.Posix (takeExtension)
+import Prelude ((||))
 
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.Config
@@ -170,8 +171,17 @@ getFilePath ev = case ev of
     FSNotify.Unknown p _ _ _ -> p
     FSNotify.WatchedDirectoryRemoved p _ _ -> p
 
+{- | Files the dev-server's fsnotify watch never triggers a reload for.
+Besides editor swap files, this excludes a sqlite datasource
+("KitchenSink.Engine.Dynamic", @kitchen-sink serve --dynamic@) and its
+WAL\/SHM\/journal side-files: those churn on every dynamic-page request, and
+none of it is a change to the site's own sources.
+-}
 ignoreFileReload :: FilePath -> Bool
-ignoreFileReload p = takeExtension p == ".swp"
+ignoreFileReload p =
+    takeExtension p == ".swp"
+        || takeExtension p `List.elem` [".db", ".sqlite", ".sqlite3"]
+        || List.any (`List.isSuffixOf` p) ["-wal", "-shm", "-journal"]
 
 {- | Adapt the background-value tracks with a site by dropping the Site content
 (which doesn't implement Show).

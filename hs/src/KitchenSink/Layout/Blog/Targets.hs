@@ -300,6 +300,10 @@ siteTargets execRoot prefix extra site = allTargets
                 $ datasets art
 
         dataTarget :: SourceLocation -> (Int, Section () [Text]) -> Maybe Target
+        -- a .sql dataset never becomes a static target: it is deferred,
+        -- request-time-only (see "KitchenSink.Engine.Dynamic"), so `produce`
+        -- must not try to publish its raw source text
+        dataTarget _ (_, Section (Dataset _) Sql _) = Nothing
         dataTarget loc (index, (Section (Dataset name) format contents)) =
             let
                 dataDestination = destEmbeddedData urlPrefix prefix loc (destinationExtension format) name index

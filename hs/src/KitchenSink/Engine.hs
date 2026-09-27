@@ -37,6 +37,7 @@ data Action
         , httpsPort :: Maybe Int <?> "port-num"
         , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
         , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
+        , dynamic :: Bool <?> "opt-in to request-time dynamic pages (SQLPage-style routes/sql-datasets), see kitchen-sink.json's datasources"
         }
     | NewArticle
         { srcDir :: FilePath <?> "source directory"
@@ -67,9 +68,9 @@ defaultMain = do
         Produce a b c vars d ->
             let (a', b', c', d') = coerce (a, b, c, d)
              in Produce.run (Produce.Args a' b' c' (parseVars (coerce vars)) d')
-        Serve a b c d vars e f g h ->
-            let (a', b', c', d', e', f', g', h') = coerce (a, b, c, d, e, f, g, h)
-             in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h')
+        Serve a b c d vars e f g h i ->
+            let (a', b', c', d', e', f', g', h', i') = coerce (a, b, c, d, e, f, g, h, i)
+             in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h' i')
         NewArticle a b c d ->
             let (a', b', c', d') = coerce (a, b, c, d)
              in NewArticle.run (NewArticle.Args a' b' c' d')

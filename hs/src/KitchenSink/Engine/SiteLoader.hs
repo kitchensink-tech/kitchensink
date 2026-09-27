@@ -20,7 +20,7 @@ import System.FilePath.Posix (dropExtension, takeExtension, takeFileName, (</>))
 import Text.Megaparsec (runParser)
 import Text.Mustache qualified as Mustache
 import Text.Parsec qualified as Parsec
-import Prelude (Integer, ioError, succ, userError, (||))
+import Prelude (Integer, ioError, succ, userError, (&&), (||))
 import Control.Monad (foldM)
 import qualified Tramaj.Ast
 import qualified Tramaj.Eval
@@ -67,7 +67,25 @@ loadArticle vars pathPrefix extras globalLibs trace path = do
         Right art -> Sourced (FileSource path) <$> evalSections art
   where
     env = EvalEnv path vars pathPrefix trace
-    evalSections art = evalStateT (overSections (evalSection env) art) (newState globalLibs)
+    evalSections art = evalStateT (overSections (evalSection env) art) (newState (isDynamicArticle art) globalLibs)
+
+{- | Whether an article declares a @route@ in its @=base:build-info.json@
+section, which makes it a request-time dynamic page (see
+"KitchenSink.Engine.Dynamic"). Sections of such an article that would
+otherwise be evaluated against @$ctx@ at load time (its @.tramaj-doc@ /
+@.tramaj-json@ sections, most importantly its @main-content@) are instead
+left untouched here, since @$ctx.request@ only exists once an actual request
+comes in.
+-}
+isDynamicArticle :: Article ext [Text] -> Bool
+isDynamicArticle (Article _ secs) =
+    List.any hasRoute secs
+  where
+    hasRoute (Section BuildInfo Json body) =
+        case Aeson.decode (LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
+            Just (binfo :: BuildInfoData) -> isJust (route binfo)
+            Nothing -> False
+    hasRoute _ = False
 
 {- | Parses every @library.templating-lib@ section out of a set of
 templating-library-only files (a @*.cmark-tramaj@ file, picked up by
@@ -168,10 +186,12 @@ data EvalState = EvalState
     { sectionNumber :: Integer
     , datasets :: DatasetCells
     , templatingLibraryTable :: Tramaj.Eval.LibraryTable
+    , dynamicArticle :: Bool
+    -- ^ set once, from the article's own @route@ build-info; see 'isDynamicArticle'
     }
 
-newState :: Tramaj.Eval.LibraryTable -> EvalState
-newState globalLibs = EvalState 0 Map.empty globalLibs
+newState :: Bool -> Tramaj.Eval.LibraryTable -> EvalState
+newState dyn globalLibs = EvalState 0 Map.empty globalLibs dyn
 
 type Eval a = StateT EvalState IO a
 
@@ -204,7 +224,17 @@ sectionStep env x@(Section t fmt body) = do
     exec st0
   where
     exec :: EvalState -> Eval (Section ext [Text])
+    -- a dynamic page's tramaj sections (most importantly its main-content)
+    -- read $ctx.request, which only exists per-request; leave them as source
+    -- for "KitchenSink.Engine.Dynamic" to evaluate later, not here
+    exec st0
+        | st0.dynamicArticle && (fmt == TramajDoc || fmt == TramajJson) =
+            pure x
     exec st0 = case (t, fmt) of
+        -- a .sql dataset is never evaluated at load time either: it runs
+        -- per-request against a read-only sqlite datasource, see
+        -- "KitchenSink.Engine.Dynamic"
+        (Dataset _, Sql) -> pure x
         (_, Mustache) -> do
             let jsonDataset = Aeson.toJSON st0.datasets
             let template = Mustache.compileTemplate "(section)" (Text.unlines body)

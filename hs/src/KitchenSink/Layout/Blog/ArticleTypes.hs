@@ -25,14 +25,17 @@ data ArticleLayout
     | VariousListing
     | DocumentationPage
     | CorporatePage
+    | DynamicPage
     deriving (Show, Eq)
 
-{- | Layouts of the special articles: the consolidated listings (topics,
-hashtags, glossary) are built from the whole site by dedicated targets rather
-than rendered as an ordinary article target.
+{- | Layouts that never get an ordinary static article target: the
+consolidated listings (topics, hashtags, glossary) are built from the whole
+site by dedicated targets instead, and 'DynamicPage' is request-time-only
+(see "KitchenSink.Engine.Dynamic") so it has no static rendering at all --
+'produce' and the dev-server's @\/dev\/targets@ simply skip it.
 -}
 isSpecialLayout :: ArticleLayout -> Bool
-isSpecialLayout l = l `List.elem` [TopicListingTemplate, HashTagListingTemplate, GlossaryPage]
+isSpecialLayout l = l `List.elem` [TopicListingTemplate, HashTagListingTemplate, GlossaryPage, DynamicPage]
 
 layoutNameFor :: Article [Text] -> ArticleLayout
 layoutNameFor art =
@@ -56,6 +59,7 @@ effectiveLayout Public "gallery" = ImageGallery
 effectiveLayout Public "listing" = VariousListing
 effectiveLayout Public "documentation" = DocumentationPage
 effectiveLayout Public "corporate" = CorporatePage
+effectiveLayout Public "dynamic" = DynamicPage
 effectiveLayout Public t = UnknownLayout t
 effectiveLayout Upcoming "article" = UpcomingArticle
 effectiveLayout Upcoming "application" = SinglePageApp
