@@ -1,0 +1,52 @@
+=base:library.tramaj-lib hero
+.div(class: "hero",
+  .h1($ctx.title),
+  .p(class: "hero-subtitle", $ctx.subtitle),
+  .div(class: "hero-actions",
+    map($ctx.actions, (a) =>
+      .a(class: branch("button", eq($a.style, "secondary"), "button secondary"),
+         href: $a.href,
+         $a.label))))
+
+=base:library.tramaj-lib feature-grid
+.div(class: "feature-grid",
+  map($ctx.features, (f) =>
+    .div(class: "feature-card",
+      .h3($f.title),
+      .p($f.body))))
+
+=base:library.tramaj-lib pricing-table
+.table(class: "pricing-table",
+  .thead(
+    .tr(
+      .th(class: "pricing-feature-header"),
+      map($ctx.plans, (p) =>
+        .th(class: "pricing-plan-header",
+          .div(class: "pricing-plan-name", $p.name),
+          .div(class: "pricing-plan-price", $p.price))))),
+  .tbody(
+    map($ctx.rows, (r) =>
+      .tr(
+        .td(class: "pricing-feature-name", $r.feature),
+        map($r.values, (v) => .td(class: "pricing-value", $v))))))
+
+=base:library.tramaj-lib cta-banner
+.div(class: "cta-banner",
+  id: $ctx.id,
+  .h2($ctx.title),
+  .p($ctx.body),
+  .a(class: "button", href: $ctx.href, $ctx.label))
+
+=base:library.tramaj-lib testimonial-strip
+.div(class: "testimonial-strip",
+  map($ctx.testimonials, (t) =>
+    .div(class: "testimonial",
+      $t.quote,
+      .span(class: "testimonial-author", $t.author))))
+
+=base:library.tramaj-lib footer-columns
+.div(class: "corp-footer-columns",
+  map($ctx.columns, (c) =>
+    .div(class: "corp-footer-column",
+      .h2($c.heading),
+      .ul(map($c.links, (l) => .li(.a(href: $l.href, $l.label)))))))

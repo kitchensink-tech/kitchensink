@@ -255,17 +255,35 @@ check_grep 'class="doc-next"' "${web}/documentation-layout.html"
 check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
 # the corporate layout: wide sections (hero, feature grid, pricing, CTA,
-# testimonials), the site menu and footer, but no byline/date/topics/glossary
+# testimonials), the site menu and footer, but no byline/date/topics/glossary.
+# Every one of those sections is now rendered by the corporate.cmark-tramaj
+# component library (see corporate-layout.cmark), not hand-written HTML.
 check_file "${web}/corporate-layout.html"
 check_grep 'class="hero"' "${web}/corporate-layout.html"
+check_grep 'class="hero-actions"' "${web}/corporate-layout.html"
+check_grep '<a class="button secondary" href="#contact">Talk to sales</a>' "${web}/corporate-layout.html"
 check_grep 'class="feature-grid"' "${web}/corporate-layout.html"
-check_grep 'class="pricing-table"' "${web}/corporate-layout.html"
+check_grep 'class="feature-card"' "${web}/corporate-layout.html"
+check_grep '<table class="pricing-table">' "${web}/corporate-layout.html"
+check_grep '<div class="pricing-plan-name">Team</div>' "${web}/corporate-layout.html"
 check_grep 'class="testimonial-strip"' "${web}/corporate-layout.html"
-check_grep 'class="cta-banner"' "${web}/corporate-layout.html"
+check_grep 'class="cta-banner" id="contact"' "${web}/corporate-layout.html"
 check_grep '<ul class="site-menu">' "${web}/corporate-layout.html"
 check_grep '<footer class="site-footer">' "${web}/corporate-layout.html"
 check_no_grep 'class="heading"' "${web}/corporate-layout.html"
 check_no_grep 'class="topiclist"' "${web}/corporate-layout.html"
+
+# the corporate components documentation page: a live example of each of the
+# six library entries (hero, feature-grid, pricing-table, cta-banner,
+# testimonial-strip, footer-columns), each imported from corporate.cmark-tramaj
+check_file "${web}/corporate-components.html"
+check_grep 'class="hero"' "${web}/corporate-components.html"
+check_grep 'class="feature-card"' "${web}/corporate-components.html"
+check_grep '<table class="pricing-table">' "${web}/corporate-components.html"
+check_grep 'class="cta-banner"' "${web}/corporate-components.html"
+check_grep 'class="testimonial-strip"' "${web}/corporate-components.html"
+check_grep 'class="corp-footer-columns"' "${web}/corporate-components.html"
+check_grep 'class="corp-footer-column"' "${web}/corporate-components.html"
 
 # 3. The roast-me generator falls back to its committed saved result when agents-exe
 # fails (rate limit, no network); its stub above succeeds, so use a failing one.

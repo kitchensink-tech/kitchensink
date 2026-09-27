@@ -29,76 +29,78 @@
 =base:summary.cmark
 
 A `corporate` layout example: a fictional marketing page for an "Acme
-Cloud" product, showing the hero, feature grid, pricing table, call to
-action, and testimonial strip that the layout is meant for.
+Cloud" product, composed from the `corporate.cmark-tramaj` component
+library (hero, feature grid, pricing table, call to action, testimonial
+strip) instead of hand-written HTML.
 
-=base:main-content.cmark
-
-<div class="hero">
-  <h1>Acme Cloud</h1>
-  <p class="hero-subtitle">Track team spend in real time, without the
-  spreadsheet gymnastics. Set up in an afternoon, keep everyone honest for
-  years.</p>
-  <div class="hero-actions">
-    <a class="button" href="#pricing">See pricing</a>
-    <a class="button secondary" href="#contact">Talk to sales</a>
-  </div>
-</div>
-
-=base:main-content.cmark
-
-## Why teams switch to Acme Cloud
-
-<div class="feature-grid">
-  <div class="feature-card">
-    <h3>Live budgets</h3>
-    <p>Every team sees its own bucket update as spend happens, not at
-    month-end reconciliation.</p>
-  </div>
-  <div class="feature-card">
-    <h3>Delegated keys</h3>
-    <p>Hand a scoped key to a sub-team or a robot; reclaim what it does not
-    use.</p>
-  </div>
-  <div class="feature-card">
-    <h3>Audit trail</h3>
-    <p>Every consumption and replenishment is timestamped and attributable,
-    no export required.</p>
-  </div>
-</div>
-
-=base:pricing.json
-{"pricingFeatures": ["Buckets", "Delegated keys", "Support"]
-,"pricingPlans":
-  [ {"name": "Starter", "price": "$0", "values": ["3", "1", "Community"]}
-  , {"name": "Team", "price": "$29/mo", "values": ["25", "20", "Priority"]}
-  , {"name": "Scale", "price": "Talk to us", "values": ["Unlimited", "Unlimited", "Dedicated"]}
+=base:dataset.json hero-data
+{ "title": "Acme Cloud"
+, "subtitle": "Track team spend in real time, without the spreadsheet gymnastics. Set up in an afternoon, keep everyone honest for years."
+, "actions":
+  [ {"label": "See pricing", "href": "#pricing", "style": "primary"}
+  , {"label": "Talk to sales", "href": "#contact", "style": "secondary"}
   ]
 }
 
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.hero-data
+import("corporate/hero", {"title": $d.title, "subtitle": $d.subtitle, "actions": $d.actions}).rendered
+
+=base:dataset.json features-data
+{ "features":
+  [ {"title": "Live budgets", "body": "Every team sees its own bucket update as spend happens, not at month-end reconciliation."}
+  , {"title": "Delegated keys", "body": "Hand a scoped key to a sub-team or a robot; reclaim what it does not use."}
+  , {"title": "Audit trail", "body": "Every consumption and replenishment is timestamped and attributable, no export required."}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.features-data
+.(.h2("Why teams switch to Acme Cloud"),
+  import("corporate/feature-grid", {"features": $d.features}).rendered)
+
+=base:dataset.json pricing-data
+{ "plans":
+  [ {"name": "Starter", "price": "$0"}
+  , {"name": "Team", "price": "$29/mo"}
+  , {"name": "Scale", "price": "Talk to us"}
+  ]
+, "rows":
+  [ {"feature": "Buckets", "values": ["3", "25", "Unlimited"]}
+  , {"feature": "Delegated keys", "values": ["1", "20", "Unlimited"]}
+  , {"feature": "Support", "values": ["Community", "Priority", "Dedicated"]}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.pricing-data
+import("corporate/pricing-table", {"plans": $d.plans, "rows": $d.rows}).rendered
+
+=base:dataset.json testimonials-data
+{ "testimonials":
+  [ {"quote": "We went from a shared spreadsheet nobody trusted to a dashboard every team lead checks before standup.", "author": "Head of Platform, mid-size fintech"}
+  , {"quote": "Delegated keys are the feature that sold the rest of the team: our robots finally have their own budget instead of one shared secret.", "author": "Staff engineer, dev tooling team"}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.testimonials-data
+.(.h2("What our early customers say"),
+  import("corporate/testimonial-strip", {"testimonials": $d.testimonials}).rendered)
+
+=base:dataset.json cta-data
+{ "title": "Ready to see it on your own numbers?"
+, "body": "No credit card. Import a CSV of last month's spend and get a live dashboard in minutes."
+, "label": "Get started"
+, "href": "mailto:hello@example.invalid"
+, "id": "contact"
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.cta-data
+import("corporate/cta-banner", {"title": $d.title, "body": $d.body, "label": $d.label, "href": $d.href, "id": $d.id}).rendered
+
 =base:main-content.cmark
-
-## What our early customers say
-
-<div class="testimonial-strip">
-  <div class="testimonial">
-    We went from a shared spreadsheet nobody trusted to a dashboard every
-    team lead checks before standup.
-    <span class="testimonial-author">Head of Platform, mid-size fintech</span>
-  </div>
-  <div class="testimonial">
-    Delegated keys are the feature that sold the rest of the team: our
-    robots finally have their own budget instead of one shared secret.
-    <span class="testimonial-author">Staff engineer, dev tooling team</span>
-  </div>
-</div>
-
-<div class="cta-banner" id="contact">
-  <h2>Ready to see it on your own numbers?</h2>
-  <p>No credit card. Import a CSV of last month's spend and get a live
-  dashboard in minutes.</p>
-  <a class="button" href="mailto:hello@example.invalid">Get started</a>
-</div>
 
 <p>&#8203;</p>
 
@@ -107,6 +109,10 @@ This page uses the <code>corporate</code> article layout: set
 import <code>/css/corporate.css</code> next to the usual stylesheets. Unlike
 the <code>article</code> layout, it renders no byline, no publication date,
 and no topic links or glossary — only the site-wide menu and footer plus
-whatever <code>main-content</code>, <code>callout</code>, and
-<code>pricing</code> sections the page declares, each as its own full-width
-section. See [layouts](/layouts.html) for the other article layouts.
+whatever sections the page declares, each as its own full-width section.
+Every section above is a `main-content.tramaj-doc` section that reads a
+`dataset.json` cell and imports a component from
+[`corporate.cmark-tramaj`](/corporate-components.html), rather than
+hand-written HTML per page. See [layouts](/layouts.html) for the other
+article layouts and [corporate components](/corporate-components.html) for
+the library's documented fields.

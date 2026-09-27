@@ -1,0 +1,267 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Corporate components"
+,"faviconUrl": "/images/favicon.png"
+}
+
+=base:topic.json
+{"topics":["sections", "corporate"]
+,"keywords":["tramaj", "templating", "corporate", "landing-page"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+@import "/css/corporate.css";
+
+pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
+
+.output {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1em 1.5em;
+  margin: 1em 0;
+}
+
+=base:summary.cmark
+
+A small tramaj component library for the `corporate` article layout: hero,
+feature grid, pricing table, call to action, testimonial strip and footer
+columns, each driven by a `dataset.json` cell instead of hand-written HTML.
+
+=base:main-content.cmark
+
+`corporate.cmark-tramaj` is a `.cmark-tramaj` library file (see
+[tramaj sections](/sections-templating.html) for what that extension means
+and how cross-file imports resolve). It has no page of its own; every
+article imports from it as `corporate/<name>`, most visibly the
+[corporate layout example](/corporate-layout.html), which composes its
+whole body from the six components documented below.
+
+Each component is a single `library.tramaj-lib` template rooted at one
+element, called from a page's own `main-content.tramaj-doc` section with
+`import("corporate/<name>", {…}).rendered`. A component takes exactly the
+fields listed under it — nothing more, since tramaj has
+[no arithmetic](/sections-templating.html): counts, index
+alignment and conditional styling all have to be either decided by the
+data author ahead of time (e.g. `pricing-table`'s `rows[].values` line up
+with `plans` positionally because the dataset says so, not because the
+template computes it) or reduced to the handful of comparisons `branch`
+and `eq` can express (`hero`'s `style: "secondary"` switch).
+
+=base:main-content.cmark
+
+## hero
+
+Fields: `title` (string), `subtitle` (string), `actions` (array of
+`{label, href, style}`, where `style: "secondary"` renders as the outlined
+button and anything else — typically `"primary"` — as the filled one).
+
+    =base:dataset.json hero-data
+    { "title": "Acme Cloud"
+    , "subtitle": "Track team spend in real time, without the spreadsheet gymnastics."
+    , "actions":
+      [ {"label": "See pricing", "href": "#pricing", "style": "primary"}
+      , {"label": "Talk to sales", "href": "#contact", "style": "secondary"}
+      ]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.hero-data
+    import("corporate/hero", {"title": $d.title, "subtitle": $d.subtitle, "actions": $d.actions}).rendered
+
+=base:dataset.json hero-data
+{ "title": "Acme Cloud"
+, "subtitle": "Track team spend in real time, without the spreadsheet gymnastics."
+, "actions":
+  [ {"label": "See pricing", "href": "#pricing", "style": "primary"}
+  , {"label": "Talk to sales", "href": "#contact", "style": "secondary"}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.hero-data
+.div(class: "output", import("corporate/hero", {"title": $d.title, "subtitle": $d.subtitle, "actions": $d.actions}).rendered)
+
+=base:main-content.cmark
+
+## feature-grid
+
+Fields: `features` (array of `{title, body}`), one `feature-card` per
+entry.
+
+    =base:dataset.json features-data
+    { "features":
+      [ {"title": "Live budgets", "body": "Every team sees its own bucket update as spend happens."}
+      , {"title": "Delegated keys", "body": "Hand a scoped key to a sub-team or a robot."}
+      ]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.features-data
+    import("corporate/feature-grid", {"features": $d.features}).rendered
+
+=base:dataset.json features-data
+{ "features":
+  [ {"title": "Live budgets", "body": "Every team sees its own bucket update as spend happens."}
+  , {"title": "Delegated keys", "body": "Hand a scoped key to a sub-team or a robot."}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.features-data
+.div(class: "output", import("corporate/feature-grid", {"features": $d.features}).rendered)
+
+=base:main-content.cmark
+
+## pricing-table
+
+Fields: `plans` (array of `{name, price}`, one column each) and `rows`
+(array of `{feature, values}`, one row each, where `values` is a plain
+array of strings that the data author has already lined up positionally
+with `plans` — the template has no way to check or compute that alignment,
+it only `map`s each side once).
+
+    =base:dataset.json pricing-data
+    { "plans":
+      [ {"name": "Starter", "price": "$0"}
+      , {"name": "Team", "price": "$29/mo"}
+      ]
+    , "rows":
+      [ {"feature": "Buckets", "values": ["3", "25"]}
+      , {"feature": "Delegated keys", "values": ["1", "20"]}
+      ]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.pricing-data
+    import("corporate/pricing-table", {"plans": $d.plans, "rows": $d.rows}).rendered
+
+=base:dataset.json pricing-data
+{ "plans":
+  [ {"name": "Starter", "price": "$0"}
+  , {"name": "Team", "price": "$29/mo"}
+  ]
+, "rows":
+  [ {"feature": "Buckets", "values": ["3", "25"]}
+  , {"feature": "Delegated keys", "values": ["1", "20"]}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.pricing-data
+.div(class: "output", import("corporate/pricing-table", {"plans": $d.plans, "rows": $d.rows}).rendered)
+
+=base:main-content.cmark
+
+## cta-banner
+
+Fields: `title` (string), `body` (string), `label`/`href` (the button),
+and `id` (string, may be `""`; set to a real id when the banner is also an
+in-page anchor target, as the corporate layout example does for its
+"Talk to sales" hero link).
+
+    =base:dataset.json cta-data
+    { "title": "Ready to see it on your own numbers?"
+    , "body": "No credit card required."
+    , "label": "Get started"
+    , "href": "mailto:hello@example.invalid"
+    , "id": ""
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.cta-data
+    import("corporate/cta-banner", {"title": $d.title, "body": $d.body, "label": $d.label, "href": $d.href, "id": $d.id}).rendered
+
+=base:dataset.json cta-data
+{ "title": "Ready to see it on your own numbers?"
+, "body": "No credit card required."
+, "label": "Get started"
+, "href": "mailto:hello@example.invalid"
+, "id": ""
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.cta-data
+.div(class: "output", import("corporate/cta-banner", {"title": $d.title, "body": $d.body, "label": $d.label, "href": $d.href, "id": $d.id}).rendered)
+
+=base:main-content.cmark
+
+## testimonial-strip
+
+Fields: `testimonials` (array of `{quote, author}`).
+
+    =base:dataset.json testimonials-data
+    { "testimonials":
+      [ {"quote": "We went from a shared spreadsheet nobody trusted to a dashboard every team lead checks before standup.", "author": "Head of Platform, mid-size fintech"}
+      ]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.testimonials-data
+    import("corporate/testimonial-strip", {"testimonials": $d.testimonials}).rendered
+
+=base:dataset.json testimonials-data
+{ "testimonials":
+  [ {"quote": "We went from a shared spreadsheet nobody trusted to a dashboard every team lead checks before standup.", "author": "Head of Platform, mid-size fintech"}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.testimonials-data
+.div(class: "output", import("corporate/testimonial-strip", {"testimonials": $d.testimonials}).rendered)
+
+=base:main-content.cmark
+
+## footer-columns
+
+Fields: `columns` (array of `{heading, links}`, where `links` is an array
+of `{label, href}`). This renders link columns as ordinary page content —
+`class="corp-footer-columns"` — distinct from the site-wide
+`<footer class="site-footer">` chrome that `kitchen-sink.json`'s own
+`footer` configuration already renders below every page; use this
+component for an in-page "resources" band, not to replace the site
+footer.
+
+    =base:dataset.json footer-columns-data
+    { "columns":
+      [ {"heading": "Product", "links": [{"label": "Pricing", "href": "#pricing"}, {"label": "Changelog", "href": "/changelog.html"}]}
+      , {"heading": "Company", "links": [{"label": "About", "href": "/about.html"}]}
+      ]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.footer-columns-data
+    import("corporate/footer-columns", {"columns": $d.columns}).rendered
+
+=base:dataset.json footer-columns-data
+{ "columns":
+  [ {"heading": "Product", "links": [{"label": "Pricing", "href": "#pricing"}, {"label": "Changelog", "href": "/changelog.html"}]}
+  , {"heading": "Company", "links": [{"label": "About", "href": "/about.html"}]}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.footer-columns-data
+.div(class: "output", import("corporate/footer-columns", {"columns": $d.columns}).rendered)
+
+=base:main-content.cmark
+
+See the [corporate layout example](/corporate-layout.html) for all of
+`hero`, `feature-grid`, `pricing-table`, `cta-banner` and
+`testimonial-strip` composed into one landing page, and
+[tramaj sections](/sections-templating.html) for the underlying language
+(imports, `.cmark-tramaj` library files, the `$ctx` object).

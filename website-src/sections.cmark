@@ -143,7 +143,8 @@ single-page apps, `gallery` for content galleries, `listing` for various
 listings, `documentation` for [technical documentation](/documentation-layout.html)
 (a sidebar table of contents and previous/next links between pages), and
 `corporate` for [landing pages](/corporate-layout.html) (wide sections instead
-of a reading column, no byline/date/topics). Overall, except for index,
+of a reading column, no byline/date/topics), composed from the
+[corporate components](/corporate-components.html) tramaj library. Overall, except for index,
 topics, documentation and corporate, the layout of content does not
 change significantly besides the HTML-nesting (which then allows you to modify
 CSS or hijack DOM elements for single-page apps).

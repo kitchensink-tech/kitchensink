@@ -4,7 +4,7 @@
 , "homeLink": {"label": "Home", "icon": "/images/logo.png"}
 , "menu":
   [ {"label": "Features", "url": "/features.html"}
-  , {"label": "Sections", "url": "/sections-templating.html", "children": [{"label": "Dhall", "url": "/sections-dhall.html"}]}
+  , {"label": "Sections", "url": "/sections-templating.html", "children": [{"label": "Dhall", "url": "/sections-dhall.html"}, {"label": "Corporate components", "url": "/corporate-components.html"}]}
   ]
 , "footer":
   { "columns": [{"heading": "Docs", "links": [{"label": "Features", "url": "/features.html"}, {"label": "GitHub", "url": "https://github.com/kitchensink-tech/kitchensink"}]}]
