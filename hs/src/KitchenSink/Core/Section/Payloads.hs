@@ -38,6 +38,10 @@ data BuildInfoData = BuildInfoData
     , blobs :: Maybe Text
     -- ^ how @BLOB@ columns of this page's @.sql@ datasets are rendered into
     -- JSON: @\"base64\"@ (the default) or @\"omit\"@; a dynamic-page-only setting
+    , auth :: Maybe Text
+    -- ^ access policy for a dynamic page: @\"public\"@ (the default, when
+    -- absent) or @\"required\"@, enforced before any @.sql@ dataset of the
+    -- page runs; a dynamic-page-only setting, see "KitchenSink.Engine.Auth"
     }
     deriving (Show, Eq, Generic)
 instance FromJSON BuildInfoData

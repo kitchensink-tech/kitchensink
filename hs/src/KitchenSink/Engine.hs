@@ -8,6 +8,7 @@ module KitchenSink.Engine where
 import Options.Generic
 
 import Data.Text as Text
+import KitchenSink.Engine.Auth (hashPassword)
 import KitchenSink.Engine.Init qualified as Init
 import KitchenSink.Engine.MultiSite qualified as MultiSite
 import KitchenSink.Engine.NewArticle qualified as NewArticle
@@ -54,6 +55,9 @@ data Action
         , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
         , proxyingTimeout :: Maybe Int <?> "proxy-timeout-microsecs"
         }
+    | HashPassword
+        { password :: Text <?> "plaintext password to hash for kitchen-sink.json's auth.provider.users[].passwordHash (see KitchenSink.Engine.Auth)"
+        }
     deriving (Generic, Show)
 
 instance ParseRecord Action
@@ -77,6 +81,9 @@ defaultMain = do
         MultiSite a vars b c d e f ->
             let (a', b', c', d', e', f') = coerce (a, b, c, d, e, f)
              in MultiSite.run (MultiSite.Args a' (parseVars (coerce vars)) b' c' d' e' f')
+        HashPassword a -> do
+            hashed <- hashPassword (coerce a)
+            putStrLn (Text.unpack hashed)
   where
     parseVars :: [Text] -> [(Text, Text)]
     parseVars xs = fmap parseVar xs

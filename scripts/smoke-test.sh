@@ -208,6 +208,23 @@ SELECT id, name FROM users WHERE id = :id
 =base:main-content.tramaj-doc
 .div(.h1("User ", $ctx.request.params.id))
 CMARK
+# a page with "auth":"required" (KitchenSink.Engine.Auth) must be just as
+# inert under `produce` as any other dynamic page -- auth is a serve-time
+# concern, so `produce` must accept the field, skip the page, and never try
+# to enforce or even parse credentials.
+cat > "${dyncase}/src/admin-profile.cmark" <<'CMARK'
+=base:build-info.json
+{"layout":"dynamic","route":"/admin/:id","auth":"required"}
+
+=base:preamble.json
+{"author":"Smoke Test","title":"Admin profile"}
+
+=base:dataset.sql user
+SELECT id, name FROM users WHERE id = :id AND :user_id IS NOT NULL
+
+=base:main-content.tramaj-doc
+.div(.h1("Admin ", $ctx.request.params.id), .p("user: ", $ctx.request.user))
+CMARK
 echo "== dynamic page: produce skips it"
 if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${dyncase}/src" --outDir "${dyncase}/www" > "${workdir}/dynamic-page.log" 2>&1; then
   if [ -e "${dyncase}/www/user-profile.html" ]; then
@@ -215,6 +232,12 @@ if PATH="${stubs}:${PATH}" "${KITCHEN_SINK}" produce --srcDir "${dyncase}/src" -
     failures=$((failures + 1))
   else
     echo "  ok   produce did not render user-profile.html"
+  fi
+  if [ -e "${dyncase}/www/admin-profile.html" ]; then
+    echo "  FAIL produce must not render an auth-required dynamic page statically either"
+    failures=$((failures + 1))
+  else
+    echo "  ok   produce did not render admin-profile.html (auth:required)"
   fi
   if find "${dyncase}/www" -name '*user-profile*sql*' | grep -q .; then
     echo "  FAIL produce must not publish a .sql dataset's raw source"
