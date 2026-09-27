@@ -89,7 +89,7 @@ handleOnTheFlyProduction fetchTarget cntrs2 track = go
             let size = LByteString.length body
             seq size (pure (body, size))
         runTracer track (TargetBuilt path size)
-        resp $ Wai.responseLBS status200 [("content-type", ctypeFor path)] body
+        resp $ Wai.responseLBS status200 (("content-type", ctypeFor path) : corsHeadersFor path) body
 
     ctypeFor path
         | path == "/.well-known/webfinger" = "application/jrd+json"
@@ -97,3 +97,13 @@ handleOnTheFlyProduction fetchTarget cntrs2 track = go
         | ".json" `ByteString.isSuffixOf` path = "application/json"
         | ".html" `ByteString.isSuffixOf` path = "text/html"
         | True = ""
+
+    -- JSON data targets (e.g. `topicsgraph.json`, consumed by the
+    -- graphexplorer widget to build a federated cross-site graph, see
+    -- KitchenSink.Layout.Blog.Analyses.SiteGraph) are meant to be readable
+    -- from other kitchen-sink sites' origins. They carry no secrets and no
+    -- credentials/cookies are involved, so a permissive read-only CORS
+    -- allowance is safe: allow any origin to GET them.
+    corsHeadersFor path
+        | ".json" `ByteString.isSuffixOf` path = [("Access-Control-Allow-Origin", "*")]
+        | True = []
