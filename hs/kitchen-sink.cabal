@@ -83,6 +83,7 @@ library
                  , KitchenSink.Engine.SiteLoader
                  , KitchenSink.Engine.SiteBuilder
                  , KitchenSink.Engine.Templating
+                 , KitchenSink.Engine.Toolbox
                  , KitchenSink.Engine.Dynamic
                  , KitchenSink.Engine.Track
                  , KitchenSink.Engine.Utils
@@ -154,6 +155,13 @@ executable kitchen-sink
                     , kitchen-sink
     ghc-options: -O2 -threaded
     hs-source-dirs:   app
+
+executable kitchen-sink-tool
+    main-is:          Main.hs
+    build-depends:    base >=4.14.3.0
+                    , kitchen-sink
+    ghc-options: -O2 -threaded
+    hs-source-dirs:   toolbox-app
 
 executable kitchen-sink-purescript-bridge
     main-is:          Main.hs
