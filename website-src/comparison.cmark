@@ -1,0 +1,173 @@
+=base:build-info.json
+{"layout":"article"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Kitchen-Sink vs. other static-site generators"
+,"faviconUrl": "/images/favicon.png"
+}
+
+=base:topic.json
+{"topics":["design", "philosophy"]
+,"keywords":["static-site generators", "Hugo", "Eleventy", "Jekyll", "Zola", "comparison"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+
+=base:summary.cmark
+
+An honest, even-handed comparison of Kitchen-Sink against a few well-known
+static-site generators (Hugo, Eleventy, Jekyll, Zola), and a look at what is
+actually distinctive about Kitchen-Sink's own design.
+
+=base:main-content.cmark
+
+There is no shortage of good static-site generators. This page is not here to
+declare a winner — [Hugo](https://gohugo.io/), [Eleventy](https://www.11ty.dev/),
+[Jekyll](https://jekyllrb.com/), and [Zola](https://www.getzola.org/) are all
+mature, well-documented tools with large communities, themes, and plugin
+ecosystems that Kitchen-Sink does not try to match. What follows is a factual
+side-by-side of a few structural choices, plus a plainer explanation of what
+we think is actually different about Kitchen-Sink.
+
+We have not run comparative build-time or output-size benchmarks, so this
+page makes no performance claims for any of these tools.
+
+=base:pricing.json
+{"pricingFeatures":
+  [ "Content format"
+  , "Templating"
+  , "Single file mixes content, style, and data"
+  , "Built-in dev server with live reload"
+  , "Request-time (on-the-fly) rendering, not just static output"
+  , "Request-time dynamic pages backed by SQL datasources"
+  , "Built-in API gateway / reverse proxy"
+  , "Multi-site hosting (one process, many domains)"
+  ]
+,"pricingPlans":
+  [ {"name": "Kitchen-Sink", "price": "Haskell"
+    ,"values":
+      [ "CommonMark (with JSON/CSS/Dhall/templating sections)"
+      , "tramaj (typed expression + document language)"
+      , "Yes"
+      , "Yes"
+      , "Yes (`serve --servMode SERVE`/`DEV`)"
+      , "Yes, opt-in (`--dynamic`)"
+      , "Yes (`/api` proxy)"
+      , "Yes (`multisite`, Dhall-configured, SNI)"
+      ]
+    }
+  , {"name": "Hugo", "price": "Go"
+    ,"values":
+      [ "Markdown + YAML/TOML front matter"
+      , "Go templates"
+      , "No"
+      , "Yes (`hugo server`)"
+      , "No"
+      , "No"
+      , "No"
+      , "No"
+      ]
+    }
+  , {"name": "Eleventy", "price": "JavaScript"
+    ,"values":
+      [ "Markdown + pluggable template languages"
+      , "Nunjucks, Liquid, EJS, Handlebars, JS, … (pluggable)"
+      , "No"
+      , "Yes (bundled dev server)"
+      , "No"
+      , "No"
+      , "No"
+      , "No"
+      ]
+    }
+  , {"name": "Jekyll", "price": "Ruby"
+    ,"values":
+      [ "Markdown + YAML front matter"
+      , "Liquid"
+      , "No"
+      , "Yes (`jekyll serve`)"
+      , "No"
+      , "No"
+      , "No"
+      , "No"
+      ]
+    }
+  , {"name": "Zola", "price": "Rust"
+    ,"values":
+      [ "Markdown + TOML/YAML front matter"
+      , "Tera"
+      , "No"
+      , "Yes (`zola serve`)"
+      , "No"
+      , "No"
+      , "No"
+      , "No"
+      ]
+    }
+  ]
+}
+
+=base:main-content.cmark
+## what is actually distinctive about Kitchen-Sink
+
+Table rows aside, here is the plainer version of what we think sets
+Kitchen-Sink apart — and why, mostly, it comes from being written by one
+person mainly for their own blog, not from a deliberate attempt to
+out-feature anyone.
+
+### one file, all the sections
+
+The [section-based format](/sections.html) lets a single `.cmark` file
+declare its layout, metadata, topics, CSS, and one or more content blocks —
+including generator commands and templating sections — instead of spreading
+content, front matter, and per-page styling across separate files and
+directories. This is a genuine trade-off, not a free lunch: it means longer
+individual files, and it is less friendly to non-technical collaborators
+than a conventional `content/` + `layouts/` + `assets/` split.
+
+### a real templating language, evaluated live
+
+Most static-site generators run their templates once, at build time, to
+produce static HTML. Kitchen-Sink's [`tramaj` sections](/sections-templating.html)
+can do the same, but in `serve` mode the same engine can also evaluate
+**per request**: opt-in with `--dynamic`, a route can query a SQL datasource
+declared in `kitchen-sink.json` and render a page from the result, in the
+spirit of [SQLPage](https://sql-page.com/). You can also [try tramaj directly
+in your browser](/playground.html) without installing anything.
+
+### the dev server doubles as a small API gateway
+
+`kitchen-sink serve` is not only a preview server: it can proxy an `/api`
+route to a backend of your choice (useful for local development of a
+single-page app alongside its content), and in `multisite` mode it can host
+several domains — with per-domain TLS/SNI and proxying rules — from a single
+process, configured in Dhall. None of the tools in the table above are meant
+to do this; it is not a criticism of them, it is simply a different job
+(they generate files, ours also wants to be a small always-on daemon).
+
+### produce and serve share one pipeline
+
+`produce` (one-shot build) and `serve` (dev server / production-ish serving)
+run the exact same `Site → Target → bytes` pipeline — the only difference is
+*when* a target gets realized (ahead of time to disk, or on the fly per
+request). This is what makes on-the-fly dev-mode rendering and request-time
+dynamic pages possible without a second code path to keep in sync.
+
+=base:callout.json
+{"kind": "note"
+,"title": "When you might prefer one of the others"
+,"body": "If you want a large theme ecosystem, a big plugin marketplace, non-technical content editors, or a tool with a much bigger community for support, Hugo, Eleventy, Jekyll, and Zola are all solid, more established choices. Kitchen-Sink is a smaller, more opinionated tool, built first for its author's own blog and now used as the demo of its own input format."
+}

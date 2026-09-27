@@ -5,6 +5,8 @@
 , "menu":
   [ {"label": "Features", "url": "/features.html"}
   , {"label": "Sections", "url": "/sections-templating.html", "children": [{"label": "Dhall", "url": "/sections-dhall.html"}, {"label": "Corporate components", "url": "/corporate-components.html"}]}
+  , {"label": "Comparison", "url": "/comparison.html"}
+  , {"label": "Playground", "url": "/playground.html"}
   ]
 , "footer":
   { "columns": [{"heading": "Docs", "links": [{"label": "Features", "url": "/features.html"}, {"label": "GitHub", "url": "https://github.com/kitchensink-tech/kitchensink"}]}]
