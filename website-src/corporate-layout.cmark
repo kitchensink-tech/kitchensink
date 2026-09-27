@@ -1,0 +1,112 @@
+=base:build-info.json
+{"layout":"corporate"
+,"publicationStatus":"Public"
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Budgetz Cloud"
+}
+
+=base:topic.json
+{"topics":["authoring articles", "how-to"]
+,"keywords":["corporate", "landing-page", "layouts"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+@import "/css/corporate.css";
+
+=base:summary.cmark
+
+A `corporate` layout example: a fictional marketing page for a "Budgetz
+Cloud" product, showing the hero, feature grid, pricing table, call to
+action, and testimonial strip that the layout is meant for.
+
+=base:main-content.cmark
+
+<div class="hero">
+  <h1>Budgetz Cloud</h1>
+  <p class="hero-subtitle">Track team spend in real time, without the
+  spreadsheet gymnastics. Set up in an afternoon, keep everyone honest for
+  years.</p>
+  <div class="hero-actions">
+    <a class="button" href="#pricing">See pricing</a>
+    <a class="button secondary" href="#contact">Talk to sales</a>
+  </div>
+</div>
+
+=base:main-content.cmark
+
+## Why teams switch to Budgetz Cloud
+
+<div class="feature-grid">
+  <div class="feature-card">
+    <h3>Live budgets</h3>
+    <p>Every team sees its own bucket update as spend happens, not at
+    month-end reconciliation.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Delegated keys</h3>
+    <p>Hand a scoped key to a sub-team or a robot; reclaim what it does not
+    use.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Audit trail</h3>
+    <p>Every consumption and replenishment is timestamped and attributable,
+    no export required.</p>
+  </div>
+</div>
+
+=base:pricing.json
+{"pricingFeatures": ["Buckets", "Delegated keys", "Support"]
+,"pricingPlans":
+  [ {"name": "Starter", "price": "$0", "values": ["3", "1", "Community"]}
+  , {"name": "Team", "price": "$29/mo", "values": ["25", "20", "Priority"]}
+  , {"name": "Scale", "price": "Talk to us", "values": ["Unlimited", "Unlimited", "Dedicated"]}
+  ]
+}
+
+=base:main-content.cmark
+
+## What our early customers say
+
+<div class="testimonial-strip">
+  <div class="testimonial">
+    We went from a shared spreadsheet nobody trusted to a dashboard every
+    team lead checks before standup.
+    <span class="testimonial-author">Head of Platform, mid-size fintech</span>
+  </div>
+  <div class="testimonial">
+    Delegated keys are the feature that sold the rest of the team: our
+    robots finally have their own budget instead of one shared secret.
+    <span class="testimonial-author">Staff engineer, dev tooling team</span>
+  </div>
+</div>
+
+<div class="cta-banner" id="contact">
+  <h2>Ready to see it on your own numbers?</h2>
+  <p>No credit card. Import a CSV of last month's spend and get a live
+  dashboard in minutes.</p>
+  <a class="button" href="mailto:hello@example.invalid">Get started</a>
+</div>
+
+<p>&#8203;</p>
+
+This page uses the <code>corporate</code> article layout: set
+<code>{"layout":"corporate"}</code> in <code>base:build-info.json</code> and
+import <code>/css/corporate.css</code> next to the usual stylesheets. Unlike
+the <code>article</code> layout, it renders no byline, no publication date,
+and no topic links or glossary — only the site-wide menu and footer plus
+whatever <code>main-content</code>, <code>callout</code>, and
+<code>pricing</code> sections the page declares, each as its own full-width
+section. See [layouts](/layouts.html) for the other article layouts.

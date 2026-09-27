@@ -216,6 +216,18 @@ check_grep 'href="#using-the-layout"' "${web}/documentation-layout.html"
 check_grep 'class="doc-next"' "${web}/documentation-layout.html"
 check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
+# the corporate layout: wide sections (hero, feature grid, pricing, CTA,
+# testimonials), the site menu and footer, but no byline/date/topics/glossary
+check_file "${web}/corporate-layout.html"
+check_grep 'class="hero"' "${web}/corporate-layout.html"
+check_grep 'class="feature-grid"' "${web}/corporate-layout.html"
+check_grep 'class="pricing-table"' "${web}/corporate-layout.html"
+check_grep 'class="testimonial-strip"' "${web}/corporate-layout.html"
+check_grep 'class="cta-banner"' "${web}/corporate-layout.html"
+check_grep '<ul class="site-menu">' "${web}/corporate-layout.html"
+check_grep '<footer class="site-footer">' "${web}/corporate-layout.html"
+check_no_grep 'class="heading"' "${web}/corporate-layout.html"
+check_no_grep 'class="topiclist"' "${web}/corporate-layout.html"
 
 # 3. The roast-me generator falls back to its committed saved result when agents-exe
 # fails (rate limit, no network); its stub above succeeds, so use a failing one.

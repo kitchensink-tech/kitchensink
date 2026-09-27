@@ -140,9 +140,11 @@ An important section to let Kitchen-Sink know which __layout__ to apply.  Known
 layouts are `article`, `index` (for `index.cmark`), `glossary` (for
 `glossary.cmark`), `topics` (for `topics.cmark`), `application` for JavaScript
 single-page apps, `gallery` for content galleries, `listing` for various
-listings, and `documentation` for [technical documentation](/documentation-layout.html)
-(a sidebar table of contents and previous/next links between pages). Overall,
-except for index, topics and documentation, the layout of content does not
+listings, `documentation` for [technical documentation](/documentation-layout.html)
+(a sidebar table of contents and previous/next links between pages), and
+`corporate` for [landing pages](/corporate-layout.html) (wide sections instead
+of a reading column, no byline/date/topics). Overall, except for index,
+topics, documentation and corporate, the layout of content does not
 change significantly besides the HTML-nesting (which then allows you to modify
 CSS or hijack DOM elements for single-page apps).
 
