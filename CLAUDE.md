@@ -45,7 +45,7 @@ kitchen-sink multisite --configFile sites.json --httpPort 80
 
 Flags are derived by `optparse-generic` from the `Action` record fields in `KitchenSink/Engine.hs` — that file is the authority when a flag name in the website docs looks stale.
 
-`--var name=value` injects variables available to Dhall sections.
+`--var name=value` injects variables available to tramaj sections.
 
 Rebuilding the site the project serves as its own docs, from the repo root:
 
@@ -72,15 +72,16 @@ A page is a `.cmark`/`.md` file split into *sections*, each introduced by a head
 =base:main-content.cmark
 =base:main-css.css
 =base:dataset.json my-name → named data cell, referenceable by later sections
-=base:main-content.templating     → templating-lang expression → {format, contents}
-=base:main-content.templating-doc → templating-lang document tree → HTML
+=base:main-content.tramaj-json → tramaj expression → {format, contents}
+=base:main-content.tramaj-doc  → tramaj document tree → HTML
+=base:<name>.tramaj-lib        → tramaj library, only reachable through imports
 =generator:cmd.json        → runs an external command, its stdout becomes an extra target
 =ext:<key>.<fmt>           → layout-declared extension sections
 ```
 
-Parsing lives in `Core/Section/Parser.hs` (megaparsec); the payload record types (`BuildInfoData`, `PreambleData`, `TopicData`, …) are in `Core/Section/Payloads.hs`. `Format` covers `cmark | json | css | csv | dhall | mustache | templating | templating-doc`; the last four are *evaluated at load time* (`Engine/SiteLoader.hs`) and rewritten into a concrete format, which is where `--var` and previously-declared datasets are threaded in.
+Parsing lives in `Core/Section/Parser.hs` (megaparsec); the payload record types (`BuildInfoData`, `PreambleData`, `TopicData`, …) are in `Core/Section/Payloads.hs`. `Format` covers `cmark | json | css | csv | mustache | tramaj-json | tramaj-doc | tramaj-lib`; the tramaj formats are *evaluated at load time* (`Engine/SiteLoader.hs`) and rewritten into a concrete format, which is where `--var` and previously-declared datasets are threaded in.
 
-`dhall` and `templating` are two backends for the same job — see `website-src/sections-templating.cmark`. Both answer with a `{format, contents}` value that says which concrete format (`json`/`cmark`/`html`) the section becomes; `SiteLoader.rewriteSection` is the shared tail that applies it, including registering a `=base:dataset.<fmt> name` cell generated that way. `templating`/`templating-doc` are backed by `templating-hs` (`Engine/Templating.hs`, pinned by git in `cabal.project`), respectively its expression mode (JSON out) and its document mode (a `Node` tree folded to HTML via lucid). The medium-term intent is to deprecate `dhall`, since `dhall-json` is a recurring obstacle to upgrading GHC — do not add new Dhall-only capability without a templating counterpart.
+tramaj is the section pre-processor; see `website-src/sections-templating.cmark`. The former Dhall format was removed: a `.dhall` section is rejected at load time with a located error (the `Dhall` `Format` constructor survives only to produce that error). A `tramaj-json` section answers with a `{format, contents}` value that says which concrete format (`json`/`cmark`/`html`) the section becomes; `SiteLoader.rewriteSection` is the shared tail that applies it, including registering a `=base:dataset.<fmt> name` cell generated that way. `tramaj-json`/`tramaj-doc` are backed by tramaj-hs (`Engine/Templating.hs`, pinned by git in `cabal.project`), respectively its expression mode (JSON out) and its document mode (a `Node` tree folded to HTML via lucid). `*.cmark-tramaj` files hold library-only `tramaj-lib` sections that seed a library table every article can import.
 
 Everything else in a source directory is picked up by extension (`SiteLoader.loadSite`): `.jpg/.png`, `.css`, `.js`, `.html`, `.dot` (rendered via graphviz `dot`), `.webm/.mp4`, audio, `.pdf`, and raw `.txt/.csv/.json/.dhall`. `kitchen-sink.json` at the source root is the site config and is excluded from raw files.
 
