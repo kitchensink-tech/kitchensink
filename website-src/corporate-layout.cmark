@@ -5,7 +5,7 @@
 
 =base:preamble.json
 {"author": "Lucas DiCioccio"
-,"title": "Budgetz Cloud"
+,"title": "Acme Cloud"
 }
 
 =base:topic.json
@@ -28,14 +28,14 @@
 
 =base:summary.cmark
 
-A `corporate` layout example: a fictional marketing page for a "Budgetz
+A `corporate` layout example: a fictional marketing page for an "Acme
 Cloud" product, showing the hero, feature grid, pricing table, call to
 action, and testimonial strip that the layout is meant for.
 
 =base:main-content.cmark
 
 <div class="hero">
-  <h1>Budgetz Cloud</h1>
+  <h1>Acme Cloud</h1>
   <p class="hero-subtitle">Track team spend in real time, without the
   spreadsheet gymnastics. Set up in an afternoon, keep everyone honest for
   years.</p>
@@ -47,7 +47,7 @@ action, and testimonial strip that the layout is meant for.
 
 =base:main-content.cmark
 
-## Why teams switch to Budgetz Cloud
+## Why teams switch to Acme Cloud
 
 <div class="feature-grid">
   <div class="feature-card">
