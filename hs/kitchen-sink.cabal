@@ -98,9 +98,7 @@ library
                     , bytestring
                     , containers
                     , directory
-                    , dhall
                     , file-embed
-                    , dhall-json
                     , either
                     , lens-family-core
                     , feed >= 1.3.2.1
