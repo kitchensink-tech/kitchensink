@@ -5,6 +5,7 @@ set -x
 cp -v ./website-src/article.css ./scaffolding/css
 cp -v ./website-src/articles-listing.css ./scaffolding/css
 cp -v ./website-src/colors.css ./scaffolding/css
+cp -v ./website-src/corporate.css ./scaffolding/css
 cp -v ./website-src/dev.css ./scaffolding/css
 cp -v ./website-src/documentation.css ./scaffolding/css
 cp -v ./website-src/index.css ./scaffolding/css

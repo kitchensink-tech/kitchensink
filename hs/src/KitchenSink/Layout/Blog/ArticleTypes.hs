@@ -24,6 +24,7 @@ data ArticleLayout
     | ImageGallery
     | VariousListing
     | DocumentationPage
+    | CorporatePage
     deriving (Show, Eq)
 
 {- | Layouts of the special articles: the consolidated listings (topics,
@@ -54,12 +55,14 @@ effectiveLayout Public "application" = SinglePageApp
 effectiveLayout Public "gallery" = ImageGallery
 effectiveLayout Public "listing" = VariousListing
 effectiveLayout Public "documentation" = DocumentationPage
+effectiveLayout Public "corporate" = CorporatePage
 effectiveLayout Public t = UnknownLayout t
 effectiveLayout Upcoming "article" = UpcomingArticle
 effectiveLayout Upcoming "application" = SinglePageApp
 effectiveLayout Upcoming "gallery" = ImageGallery
 effectiveLayout Upcoming "listing" = VariousListing
 effectiveLayout Upcoming "documentation" = DocumentationPage
+effectiveLayout Upcoming "corporate" = CorporatePage
 effectiveLayout Upcoming t = UnknownLayout t
 effectiveLayout Archived "article" = ArchivedArticle
 effectiveLayout Archived t = UnknownLayout t

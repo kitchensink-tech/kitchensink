@@ -375,6 +375,7 @@ siteTargets execRoot prefix extra site = allTargets
         , (UpcomingArticle, upcomingArticleLayout)
         , (PublishedArticle, articleLayout)
         , (DocumentationPage, documentationLayout)
+        , (CorporatePage, corporateLayout)
         , (IndexPage, indexLayout)
         ]
 
@@ -535,6 +536,41 @@ siteTargets execRoot prefix extra site = allTargets
                                         , assembleFooter
                                         ]
                                 ]
+                        ]
+                ]
+
+    {- | @corporate@: a landing-page layout for company/marketing sites. Wide,
+    full-bleed sections (hero, feature grid, pricing table, call to action,
+    testimonial strip) instead of a narrow reading column, and none of the
+    blog chrome (no byline, no publication date, no topic links, no
+    glossary): the page's own @main-content@/@callout@/@pricing@ sections are
+    the whole story. The site-wide menu and footer are still shown, same as
+    every other layout.
+    -}
+    corporateLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    corporateLayout dloc jsondloc txtdloc =
+        htmldoc
+            $ mconcat
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
+                , htmlbody
+                    $ mconcat
+                        [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
+                            $ mconcat
+                                [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
+                                , const $ pure $ searchBox urlPrefix
+                                ]
+                        , wrap (div_ [class_ "main corporate-layout"])
+                            $ wrap article_
+                            $ mconcat
+                                [ assembleMain urlPrefix
+                                ]
+                        , const $ pure $ siteFooter extra
                         ]
                 ]
 

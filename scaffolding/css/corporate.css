@@ -1,0 +1,186 @@
+/* Theme and layout for the `corporate` article layout: a landing/marketing
+   page rendered as full-width sections (hero, feature grid, pricing table,
+   call to action, testimonial strip) instead of a narrow reading column.
+   A small, neutral corporate palette on top of the site's own colors.css
+   variables, dark-mode aware via the same `prefers-color-scheme` query. */
+
+:root {
+  --corp-bg: #f4f6fb;
+  --corp-surface: #ffffff;
+  --corp-accent: #2454e0;
+  --corp-accent-ink: #ffffff;
+  --corp-accent-soft: #e6ecfd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --corp-bg: #11151d;
+    --corp-surface: #171c26;
+    --corp-accent: #7c9bff;
+    --corp-accent-ink: #0c1020;
+    --corp-accent-soft: rgba(124, 155, 255, 0.14);
+  }
+}
+
+.main.corporate-layout {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1.05em;
+}
+
+.main.corporate-layout .main-article {
+  display: flex;
+  flex-direction: column;
+}
+
+.main.corporate-layout > article {
+  display: block;
+}
+
+/* every main-content/callout/pricing section is its own full-bleed band,
+   with its content kept to a comfortable reading width */
+.main.corporate-layout .main-section {
+  padding: 4em 1.5em;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.main.corporate-layout table.pricing-table {
+  max-width: 900px;
+  margin: 1.5em auto;
+}
+
+/* a section whose only content is a hero goes edge-to-edge instead of
+   sitting inside the 1100px column (falls back gracefully to the nested
+   padding on browsers without :has()) */
+.main.corporate-layout .main-section:has(> .hero) {
+  padding: 0;
+  max-width: none;
+}
+
+/* ~~ hero: the first section of a corporate page ~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.hero {
+  text-align: center;
+  padding: 5em 1.5em;
+  background: linear-gradient(180deg, var(--corp-surface), var(--corp-bg));
+  border-bottom: 1px solid var(--border);
+}
+
+.hero h1 {
+  margin-top: 0;
+  font-size: 2.6em;
+}
+
+.hero .hero-subtitle {
+  max-width: 60ch;
+  margin: 0 auto 1.75em;
+  font-size: 1.2em;
+  color: var(--muted);
+}
+
+.hero .hero-actions {
+  display: flex;
+  gap: 1em;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ~~ buttons, used by the hero and the call-to-action ~~~~~~~~~~~~~~~~~~ */
+
+a.button {
+  display: inline-block;
+  padding: 0.75em 1.6em;
+  border-radius: var(--radius);
+  background-color: var(--corp-accent);
+  color: var(--corp-accent-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+a.button:hover {
+  opacity: 0.9;
+}
+
+a.button.secondary {
+  background-color: transparent;
+  color: var(--corp-accent);
+  border: 1px solid var(--corp-accent);
+}
+
+/* ~~ feature grid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2em;
+}
+
+.feature-card {
+  padding: 1.6em;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+}
+
+.feature-card p {
+  margin-bottom: 0;
+}
+
+/* ~~ call to action banner ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.cta-banner {
+  text-align: center;
+  padding: 3em 2em;
+  background-color: var(--corp-accent-soft);
+  border-radius: var(--radius);
+}
+
+.cta-banner h2 {
+  margin-top: 0;
+}
+
+/* ~~ testimonial strip ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.testimonial-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2em;
+}
+
+.testimonial {
+  padding: 1.6em;
+  background-color: var(--surface-alt);
+  border-radius: var(--radius);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.testimonial .testimonial-author {
+  display: block;
+  margin-top: 1em;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* single column, tighter padding on narrow screens */
+@media (max-width: 700px) {
+  .hero {
+    padding: 3em 1em;
+  }
+
+  .hero h1 {
+    font-size: 1.9em;
+  }
+
+  .main.corporate-layout .main-section {
+    padding: 2.5em 1em;
+  }
+}
