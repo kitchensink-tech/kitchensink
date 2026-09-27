@@ -16,7 +16,7 @@ scripts/      Dev helpers exposed as "commands" in the dev-server UI
 
 ## Build & run
 
-All Haskell work happens in `hs/`. GHC 9.8.2 / cabal 3.12; `cabal.project` pulls `prodapi-{core,web,proxy}`, `purescript-bridge`, and a `prometheus-client` fork from git.
+All Haskell work happens in `hs/`. GHC 9.10.3 / cabal 3.12 (pinned via `with-compiler` in `cabal.project`); `cabal.project` pulls `prodapi-{core,web,proxy}`, `purescript-bridge`, and a `prometheus-client` fork from git. `prodapi-proxy` and `tramaj-hs` pin a `base` upper bound that matches GHC 9.8's `base`; both build fine against GHC 9.10's newer `base`, so `cabal.project` relaxes those two bounds with `allow-newer` rather than waiting on upstream to bump them.
 
 ```bash
 cd hs
