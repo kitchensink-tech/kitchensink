@@ -22,7 +22,7 @@ import Foreign (Foreign, ForeignError(..), readArray, readBoolean, readInt, read
 import Foreign.Index ((!))
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), maybe)
-import Data.Array (concat)
+import Data.Array (concat, elem)
 import Data.Lens (view, toArrayOf, traversed, to, filtered)
 import Data.Lens.Fold (anyOf)
 import Data.Number as Number
@@ -66,6 +66,8 @@ data Category
   | Images
   | ExternalSites
 
+derive instance eqCategory :: Eq Category
+
 readCategory :: Int -> Except (NonEmptyList ForeignError) Category
 readCategory = case _ of
   0 -> pure Articles
@@ -104,8 +106,13 @@ type Options =
   , series :: Array Series
   )
 
-chartOptions :: TopicGraph -> Maybe Node -> ECharts.Input Options
-chartOptions graph focusedNode =
+-- | `expandedExternalSites` lists the URLs of external kitchen-sink sites
+-- whose own `topicsgraph.json` has already been fetched and merged into
+-- `graph` (see `Main.purs`'s click-to-expand handling). It only drives the
+-- node's rendering (a filled circle once expanded vs. a hollow triangle
+-- before); the actual fetch+merge state lives in `Main`'s component state.
+chartOptions :: TopicGraph -> Maybe Node -> Array String -> ECharts.Input Options
+chartOptions graph focusedNode expandedExternalSites =
   let
     isSelection :: String -> Boolean
     isSelection n1id = maybe false (\n2 -> n2.id == n1id) focusedNode
@@ -177,8 +184,11 @@ chartOptions graph focusedNode =
       KS.ExternalKitchenSinkSiteNode url ->
         { id: key
         , name: url
+        -- unexpanded: hollow triangle (click to fetch + merge that site's
+        -- own graph); expanded: filled circle, its nodes/edges are already
+        -- spliced into `graph`.
         , category: 4
-        , symbol: "triangle"
+        , symbol: if url `elem` expandedExternalSites then "circle" else "triangle"
         , symbolSize: externalSiteSize key
         }
 

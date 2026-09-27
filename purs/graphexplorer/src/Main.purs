@@ -3,11 +3,12 @@ module Main where
 import Prelude
 
 import Affjax.Web as AX
+import Data.Array (elem, (\\), (:))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Either (Either(..))
 import Data.Traversable (traverse_)
 import Data.Lens
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
@@ -27,7 +28,7 @@ import Web.HTML.Window (Window, open)
 import Halogen.ECharts as ECharts
 import KSGraph as KSGraph
 import KitchenSink (fetchGraph, getBasePath)
-import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph, _TopicGraph)
+import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph(..), _TopicGraph)
 import KitchenSink.Layout.Blog.Analyses.SiteGraph as KS
 
 type BaseUrl = String
@@ -74,7 +75,7 @@ component =
     }
   where
 
-  initialState graph = {graph, focusedNode: Nothing}
+  initialState graph = {graph, focusedNode: Nothing, expandedSites: []}
 
   render state =
     HH.div
@@ -82,7 +83,7 @@ component =
     ]
     [ case state.graph of
         Nothing -> renderEmpty
-        Just graph -> renderGraph graph state.focusedNode
+        Just graph -> renderGraph graph state.focusedNode state.expandedSites
     ]
 
   renderEmpty =
@@ -96,25 +97,107 @@ component =
       ]
     ]
 
-  renderGraph graph focusedNode =
+  renderGraph graph focusedNode expandedSites =
     HH.div_
-    [ HH.slot _ksgraph unit (ECharts.component ECharts.style640x480) (KSGraph.chartOptions graph focusedNode) HandleGraphEvent
+    [ HH.slot _ksgraph unit (ECharts.component ECharts.style640x480) (KSGraph.chartOptions graph focusedNode expandedSites) HandleGraphEvent
     ]
 
   handleAction = case _ of
     HandleGraphEvent ev -> do
-      let event = KSGraph.runExcept (KSGraph.decodeEvent ev) 
+      let event = KSGraph.runExcept (KSGraph.decodeEvent ev)
       traverse_ onClick event
 
   onClick (KSGraph.ClickedNode node) = onNodeClicked node
   onClick _ = pure unit
 
-  onNodeClicked node = do
+  onNodeClicked node
+    | node.category == KSGraph.ExternalSites = onExternalSiteNodeClicked node
+    | otherwise = onOrdinaryNodeClicked node
+
+  onOrdinaryNodeClicked node = do
     st0 <- H.get
     let u = url node =<< st0.graph
     when (map _.id st0.focusedNode == Just node.id) $ do
       H.liftEffect $ traverse_ openPage u
     H.modify_ _ { focusedNode = Just node }
+
+  -- `node.name` is the external site's own URL for an
+  -- `ExternalKitchenSinkSiteNode` (see `KSGraph.echartNode`).
+  --
+  -- Click-to-expand, not eager-fetch-on-load: eagerly fetching every
+  -- external site referenced by a site (possibly transitively, once
+  -- merged) doesn't scale and wasn't asked for, so a first click on an
+  -- unexpanded external-site node fetches that site's `topicsgraph.json`
+  -- and splices it into the local graph instead of just focusing it.
+  --
+  -- Cycle guard: `expandedSites` accumulates the URLs of sites already
+  -- merged in. If a merged remote graph itself references a site we've
+  -- already expanded (A -> B -> A, or a direct self-reference), the
+  -- resulting node is rendered normally, but clicking it re-enters this
+  -- same guard and is a no-op fetch (falls into the "already expanded"
+  -- branch below) rather than looping.
+  onExternalSiteNodeClicked node = do
+    st0 <- H.get
+    let siteUrl = node.name
+    if siteUrl `elem` st0.expandedSites
+      then do
+        -- Already expanded: behave like an ordinary node (focus, then
+        -- open the site itself in a new tab on a second click).
+        when (map _.id st0.focusedNode == Just node.id) $
+          H.liftEffect $ traverse_ openPage (Just siteUrl)
+        H.modify_ _ { focusedNode = Just node }
+      else do
+        H.modify_ _ { focusedNode = Just node }
+        mMerged <- H.liftAff $ fetchAndMergeExternalGraph siteUrl st0.graph
+        case mMerged of
+          Nothing -> pure unit
+          Just merged ->
+            H.modify_ _
+              { graph = Just merged
+              , expandedSites = siteUrl : st0.expandedSites
+              }
+
+-- | Fetches `<siteUrl>/json/topicsgraph.json` (the same shape kitchen-sink
+-- emits for its own site, see `KitchenSink.fetchGraph`) and merges it into
+-- the local graph. `Nothing` on any failure (network error, decode error,
+-- or no local graph loaded yet) — the caller leaves the graph untouched in
+-- that case.
+fetchAndMergeExternalGraph :: String -> Maybe TopicGraph -> Aff (Maybe TopicGraph)
+fetchAndMergeExternalGraph siteUrl mLocal = do
+  mRemote <- getGraph siteUrl
+  pure $ case mLocal, mRemote of
+    Just local, Just remote -> Just (mergeExternalGraph siteUrl local remote)
+    _, _ -> Nothing
+
+-- | Splices a remote site's topic graph into the local one:
+--
+--   * every remote node/edge key is namespaced with the site's URL, so it
+--     cannot collide with a local key (or with another already-merged
+--     site's keys);
+--   * the local `ExternalKitchenSinkSiteNode` that was clicked gets extra
+--     edges to the remote graph's own "roots" (nodes that are nobody's
+--     edge target in the remote graph, typically its topics), so the
+--     merged graph reads as one connected component instead of a
+--     disconnected island next to the site node that was expanded.
+mergeExternalGraph :: String -> TopicGraph -> TopicGraph -> TopicGraph
+mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
+  let
+    ns k = siteUrl <> "::" <> k
+
+    remoteNodes = map (\(Tuple k n) -> Tuple (ns k) n) remote.nodes
+    remoteEdges = map (\(Tuple a b) -> Tuple (ns a) (ns b)) remote.edges
+
+    remoteKeys = map fst remoteNodes
+    remoteTargets = map snd remoteEdges
+    roots = remoteKeys \\ remoteTargets
+
+    localSiteKey = "site:" <> siteUrl
+    connectingEdges = map (\r -> Tuple localSiteKey r) roots
+  in
+    TopicGraph
+      { nodes: local.nodes <> remoteNodes
+      , edges: local.edges <> remoteEdges <> connectingEdges
+      }
 
 openPage :: String -> Effect (Maybe Window)
 openPage url = window >>= open url "_blank" ""
