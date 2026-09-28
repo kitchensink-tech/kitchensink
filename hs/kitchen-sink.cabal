@@ -85,6 +85,7 @@ library
                  , KitchenSink.Engine.Templating
                  , KitchenSink.Engine.Toolbox
                  , KitchenSink.Engine.Dynamic
+                 , KitchenSink.Engine.Auth
                  , KitchenSink.Engine.Track
                  , KitchenSink.Engine.Utils
                  , KitchenSink.Prelude
@@ -143,6 +144,8 @@ library
                     , fsnotify >= 0.4.0.0
                     , direct-sqlite
                     , base64-bytestring
+                    , crypton
+                    , memory
 
     hs-source-dirs:   src
     default-language: GHC2021

@@ -9,7 +9,7 @@ is served per-request instead of statically. Its @.sql@ datasets
 (@=base:dataset.sql name@) run against a read-only sqlite datasource for
 every request, and its @main-content@ (a @.tramaj-doc@ section) is evaluated
 per-request against a context extended with @$ctx.request@
-(@method@\/@path@\/@params@\/@query@\/@form@\/@cookies@).
+(@method@\/@path@\/@params@\/@query@\/@form@\/@cookies@\/@user@).
 
 Both are left unevaluated at load time by "KitchenSink.Engine.SiteLoader"
 (see @KitchenSink.Engine.SiteLoader.isDynamicArticle@); this module does the
@@ -18,9 +18,15 @@ per-request evaluation.
 This is opt-in (@kitchen-sink serve --dynamic@) and, in this first cut,
 scoped to what the feature's design notes called out as an acceptable
 subset: GET-only (no forms\/POST\/redirects), a single datasource named
-@\"main\"@ (no per-dataset datasource selection), and no
-sessions\/auth\/postgres -- all recorded as deferred follow-ups, not
-silently missing.
+@\"main\"@ (no per-dataset datasource selection), and no postgres -- all
+recorded as deferred follow-ups, not silently missing.
+
+A page's build-info may set @\"auth\":\"required\"@ to require a caller
+identity before any dataset runs (default, and any other value, is
+@\"public\"@) -- see "KitchenSink.Engine.Auth" for how identity is
+established (HTTP Basic against the @config@ credential provider, backed by
+a signed session cookie) and 'DynamicOptions' for how it is wired in from
+@kitchen-sink.json@'s @auth@ stanza.
 -}
 module KitchenSink.Engine.Dynamic (
     DynamicOptions (..),
@@ -49,13 +55,14 @@ import Data.Int (Int64)
 import Data.List qualified as List
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Maybe (isNothing)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Database.SQLite3 (ColumnIndex (..), Database, ParamIndex (..), SQLData (..), SQLOpenFlag (..), SQLVFS (..), Statement, StepResult (..))
 import Database.SQLite3 qualified as SQLite3
 import Network.HTTP.Types (status200, status500)
 import Network.Wai qualified as Wai
-import Prelude (Double, id, negate, (+), (-), (<), (>), (>=), (||))
+import Prelude (Double, id, negate, (&&), (+), (-), (<), (>), (>=), (||))
 
 import KitchenSink.Core.Assembler (runAssembler)
 import KitchenSink.Core.Assembler.Sections.Json (json)
@@ -64,7 +71,8 @@ import KitchenSink.Core.Build.Site (Article, Site (..))
 import KitchenSink.Core.Build.Target (SourceLocation (..), Sourced (..))
 import KitchenSink.Core.Section (BuildInfoData (..), Format (..), Section (..), SectionType (Dataset))
 import KitchenSink.Core.Section.Parser (extract)
-import KitchenSink.Engine.Config (Config (..), DatasourceConfig (..))
+import KitchenSink.Engine.Auth (AuthPolicy (..), Identity (..), identityFromRequest, parseAuthPolicy, setSessionCookieHeader, unauthorizedResponse)
+import KitchenSink.Engine.Config (AuthConfig, Config (..), DatasourceConfig (..))
 import KitchenSink.Engine.Templating qualified as Templating
 import KitchenSink.Prelude
 
@@ -112,6 +120,7 @@ data DynamicPage = DynamicPage
     { dynRoute :: [RouteSegment]
     , dynRowCap :: Int
     , dynBlobMode :: BlobMode
+    , dynAuthPolicy :: AuthPolicy
     , dynDatasets :: [(Name, Text)]
     -- ^ dataset name, raw (unevaluated) SQL source
     , dynMainContent :: Text
@@ -143,6 +152,7 @@ extractDynamicPage path art = do
             { dynRoute = parseRoute r
             , dynRowCap = maybe defaultRowCap id (rowCap binfo)
             , dynBlobMode = parseBlobMode (blobs binfo)
+            , dynAuthPolicy = parseAuthPolicy binfo.auth
             , dynDatasets = sqlDatasets
             , dynMainContent = mainBody
             , dynSourcePath = path
@@ -159,14 +169,15 @@ findDynamicPages site =
 data DynamicOptions = DynamicOptions
     { dynEnabled :: Bool
     , dynDatasources :: Map Text DatasourceConfig
+    , dynAuth :: Maybe AuthConfig
     }
 
 noDynamicOptions :: DynamicOptions
-noDynamicOptions = DynamicOptions False Map.empty
+noDynamicOptions = DynamicOptions False Map.empty Nothing
 
 dynamicOptionsFromConfig :: Bool -> Config -> DynamicOptions
 dynamicOptionsFromConfig enabled cfg =
-    DynamicOptions enabled (maybe Map.empty id cfg.datasources)
+    DynamicOptions enabled (maybe Map.empty id cfg.datasources) cfg.auth
 
 {- | Tries every dynamic route (GET only, in this first cut) before falling
 back to @app@ (the site's ordinary on-the-fly production). Disabled
@@ -182,7 +193,27 @@ dynamicMiddleware opts readSite fallback req resp
             Nothing -> fallback req resp
             Just (pg, params) -> case Map.lookup "main" (dynDatasources opts) of
                 Nothing -> resp $ Wai.responseLBS status500 [("content-type", "text/plain")] "dynamic page requested but no \"main\" datasource is configured (kitchen-sink.json: datasources.main.sqlite)"
-                Just dsCfg -> respondDynamic dsCfg pg params req >>= resp
+                Just dsCfg -> case (dynAuthPolicy pg, dynAuth opts) of
+                    (Required, Nothing) ->
+                        resp $ Wai.responseLBS status500 [("content-type", "text/plain")] "dynamic page requires auth (\"auth\":\"required\") but kitchen-sink.json has no \"auth\" stanza configured"
+                    (policy, mAuthCfg) -> do
+                        (mIdent, mFreshCookie) <- case mAuthCfg of
+                            Just authCfg -> identityFromRequest authCfg req
+                            Nothing -> pure (Nothing, Nothing)
+                        if policy == Required && isNothing mIdent
+                            then resp unauthorizedResponse
+                            else do
+                                response <- respondDynamic dsCfg pg params mIdent req
+                                resp (attachFreshCookie (Wai.isSecure req) mFreshCookie response)
+
+-- | Adds a @Set-Cookie@ header for a freshly-minted session (see
+-- 'KitchenSink.Engine.Auth.identityFromRequest') onto an otherwise-finished
+-- response; a no-op when identity came from an already-valid cookie or
+-- there is no identity at all.
+attachFreshCookie :: Bool -> Maybe Text -> Wai.Response -> Wai.Response
+attachFreshCookie _ Nothing response = response
+attachFreshCookie secure (Just signedValue) response =
+    Wai.mapResponseHeaders (setSessionCookieHeader secure signedValue :) response
 
 lookupDynamicPage :: (Eq ext) => Site ext -> [Text] -> Maybe (DynamicPage, Map Text Text)
 lookupDynamicPage site segs =
@@ -192,25 +223,25 @@ newtype DynamicPageError = DynamicPageError Text
     deriving (Show)
 instance Exception DynamicPageError
 
-respondDynamic :: DatasourceConfig -> DynamicPage -> Map Text Text -> Wai.Request -> IO Wai.Response
-respondDynamic dsCfg pg routeParams req = do
-    outcome <- try (renderDynamicPage dsCfg pg routeParams req)
+respondDynamic :: DatasourceConfig -> DynamicPage -> Map Text Text -> Maybe Identity -> Wai.Request -> IO Wai.Response
+respondDynamic dsCfg pg routeParams mIdent req = do
+    outcome <- try (renderDynamicPage dsCfg pg routeParams mIdent req)
     pure $ case outcome of
         Right html ->
             Wai.responseLBS status200 [("content-type", "text/html; charset=utf-8")] (LByteString.fromStrict $ Text.encodeUtf8 html)
         Left (e :: SomeException) ->
             Wai.responseLBS status500 [("content-type", "text/plain; charset=utf-8")] (LByteString.fromStrict $ Text.encodeUtf8 $ "dynamic page error: " <> Text.pack (show e))
 
-renderDynamicPage :: DatasourceConfig -> DynamicPage -> Map Text Text -> Wai.Request -> IO Text
-renderDynamicPage dsCfg pg routeParams req =
+renderDynamicPage :: DatasourceConfig -> DynamicPage -> Map Text Text -> Maybe Identity -> Wai.Request -> IO Text
+renderDynamicPage dsCfg pg routeParams mIdent req =
     bracket (openReadOnly (sqlite dsCfg)) SQLite3.close $ \db -> do
-        let bindings = Map.union routeParams (queryMap req)
+        let bindings = maybe id (\(Identity u) -> Map.insert "user_id" u) mIdent (Map.union routeParams (queryMap req))
         datasetPairs <-
             traverse
                 (\(name, sqlText) -> (,) name <$> runDataset db (dynRowCap pg) (dynBlobMode pg) bindings sqlText)
                 (dynDatasets pg)
         let datasetsMap = Map.fromList datasetPairs
-        let reqCtx = requestContext req routeParams
+        let reqCtx = requestContext req routeParams mIdent
         let ctx0 = Templating.buildContext (dynSourcePath pg) 0 "" [] datasetsMap
         let ctx = withRequestContext reqCtx ctx0
         case Templating.evalDocSection Map.empty ctx (dynMainContent pg) of
@@ -221,8 +252,8 @@ withRequestContext :: Value -> Value -> Value
 withRequestContext reqVal (Aeson.Object obj) = Aeson.Object (KeyMap.insert "request" reqVal obj)
 withRequestContext _ other = other
 
-requestContext :: Wai.Request -> Map Text Text -> Value
-requestContext req params =
+requestContext :: Wai.Request -> Map Text Text -> Maybe Identity -> Value
+requestContext req params mIdent =
     Aeson.object
         [ ("method", Aeson.toJSON (Text.decodeUtf8 (Wai.requestMethod req)))
         , ("path", Aeson.toJSON (Text.decodeUtf8 (Wai.rawPathInfo req)))
@@ -230,6 +261,7 @@ requestContext req params =
         , ("query", Aeson.toJSON (queryMap req))
         , ("form", Aeson.object []) -- GET-only in this first cut; see module docs
         , ("cookies", Aeson.toJSON (cookieMap req))
+        , ("user", maybe Aeson.Null (\(Identity u) -> Aeson.toJSON u) mIdent)
         ]
 
 queryMap :: Wai.Request -> Map Text Text
