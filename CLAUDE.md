@@ -16,7 +16,7 @@ scripts/      Dev helpers exposed as "commands" in the dev-server UI
 
 ## Build & run
 
-All Haskell work happens in `hs/`. GHC 9.10.3 / cabal 3.12 (pinned via `with-compiler` in `cabal.project`); `cabal.project` pulls `prodapi-{core,web,proxy}`, `purescript-bridge`, and a `prometheus-client` fork from git. `prodapi-proxy` and `tramaj-hs` pin a `base` upper bound that matches GHC 9.8's `base`; both build fine against GHC 9.10's newer `base`, so `cabal.project` relaxes those two bounds with `allow-newer` rather than waiting on upstream to bump them.
+All Haskell work happens in `hs/`. GHC 9.10.3 / cabal 3.12 (pinned via `with-compiler` in `cabal.project`); all dependencies (prodapi-*, purescript-bridge, prometheus-client, tramaj-hs) now come from Hackage, with PVP bounds in `kitchen-sink.cabal`.
 
 ```bash
 cd hs
@@ -25,7 +25,7 @@ cabal install            # puts `kitchen-sink` on PATH
 cabal build lib:kitchen-sink   # library only (fastest feedback loop)
 ```
 
-The library is compiled with `-Wall -Werror`: any warning is a build failure.
+The library is compiled with `-Wall`, and `cabal.project` enables the `werror` flag (`-Werror`) for development: any warning is a build failure there. The flag is off by default so the Hackage release does not break on newer GHCs.
 
 Running the tool (three subcommands, all in `KitchenSink.Engine`):
 
@@ -81,7 +81,7 @@ A page is a `.cmark`/`.md` file split into *sections*, each introduced by a head
 
 Parsing lives in `Core/Section/Parser.hs` (megaparsec); the payload record types (`BuildInfoData`, `PreambleData`, `TopicData`, …) are in `Core/Section/Payloads.hs`. `Format` covers `cmark | json | css | csv | mustache | tramaj-json | tramaj-doc | tramaj-lib`; the tramaj formats are *evaluated at load time* (`Engine/SiteLoader.hs`) and rewritten into a concrete format, which is where `--var` and previously-declared datasets are threaded in.
 
-tramaj is the section pre-processor; see `website-src/sections-templating.cmark`. The former Dhall format was removed: a `.dhall` section is rejected at load time with a located error (the `Dhall` `Format` constructor survives only to produce that error). A `tramaj-json` section answers with a `{format, contents}` value that says which concrete format (`json`/`cmark`/`html`) the section becomes; `SiteLoader.rewriteSection` is the shared tail that applies it, including registering a `=base:dataset.<fmt> name` cell generated that way. `tramaj-json`/`tramaj-doc` are backed by tramaj-hs (`Engine/Templating.hs`, pinned by git in `cabal.project`), respectively its expression mode (JSON out) and its document mode (a `Node` tree folded to HTML via lucid). `*.cmark-tramaj` files hold library-only `tramaj-lib` sections that seed a library table every article can import.
+tramaj is the section pre-processor; see `website-src/sections-templating.cmark`. The former Dhall format was removed: a `.dhall` section is rejected at load time with a located error (the `Dhall` `Format` constructor survives only to produce that error). A `tramaj-json` section answers with a `{format, contents}` value that says which concrete format (`json`/`cmark`/`html`) the section becomes; `SiteLoader.rewriteSection` is the shared tail that applies it, including registering a `=base:dataset.<fmt> name` cell generated that way. `tramaj-json`/`tramaj-doc` are backed by tramaj-hs (`Engine/Templating.hs`, from Hackage), respectively its expression mode (JSON out) and its document mode (a `Node` tree folded to HTML via lucid). `*.cmark-tramaj` files hold library-only `tramaj-lib` sections that seed a library table every article can import.
 
 Everything else in a source directory is picked up by extension (`SiteLoader.loadSite`): `.jpg/.png`, `.css`, `.js`, `.html`, `.dot` (rendered via graphviz `dot`), `.webm/.mp4`, audio, `.pdf`, and raw `.txt/.csv/.json/.dhall`. `kitchen-sink.json` at the source root is the site config and is excluded from raw files.
 

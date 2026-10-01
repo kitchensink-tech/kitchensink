@@ -2,20 +2,7 @@ packages: .
 
 with-compiler: ghc-9.10.3
 
--- prodapi-proxy and tramaj-hs pin an exact `base` upper bound matching
--- GHC 9.8's base; both build and run fine against GHC 9.10's base, the
--- bound is just stale. See CLAUDE.md for the GHC version this project
--- targets.
-
-source-repository-package
-    type: git
-    location: https://github.com/lucasdicioccio/purescript-bridge.git
-    tag: 76d8b4c53b0bbfd609a327857b1e09657cf1fc23
-
--- -- Use iand675's fork which has GHC 9.8 fixes
--- source-repository-package
---     type: git
---     location: https://github.com/fimad/prometheus-haskell
---     tag: 55cae43af452a57afaafb1ced9551b716202a59a
---     subdir: prometheus-client
-
+-- Development builds keep warnings fatal (the flag is off by default so that
+-- the Hackage release does not break on newer GHCs).
+package kitchen-sink
+    flags: +werror +purescript-bridge
