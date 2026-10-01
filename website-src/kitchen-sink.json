@@ -2,6 +2,7 @@
 , "publishURL": "https://kitchensink-tech.github.io"
 , "twitterLogin": "lucasdicioccio"
 , "homeLink": {"label": "Home", "icon": "/images/logo.png"}
+, "datasources": {"main":{"sqlite": "northwind.db"}}
 , "menu":
   [ {"label": "Features", "url": "/features.html"}
   , {"label": "Sections", "url": "/sections-templating.html", "children": [{"label": "Dhall", "url": "/sections-dhall.html"}, {"label": "Corporate components", "url": "/corporate-components.html"}]}
