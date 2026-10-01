@@ -5,4 +5,4 @@ with-compiler: ghc-9.10.3
 -- Development builds keep warnings fatal (the flag is off by default so that
 -- the Hackage release does not break on newer GHCs).
 package kitchen-sink
-    flags: +werror
+    flags: +werror +purescript-bridge

@@ -14,13 +14,16 @@ description:
     Documentation: <https://kitchensink-tech.github.io/>.
 homepage:           https://kitchensink-tech.github.io/
 bug-reports:        https://github.com/kitchensink-tech/kitchensink/issues
--- license / license-file: to be chosen by the owner before upload.
+license:            BSD-3-Clause
+license-file:       LICENSE
+copyright:          (c) 2026 Lucas DiCioccio
 author:             Lucas DiCioccio
 maintainer:         lucas@dicioccio.fr
 category:           Web
 build-type:         Simple
 tested-with:        GHC ==9.10.3
 extra-doc-files:    CHANGELOG.md
+                   , README.md
 extra-source-files: scaffolding/*.json
                    , scaffolding/*.md
                    , scaffolding/*.tmpl
@@ -31,6 +34,11 @@ source-repository head
     type:     git
     location: https://github.com/kitchensink-tech/kitchensink
     subdir:   hs
+
+flag purescript-bridge
+    description: Build the kitchen-sink-purescript-bridge development executable (not part of the Hackage release).
+    default:     False
+    manual:      True
 
 flag werror
     description: Turn warnings into errors (development and CI).
@@ -184,12 +192,15 @@ executable kitchen-sink-tool
 executable kitchen-sink-purescript-bridge
     main-is:          Main.hs
     other-modules:    Bridge
-    build-depends:    base >= 4.20.2 && < 4.21
-                    , aeson >= 2.2.5 && < 2.3
-                    , kitchen-sink
-                    , optparse-generic >= 1.5.3 && < 1.6
-                    , purescript-bridge >= 0.15.0 && < 0.16
-                    , text >= 2.1.4 && < 2.2
+    if flag(purescript-bridge)
+        build-depends:    base >= 4.20.2 && < 4.21
+                        , aeson >= 2.2.5 && < 2.3
+                        , kitchen-sink
+                        , optparse-generic >= 1.5.3 && < 1.6
+                        , purescript-bridge >= 0.15.0 && < 0.16
+                        , text >= 2.1.4 && < 2.2
+    else
+        buildable: False
     hs-source-dirs:   bridge
     default-language: GHC2021
 
