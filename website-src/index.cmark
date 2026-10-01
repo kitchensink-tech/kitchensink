@@ -21,7 +21,11 @@ Kitchen-Sink also is an API gateway.
 
 Kitchen-Sink is a [_frivolous_](/philosophy.html)  static-site generator.
 
-This website is the main documentation and main example of Kitchen-Sink features.
+This website is the main documentation and main example of Kitchen-Sink features
+— you're already looking at the live demo. Also worth a look: the
+[in-browser templating playground](/playground.html) (try the `tramaj`
+templating language without installing anything) and [how Kitchen-Sink
+compares to other static-site generators](/comparison.html).
 You can install KitchenSink from source [using the GitHub directory](https://github.com/kitchensink-tech/kitchensink).
 
 We don't claim to be the best organized nor the fastest nor the prettiest. We
