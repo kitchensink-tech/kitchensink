@@ -13,6 +13,7 @@ import Data.List qualified as List
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as Text
 import GHC.Generics (Generic)
+import Prelude ((&&))
 
 import KitchenSink.Core.Build.Target (destination, destinationUrl)
 import KitchenSink.Layout.Blog.Destinations
@@ -78,8 +79,8 @@ topicsgraph urlPrefix external stats =
     allLinks = do
         -- list monad!
         (from, a) <- knownTargets stats
-        link <- linkInfos $ analyzeArticle a
-        pure (from, link)
+        LinkInfo url txt <- linkInfos $ analyzeArticle a
+        pure (from, LinkInfo (withBase url) txt)
 
     articleArticleEdges :: [(NodeKey, NodeKey)]
     articleArticleEdges = do
@@ -100,7 +101,7 @@ topicsgraph urlPrefix external stats =
         -- list monad!
         ((from, _), infos) <- List.zip (knownTargets stats) analyses
         img <- imageInfos $ infos
-        pure (articleKey from, imageKey $ imageURL img)
+        pure (articleKey from, imageKey $ withBase $ imageURL img)
 
     hashtagKey t = "#" <> hashtagValue t
     topicKey t = "topic:" <> t
@@ -135,7 +136,14 @@ topicsgraph urlPrefix external stats =
     uniqueImages = List.nub $ do
         infos <- analyses
         img <- imageInfos $ infos
-        pure $ imageURL img
+        pure $ withBase $ imageURL img
+
+    -- Authored root-relative URLs carry no site prefix, whereas target
+    -- destinations (and the rendered HTML) do; normalize so they compare equal.
+    withBase :: Text -> Text
+    withBase u
+        | "/" `Text.isPrefixOf` u && not ("//" `Text.isPrefixOf` u) = urlPrefix <> u
+        | otherwise = u
 
     lookupArticleLink :: LinkInfo -> Maybe NodeKey
     lookupArticleLink (LinkInfo url _) =
