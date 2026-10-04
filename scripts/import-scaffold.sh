@@ -14,6 +14,7 @@ cp -v ./website-src/tags.css ./scaffolding/css
 
 cp -v ./website-src/add-dev-route.js ./scaffolding/js
 cp -v ./website-src/autoreload.js ./scaffolding/js
+cp -v ./website-src/doc-search.js ./scaffolding/js
 cp -v ./website-src/echart-histogram.js ./scaffolding/js
 cp -v ./website-src/echarts.min.js ./scaffolding/js
 cp -v ./website-src/search-box.js ./scaffolding/js

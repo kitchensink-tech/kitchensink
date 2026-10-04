@@ -1,6 +1,7 @@
 =base:build-info.json
 {"layout":"documentation"
 ,"publicationStatus":"Public"
+,"group":"Organizing a documentation"
 ,"order":2
 }
 
@@ -33,7 +34,7 @@ How the pages of the documentation layout are sorted.
 
 =base:main-content.cmark
 
-The previous and next links at the bottom of a [documentation
+The list of pages and the previous and next links of a [documentation
 page](/documentation-layout.html) follow the order of the pages that use the
 `documentation` layout, and only those.
 
@@ -46,6 +47,13 @@ position of a page: pages with a smaller number come first.
 
 Pages without an `order` come after the numbered ones, sorted by title. A
 documentation where no page has an `order` is thus sorted by title.
+
+# Groups
+
+The optional `group` of the `base:build-info.json` section is the name of the
+group a page is listed under. The pages of a group are always listed together:
+a group stands where its first page does, and its other pages follow in order.
+Pages without a `group` form a group of their own, listed without a name.
 
 # Publication status
 

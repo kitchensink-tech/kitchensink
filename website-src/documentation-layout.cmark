@@ -1,6 +1,7 @@
 =base:build-info.json
 {"layout":"documentation"
 ,"publicationStatus":"Public"
+,"group":"The layout"
 ,"order":1
 }
 
@@ -29,24 +30,26 @@
 
 =base:summary.cmark
 
-A layout for technical documentation: a table of contents next to the page and
-links to the previous and next pages.
+A layout for technical documentation: the list of the pages, a search box, a
+table of contents of the page, and links to the previous and next pages.
 
 =base:main-content.cmark
 
 Set the layout of a page to `documentation` to render it as a page of a
-documentation. This very page is written with it: the sidebar lists the
-headings of the page (on a narrow screen it moves above the content), and the
-links at the bottom lead to the previous and next pages of the documentation.
+documentation. This very page is written with it: one sidebar lists the pages
+of the documentation, the other one lists the headings of the page (on a narrow
+screen both move above the content), the header has a search box, and the links
+at the bottom lead to the previous and next pages of the documentation.
 
 # Using the layout
 
 In the `base:build-info.json` section of a page, use the `documentation`
-layout and, optionally, an `order`:
+layout and, optionally, a `group` and an `order`:
 
     =base:build-info.json
     {"layout":"documentation"
     ,"publicationStatus":"Public"
+    ,"group":"The layout"
     ,"order":1
     }
 
@@ -68,4 +71,5 @@ no table of contents.
 
 All the pages that use the `documentation` layout are part of one
 documentation, sorted as explained in [ordering documentation
-pages](/documentation-ordering.html).
+pages](/documentation-ordering.html). Each page lists them all, see [navigation
+and search](/documentation-navigation.html).

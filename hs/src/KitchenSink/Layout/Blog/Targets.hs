@@ -199,6 +199,9 @@ siteTargets execRoot prefix extra site = allTargets
         , jsonDataTarget urlPrefix prefix (filecounts site) "filecounts.json"
         , jsonDataTarget urlPrefix prefix (topicsgraph urlPrefix (ExternalSitesInfo $ externalKitchenSinkURLs extra) stats) "topicsgraph.json"
         ]
+            <> [ jsonDataTarget urlPrefix prefix (documentationSearchIndex articleTargets) "doc-search.json"
+               | not (List.null (documentationPages articleTargets))
+               ]
             <> [ jsonDataTarget urlPrefix prefix (analyzeArticle art) (p <> ".json") | (Sourced (FileSource p) art) <- site.articles
                ]
 
@@ -526,11 +529,12 @@ siteTargets execRoot prefix extra site = allTargets
                         [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
                             $ mconcat
                                 [ const $ pure $ homeLink extra
-                                , const $ pure $ searchBox urlPrefix
+                                , const $ pure $ documentationSearchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main doc-layout"])
                             $ mconcat
-                                [ assembleDocumentationToc
+                                [ const $ pure $ documentationNav articleTargets dloc
+                                , assembleDocumentationToc
                                 , wrap article_
                                     $ mconcat
                                         [ assembleHeader urlPrefix prefix stats dloc

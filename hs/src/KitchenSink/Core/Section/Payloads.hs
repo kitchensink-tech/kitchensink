@@ -28,6 +28,9 @@ data BuildInfoData = BuildInfoData
     , robots :: Maybe Text
     , order :: Maybe Int
     -- ^ position among the pages of a same layout (used by the documentation layout)
+    , group :: Maybe Text
+    -- ^ name of the group of pages this page is listed under in the site-wide
+    -- navigation of the documentation layout
     , route :: Maybe Text
     -- ^ SQLPage-style request path pattern (e.g. @\"\/users\/:id\"@) that turns
     -- this article into a request-time dynamic page (@layout: \"dynamic\"@),
