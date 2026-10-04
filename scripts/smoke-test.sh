@@ -111,6 +111,13 @@ check_grep "<entry" "${www}/atom.xml"
 check_file "${www}/sitemap.txt"
 check_json '.paths | length > 0' "${www}/json/paths.json"
 check_file "${www}/topics/some-topic.html"
+# no documentation page, hence no documentation search index
+if [ -e "${www}/json/doc-search.json" ]; then
+  echo "  FAIL scaffold has a json/doc-search.json without documentation pages"
+  failures=$((failures + 1))
+else
+  echo "  ok   scaffold has no json/doc-search.json"
+fi
 # a freshly scaffolded site builds without warnings (unknown layouts, unreadable sections)
 check_no_grep ": warning: " "${workdir}/scaffold.log"
 # a site without a `homeLink` config renders the default "Home" link
@@ -276,6 +283,15 @@ check_grep 'class="doc-toc"' "${web}/documentation-layout.html"
 check_grep 'href="#using-the-layout"' "${web}/documentation-layout.html"
 check_grep 'class="doc-next"' "${web}/documentation-layout.html"
 check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
+# ... the list of the documentation pages, by group, with the current one marked
+check_grep '<p class="doc-nav-group">Organizing a documentation</p>' "${web}/documentation-layout.html"
+check_grep '<a href="/documentation-ordering.html" class="doc-nav-current" aria-current="page">' "${web}/documentation-ordering.html"
+check_no_grep 'class="doc-nav"' "${web}/features.html"
+# ... and a search box, with an index entry per heading of the documentation pages
+check_grep 'id="doc-search" data-index="/json/doc-search.json"' "${web}/documentation-layout.html"
+check_file "${web}/js/doc-search.js"
+check_json 'map(select(.url == "/documentation-layout.html#using-the-layout" and .heading == "Using the layout" and (.text | contains("build-info")))) | length == 1' "${web}/json/doc-search.json"
+check_json 'map(select(.heading == null)) | map(.url) == ["/documentation-layout.html", "/documentation-ordering.html", "/documentation-navigation.html"]' "${web}/json/doc-search.json"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
 # the corporate layout: wide sections (hero, feature grid, pricing, CTA,
 # testimonials), the site menu and footer, but no byline/date/topics/glossary.

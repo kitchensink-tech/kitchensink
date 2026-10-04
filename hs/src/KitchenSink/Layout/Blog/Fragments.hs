@@ -871,20 +871,39 @@ data OutlineEntry = OutlineEntry
 renderer's automatic identifiers) in an already-rendered HTML fragment.
 -}
 headingOutline :: Text -> [OutlineEntry]
-headingOutline t =
-    case Text.breakOn "<h" t of
-        (_, rest) | Text.null rest -> []
-        (_, rest) ->
-            let afterTag = Text.drop 2 rest
-             in case Text.uncons afterTag of
-                    Just (c, attrsAndBody)
-                        | c == '2' || c == '3' ->
-                            let (attrs, afterOpen) = Text.breakOn ">" attrsAndBody
-                                (body, afterClose) = Text.breakOn ("</h" <> Text.singleton c <> ">") (Text.drop 1 afterOpen)
-                                entry = OutlineEntry (if c == '2' then 2 else 3) <$> attributeValue "id" attrs <*> pure (stripTags body)
-                             in maybe (headingOutline afterClose) (: headingOutline afterClose) entry
-                    _ -> headingOutline afterTag
+headingOutline = fmap fst . snd . headingSections
+
+{- | Splits an already-rendered HTML fragment at its 'headingOutline': what
+comes before the first heading, then every heading with the HTML that follows
+it (up to the next heading).
+-}
+headingSections :: Text -> (Text, [(OutlineEntry, Text)])
+headingSections t =
+    case nextHeading "" t of
+        Nothing -> (t, [])
+        Just (before, entry, after) ->
+            let (body, rest) = headingSections after
+             in (before, (entry, body) : rest)
   where
+    nextHeading :: Text -> Text -> Maybe (Text, OutlineEntry, Text)
+    nextHeading skipped txt =
+        case Text.breakOn "<h" txt of
+            (_, rest) | Text.null rest -> Nothing
+            (before, rest) ->
+                let afterTag = Text.drop 2 rest
+                    skip = nextHeading (skipped <> before <> "<h") afterTag
+                 in case Text.uncons afterTag of
+                        Just (c, attrsAndBody)
+                            | c == '2' || c == '3' ->
+                                let (attrs, afterOpen) = Text.breakOn ">" attrsAndBody
+                                    closing = "</h" <> Text.singleton c <> ">"
+                                    (body, afterClose) = Text.breakOn closing (Text.drop 1 afterOpen)
+                                    entry i = OutlineEntry (if c == '2' then 2 else 3) i (stripTags body)
+                                 in case attributeValue "id" attrs of
+                                        Just i -> Just (skipped <> before, entry i, Text.drop (Text.length closing) afterClose)
+                                        Nothing -> skip
+                        _ -> skip
+
     attributeValue :: Text -> Text -> Maybe Text
     attributeValue name attrs =
         case Text.breakOn (name <> "=\"") attrs of
@@ -898,12 +917,32 @@ stripTags t =
             | Text.null rest -> before
             | otherwise -> before <> stripTags (Text.drop 1 (Text.dropWhile (/= '>') rest))
 
--- | The sidebar of a documentation page: the headings of its @main-content@.
-assembleDocumentationToc :: Article [Text] -> Assembler (Lucid.Html ())
-assembleDocumentationToc art = do
+{- | The text of an HTML fragment: no tags, the usual entities decoded, and
+whitespace collapsed.
+-}
+htmlPlainText :: Text -> Text
+htmlPlainText =
+    Text.unwords . Text.words . unescape . stripTags
+  where
+    unescape :: Text -> Text
+    unescape =
+        Text.replace "&amp;" "&"
+            . Text.replace "&lt;" "<"
+            . Text.replace "&gt;" ">"
+            . Text.replace "&quot;" "\""
+            . Text.replace "&#39;" "'"
+
+-- | The rendered HTML of the @main-content@ sections of an article.
+renderedMainContent :: Article [Text] -> Assembler Text
+renderedMainContent art = do
     sections <- getSections art isMainContent
     rendered <- traverse renderSection sections
-    let outline = List.concatMap (headingOutline . extract') rendered
+    pure $ Text.intercalate "\n" (fmap extract' rendered)
+
+-- | The table of contents of a documentation page: the headings of its @main-content@.
+assembleDocumentationToc :: Article [Text] -> Assembler (Lucid.Html ())
+assembleDocumentationToc art = do
+    outline <- headingOutline <$> renderedMainContent art
     pure $ case outline of
         [] -> nav_ [class_ "doc-toc"] mempty
         _ ->
@@ -923,6 +962,87 @@ documentationOrder :: Article [Text] -> (Int, Text)
 documentationOrder art =
     (fromMaybe maxBound (order =<< buildinfo art), fromMaybe "" (articleTitle art))
 
+-- | The @group@ a documentation page is listed under in the navigation.
+documentationGroup :: Article [Text] -> Maybe Text
+documentationGroup art = group =<< buildinfo art
+
+{- | The pages of the documentation layout, by group. Pages follow
+'documentationOrder'; a group stands where its first page does, so that the
+pages of a group are always listed together.
+-}
+documentationGroups :: [(Target a, Article [Text])] -> [(Maybe Text, [(Target a, Article [Text])])]
+documentationGroups targets =
+    [ (g, List.filter ((== g) . groupOf) pages)
+    | g <- List.nub (fmap groupOf pages)
+    ]
+  where
+    groupOf = documentationGroup . snd
+    pages =
+        List.sortOn (documentationOrder . snd)
+            $ List.filter ((== DocumentationPage) . layoutNameFor . snd) targets
+
+-- | The pages of the documentation layout, in the order of the navigation.
+documentationPages :: [(Target a, Article [Text])] -> [(Target a, Article [Text])]
+documentationPages = List.concatMap snd . documentationGroups
+
+{- | The site-wide navigation of the documentation: every page of the
+documentation layout, by group, the current one being marked.
+-}
+documentationNav :: [(Target a, Article [Text])] -> DestinationLocation -> Lucid.Html ()
+documentationNav targets current =
+    nav_ [class_ "doc-nav"]
+        $ details_ [class_ "doc-nav-menu", open_ ""]
+        $ do
+            summary_ [class_ "doc-nav-title"] "Documentation"
+            traverse_ navGroup (documentationGroups targets)
+  where
+    navGroup :: (Maybe Text, [(Target b, Article [Text])]) -> Lucid.Html ()
+    navGroup (name, pages) = do
+        traverse_ (p_ [class_ "doc-nav-group"] . toHtml) name
+        ul_ $ traverse_ navPage pages
+
+    navPage :: (Target b, Article [Text]) -> Lucid.Html ()
+    navPage (t, art) =
+        let url = destinationUrl (destination t)
+            marks
+                | url == destinationUrl current = [class_ "doc-nav-current", Lucid.makeAttribute "aria-current" "page"]
+                | otherwise = []
+         in li_ $ a_ (href_ url : marks) (toHtml (fromMaybe url (articleTitle art)))
+
+{- | The search box of the documentation layout. The @data-index@ attribute is
+read by doc-search.js, which fetches the 'documentationSearchIndex' from there.
+-}
+documentationSearchBox :: UrlPrefix -> Lucid.Html ()
+documentationSearchBox urlPrefix =
+    div_ [id_ "doc-search", data_ "index" (urlPrefix <> "/json/doc-search.json")]
+        $ js_ (urlPrefix <> "/js/doc-search.js")
+
+{- | What doc-search.js searches in: one entry for the introduction of each
+documentation page (its summary and what precedes its first heading), then one
+entry per heading, with a link to that heading.
+-}
+documentationSearchIndex :: [(Target a, Article [Text])] -> [Value]
+documentationSearchIndex targets =
+    List.concatMap pageEntries (documentationPages targets)
+  where
+    pageEntries :: (Target b, Article [Text]) -> [Value]
+    pageEntries (t, art) =
+        let url = destinationUrl (destination t)
+            (intro, sections) = headingSections $ fromRight "" $ runAssembler $ renderedMainContent art
+            entry :: Text -> Maybe Text -> Text -> Value
+            entry anchor heading body =
+                object
+                    [ "url" .= (url <> anchor)
+                    , "title" .= fromMaybe url (articleTitle art)
+                    , "group" .= documentationGroup art
+                    , "heading" .= heading
+                    , "text" .= body
+                    ]
+         in entry "" Nothing (htmlPlainText (fromMaybe "" (articleCompactSummary art) <> " " <> intro))
+                : [ entry ("#" <> e.outlineId) (Just (htmlPlainText e.outlineLabel)) (htmlPlainText body)
+                  | (e, body) <- sections
+                  ]
+
 -- | Links to the previous and next pages among those of the documentation layout.
 documentationPager :: [(Target a, Article [Text])] -> DestinationLocation -> Lucid.Html ()
 documentationPager targets current =
@@ -930,9 +1050,7 @@ documentationPager targets current =
         maybe mempty (link "doc-prev" "Previous: ") previous
         maybe mempty (link "doc-next" "Next: ") next
   where
-    pages =
-        List.sortOn (documentationOrder . snd)
-            $ List.filter ((== DocumentationPage) . layoutNameFor . snd) targets
+    pages = documentationPages targets
 
     isCurrent :: (Target a, Article [Text]) -> Bool
     isCurrent (t, _) = destinationUrl (destination t) == destinationUrl current

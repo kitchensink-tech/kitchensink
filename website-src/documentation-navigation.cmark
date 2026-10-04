@@ -1,0 +1,64 @@
+=base:build-info.json
+{"layout":"documentation"
+,"publicationStatus":"Public"
+,"group":"Organizing a documentation"
+,"order":3
+}
+
+=base:preamble.json
+{"author": "Lucas DiCioccio"
+,"title": "Navigation and search"
+}
+
+=base:topic.json
+{"topics":["authoring articles", "how-to"]
+,"keywords":["documentation", "layouts", "search"]
+}
+
+=base:social.json
+{"twitter": "lucasdicioccio"
+,"linkedin": "lucasdicioccio"
+,"github": "lucasdicioccio"
+}
+
+=base:main-css.css
+@import "/css/dev.css";
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+@import "/css/documentation.css";
+
+=base:summary.cmark
+
+How readers find their way across the pages of a documentation.
+
+=base:main-content.cmark
+
+Every [documentation page](/documentation-layout.html) comes with the list of
+all the pages of the documentation and with a search box. There is nothing to
+write for either of them: both are built from the pages that use the
+`documentation` layout.
+
+# The list of pages
+
+The sidebar lists the titles of the pages, by group, in the [order of the
+documentation](/documentation-ordering.html). The page being read is
+highlighted. On a narrow screen the list moves above the content, folded.
+
+# The search box
+
+The search box of the header looks for the typed words in the documentation
+pages only: their titles, their headings and their text. A result leads to the
+heading under which the words were found, not merely to the page.
+
+Press `/` to jump to the search box, use the arrow keys to pick a result and
+`Enter` to open it.
+
+# The search index
+
+The search runs in the browser. It needs the `doc-search.js` script, which a
+site started with `kitchen-sink init` has (copy it from the `website-src`
+directory of Kitchen-Sink otherwise), and it reads `/json/doc-search.json`, a
+file produced for any site that has documentation pages. That file has one
+entry for the introduction of each page and one entry per heading, each with
+its `url`, `title`, `group`, `heading` and `text`.
