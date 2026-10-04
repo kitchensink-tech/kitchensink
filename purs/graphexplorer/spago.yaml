@@ -18,6 +18,7 @@ package:
     - numbers
     - prelude
     - profunctor-lenses
+    - strings
     - transformers
     - tuples
     - web-dom

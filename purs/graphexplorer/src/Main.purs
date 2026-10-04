@@ -8,6 +8,8 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Either (Either(..))
 import Data.Traversable (traverse_)
 import Data.Lens
+import Data.String.CodeUnits as String
+import Data.String.Pattern (Pattern(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -164,7 +166,7 @@ component =
 -- that case.
 fetchAndMergeExternalGraph :: String -> Maybe TopicGraph -> Aff (Maybe TopicGraph)
 fetchAndMergeExternalGraph siteUrl mLocal = do
-  mRemote <- getGraph siteUrl
+  mRemote <- getGraph (stripTrailingSlash siteUrl)
   pure $ case mLocal, mRemote of
     Just local, Just remote -> Just (mergeExternalGraph siteUrl local remote)
     _, _ -> Nothing
@@ -184,7 +186,7 @@ mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
   let
     ns k = siteUrl <> "::" <> k
 
-    remoteNodes = map (\(Tuple k n) -> Tuple (ns k) n) remote.nodes
+    remoteNodes = map (\(Tuple k n) -> Tuple (ns k) (absolutizeNode siteUrl n)) remote.nodes
     remoteEdges = map (\(Tuple a b) -> Tuple (ns a) (ns b)) remote.edges
 
     remoteKeys = map fst remoteNodes
@@ -198,6 +200,36 @@ mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
       { nodes: local.nodes <> remoteNodes
       , edges: local.edges <> remoteEdges <> connectingEdges
       }
+
+stripTrailingSlash :: String -> String
+stripTrailingSlash u = fromMaybe u (String.stripSuffix (Pattern "/") u)
+
+-- | `"https://host/sub/"` -> `"https://host"`; `""` when `siteUrl` carries no
+-- scheme (nothing sensible to resolve against).
+siteOrigin :: String -> String
+siteOrigin siteUrl = case String.indexOf (Pattern "://") siteUrl of
+  Nothing -> ""
+  Just i ->
+    let hostStart = i + 3
+    in case String.indexOf (Pattern "/") (String.drop hostStart siteUrl) of
+      Nothing -> siteUrl
+      Just j -> String.take (hostStart + j) siteUrl
+
+-- | A remote site's graph carries root-relative URLs (`/sub/page.html`,
+-- already including that site's own basePath). Left as is, they would
+-- resolve against the site *displaying* the graph, so they are made
+-- absolute against the remote site's origin when merged.
+absolutizeNode :: String -> KS.Node -> KS.Node
+absolutizeNode siteUrl = case _ of
+  KS.ArticleNode u n -> KS.ArticleNode (abs u) n
+  KS.TopicNode u n -> KS.TopicNode (abs u) n
+  KS.HashTagNode u n -> KS.HashTagNode (abs u) n
+  KS.ImageNode u -> KS.ImageNode (abs u)
+  KS.ExternalKitchenSinkSiteNode u -> KS.ExternalKitchenSinkSiteNode u
+  where
+  abs u
+    | String.take 1 u == "/" && String.take 2 u /= "//" = siteOrigin siteUrl <> u
+    | otherwise = u
 
 openPage :: String -> Effect (Maybe Window)
 openPage url = window >>= open url "_blank" ""
