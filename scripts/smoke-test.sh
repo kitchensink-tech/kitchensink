@@ -130,6 +130,17 @@ else
   echo "  ok   scaffold index.html has no menu or footer"
 fi
 
+# 1b. The same scaffold with a `menu` in its kitchen-sink.json: the entries and
+# their children show up in the header.
+menusite="${workdir}/scaffold-menu"
+cp -r "${scaffold}/src" "${menusite}"
+jq '. + {menu: [{label: "Features", url: "/features.html"}, {label: "Sections", url: "/sections.html", children: [{label: "Templating", url: "/sections-templating.html"}]}]}' \
+  "${scaffold}/src/kitchen-sink.json" > "${menusite}/kitchen-sink.json"
+bash scaffolding/outputdir.sh "${workdir}/scaffold-menu-www" > /dev/null
+produce scaffold-menu "${menusite}" "${workdir}/scaffold-menu-www"
+check_grep '<ul class="site-menu"><li><a href="/features.html">Features</a>' "${workdir}/scaffold-menu-www/index.html"
+check_grep '<ul class="site-submenu"><li><a href="/sections-templating.html">Templating</a>' "${workdir}/scaffold-menu-www/index.html"
+
 # 1a. The topics listing is the article whose layout is "topics", whatever its
 # file is named.
 renamed="${workdir}/renamed-topics"
@@ -267,9 +278,8 @@ check_file "${web}/index.html"
 check_grep "<title>The Kitchen Sink Blog Generator - Home</title>" "${web}/index.html"
 # website-src configures `homeLink` with a label and an icon
 check_grep 'class="home-link"><img src="/images/logo.png" alt>Home</a>' "${web}/index.html"
-# website-src configures `menu` and `footer`
-check_grep '<ul class="site-menu"><li><a href="/features.html">Features</a>' "${web}/index.html"
-check_grep '<ul class="site-submenu"><li><a href="/sections-dhall.html">Dhall</a>' "${web}/index.html"
+# website-src configures an empty `menu`, and a `footer`
+check_no_grep 'class="site-menu"' "${web}/index.html"
 check_grep '<footer class="site-footer"><div class="footer-columns"><div class="footer-column"><h2>Docs</h2>' "${web}/index.html"
 check_grep '<p class="footer-legal">Kitchen-Sink is open source.</p>' "${web}/features.html"
 check_file "${web}/features.html"
@@ -308,7 +318,6 @@ check_grep '<table class="pricing-table">' "${web}/corporate-layout.html"
 check_grep '<div class="pricing-plan-name">Team</div>' "${web}/corporate-layout.html"
 check_grep 'class="testimonial-strip"' "${web}/corporate-layout.html"
 check_grep 'class="cta-banner" id="contact"' "${web}/corporate-layout.html"
-check_grep '<ul class="site-menu">' "${web}/corporate-layout.html"
 check_grep '<footer class="site-footer">' "${web}/corporate-layout.html"
 check_no_grep 'class="heading"' "${web}/corporate-layout.html"
 check_no_grep 'class="topiclist"' "${web}/corporate-layout.html"
