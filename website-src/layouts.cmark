@@ -1,6 +1,8 @@
 =base:build-info.json
-{"layout":"article"
+{"layout":"documentation"
 ,"publicationStatus":"Public"
+,"group":"Layouts"
+,"order":20
 }
 
 =base:preamble.json
@@ -24,6 +26,7 @@
 @import "/css/colors.css";
 @import "/css/article.css";
 @import "/css/navigation.css";
+@import "/css/documentation.css";
 
 
 =base:summary.cmark

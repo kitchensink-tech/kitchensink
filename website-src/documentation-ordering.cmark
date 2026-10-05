@@ -1,8 +1,8 @@
 =base:build-info.json
 {"layout":"documentation"
 ,"publicationStatus":"Public"
-,"group":"Organizing a documentation"
-,"order":2
+,"group":"The documentation layout"
+,"order":31
 }
 
 =base:preamble.json

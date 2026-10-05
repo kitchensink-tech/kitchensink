@@ -1,8 +1,8 @@
 =base:build-info.json
 {"layout":"documentation"
 ,"publicationStatus":"Public"
-,"group":"The layout"
-,"order":1
+,"group":"The documentation layout"
+,"order":30
 }
 
 =base:preamble.json
@@ -49,8 +49,8 @@ layout and, optionally, a `group` and an `order`:
     =base:build-info.json
     {"layout":"documentation"
     ,"publicationStatus":"Public"
-    ,"group":"The layout"
-    ,"order":1
+    ,"group":"The documentation layout"
+    ,"order":30
     }
 
 Then import the stylesheet of the layout next to the other ones, in a

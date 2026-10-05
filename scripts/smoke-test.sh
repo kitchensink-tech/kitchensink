@@ -284,14 +284,15 @@ check_grep 'href="#using-the-layout"' "${web}/documentation-layout.html"
 check_grep 'class="doc-next"' "${web}/documentation-layout.html"
 check_grep 'class="doc-prev"' "${web}/documentation-ordering.html"
 # ... the list of the documentation pages, by group, with the current one marked
-check_grep '<p class="doc-nav-group">Organizing a documentation</p>' "${web}/documentation-layout.html"
+check_grep '<p class="doc-nav-group">The documentation layout</p>' "${web}/documentation-layout.html"
+check_grep '<p class="doc-nav-group">Writing pages</p>' "${web}/documentation-layout.html"
 check_grep '<a href="/documentation-ordering.html" class="doc-nav-current" aria-current="page">' "${web}/documentation-ordering.html"
 check_no_grep 'class="doc-nav"' "${web}/features.html"
 # ... and a search box, with an index entry per heading of the documentation pages
 check_grep 'id="doc-search" data-index="/json/doc-search.json"' "${web}/documentation-layout.html"
 check_file "${web}/js/doc-search.js"
 check_json 'map(select(.url == "/documentation-layout.html#using-the-layout" and .heading == "Using the layout" and (.text | contains("build-info")))) | length == 1' "${web}/json/doc-search.json"
-check_json 'map(select(.heading == null)) | map(.url) == ["/documentation-layout.html", "/documentation-ordering.html", "/documentation-navigation.html"]' "${web}/json/doc-search.json"
+check_json 'map(select(.heading == null)) | map(.url) == ["/getting-started.html", "/sections.html", "/sections-templating.html", "/other-formats.html", "/kitchen-sink-dot-json.html", "/layouts.html", "/corporate-components.html", "/documentation-layout.html", "/documentation-ordering.html", "/documentation-navigation.html", "/engine.html", "/development.html"]' "${web}/json/doc-search.json"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
 # the corporate layout: wide sections (hero, feature grid, pricing, CTA,
 # testimonials), the site menu and footer, but no byline/date/topics/glossary.
