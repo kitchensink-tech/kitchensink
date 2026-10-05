@@ -1,6 +1,8 @@
 =base:build-info.json
-{"layout":"article"
+{"layout":"documentation"
 ,"publicationStatus":"Public"
+,"group":"Writing pages"
+,"order":10
 }
 
 =base:preamble.json
@@ -24,6 +26,7 @@
 @import "/css/colors.css";
 @import "/css/article.css";
 @import "/css/navigation.css";
+@import "/css/documentation.css";
 
 pre {
   border-left: 4px double coral;
