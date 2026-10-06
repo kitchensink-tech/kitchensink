@@ -138,7 +138,12 @@ chartOptions graph focusedNode expandedExternalSites =
       | otherwise = default
 
     articleSize :: Int -> String -> Number
-    articleSize n _ = 10.0 + Number.log(toNumber n) / Number.log(2.0)
+    -- `n` is 0 for generated pages (glossary, topics and hashtags
+    -- listings), and `log 0` is `-Infinity`. A single non-finite
+    -- `symbolSize` makes the bounding rect of the whole graph NaN, and
+    -- echarts only roams when the pointer is inside that rect: one such
+    -- node silently disables pan and zoom for the whole graph.
+    articleSize n _ = 10.0 + Number.log(toNumber (max 1 n)) / Number.log(2.0)
 
     topicSize :: String -> Number
     topicSize _ = 10.0
