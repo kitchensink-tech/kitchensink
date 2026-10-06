@@ -7,7 +7,6 @@ module KitchenSink.Engine.Handlers where
 import Control.Concurrent.Async (mapConcurrently_)
 import Control.Monad.IO.Class (liftIO)
 import Data.IORef (atomicModifyIORef', newIORef, readIORef)
-import Data.List qualified as List
 import Data.Maybe (isJust)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -97,25 +96,6 @@ handleDevPublish config rt =
         runTracer (traceDev rt) (PublishedBuild out)
         pure (DevTextOutput $ Text.pack out)
 
-handleExecCommand :: Config -> Runtime ext -> Text -> Handler DevTextOutput
-handleExecCommand config rt commandName =
-    case List.find (\c -> handle c == commandName) $ commands config of
-        Just cmd -> runCommand cmd
-        Nothing -> pure $ DevTextOutput "no publish-script configured"
-  where
-    runCommand cmd = liftIO $ do
-        let path = exe cmd
-        out <- timeIt time_publishing (counters rt) $ do
-            procOut <- readCreateProcess (proc path []) ""
-            seq (length procOut) $ pure procOut
-        Prometheus.withLabel (cnt_commands $ counters rt) (handle cmd) Prometheus.incCounter
-        runTracer (traceDev rt) (CommandRan cmd out)
-        pure (DevTextOutput $ Text.pack out)
-
-handleDevListCommands :: Config -> Runtime ext -> Handler [Command]
-handleDevListCommands config _ =
-    pure $ commands config
-
 handleDevForceReload :: Runtime ext -> Handler (Maybe ForceReloadStatus)
 handleDevForceReload rt = do
     (_, worked) <- liftIO $ do
@@ -138,8 +118,6 @@ serveDevApi config devengine prodengine rt =
         :<|> handleDevListTargets devengine rt
         :<|> handleDevProduce prodengine rt
         :<|> handleDevPublish config rt
-        :<|> handleDevListCommands config rt
-        :<|> handleExecCommand config rt
         :<|> handleDevForceReload rt
         :<|> coerce (handleProxyApi rt)
         :<|> coerce (handleOnTheFlyProduction (findTarget devengine readSite (traceDev rt)) (ontheflyCounters rt.counters) (traceDev rt))

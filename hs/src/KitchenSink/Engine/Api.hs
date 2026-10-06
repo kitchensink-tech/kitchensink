@@ -8,7 +8,6 @@ import GHC.Generics (Generic)
 import Prod.Status qualified as Prod
 import Servant
 
-import KitchenSink.Engine.Config (Command)
 import KitchenSink.Engine.Track (WatchResult)
 import KitchenSink.Prelude
 import Prod.Proxy qualified as ProdProxy
@@ -18,8 +17,6 @@ type DevApi =
         :<|> DevListTargetsApi
         :<|> DevProduceApi
         :<|> DevPublishApi
-        :<|> DevListCommandsApi
-        :<|> DevExecCommandApi
         :<|> DevForceReloadApi
         :<|> ProxyApi
         :<|> OnTheFlyProductionApi
@@ -41,10 +38,6 @@ instance ToJSON DevTextOutput
 type DevProduceApi = "dev" :> "produce" :> Post '[JSON] DevTextOutput
 
 type DevPublishApi = "dev" :> "publish" :> Post '[JSON] DevTextOutput
-
-type DevListCommandsApi = "dev" :> "commands" :> Get '[JSON] [Command]
-
-type DevExecCommandApi = "dev" :> "command" :> QueryParam' '[Required, Strict] "handle" Text :> Post '[JSON] DevTextOutput
 
 data ForceReloadStatus = ForceReloaded
     deriving (Generic, Show)

@@ -9,15 +9,6 @@ import GHC.Generics (Generic)
 
 import KitchenSink.Prelude
 
-data Command = Command
-    { exe :: FilePath
-    , display :: Text
-    , handle :: Text
-    }
-    deriving (Generic, Show)
-instance FromJSON Command
-instance ToJSON Command
-
 type HostName = Text
 type PortNum = Int
 type Prefix = Text
@@ -112,7 +103,6 @@ instance ToJSON AuthConfig
 
 data Config = Config
     { publishScript :: Maybe FilePath
-    , commands :: [Command]
     , api :: ApiProxyConfig
     , datasources :: Maybe (Map Text DatasourceConfig)
     -- ^ request-time dynamic pages (@kitchen-sink serve --dynamic@); see
