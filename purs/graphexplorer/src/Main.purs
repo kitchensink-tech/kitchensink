@@ -21,11 +21,20 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Halogen.HTML.Properties.ARIA as HPA
+import Halogen.Query.Event (eventListener)
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 import Web.DOM.ParentNode (QuerySelector(..))
+import Web.Event.Event (EventType(..))
 import Web.HTML (window)
+import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window (Window, open)
+import Web.HTML.Window as Window
+import Web.UIEvent.KeyboardEvent as KE
+import Web.UIEvent.KeyboardEvent.EventTypes as KET
+
+import ChartResize (resizeChartsIn)
 
 import Halogen.ECharts as ECharts
 import KSGraph as KSGraph
@@ -62,7 +71,41 @@ _ksgraph = Proxy :: Proxy "ksgraph"
 type Input = Maybe TopicGraph
 
 data Action
-  = HandleGraphEvent (ECharts.Output KSGraph.Event)
+  = Initialize
+  | HandleGraphEvent (ECharts.Output KSGraph.Event)
+  | ToggleEnlarged
+  | LeaveEnlarged
+  | ViewportResized
+
+-- | The chart zone reads its size from two CSS custom properties, so the
+-- same `Halogen.ECharts` component (whose style string is fixed once at
+-- creation) can be switched between the inline size (the fallbacks below)
+-- and the enlarged view (the properties set by `enlargedStyle`).
+chartStyle :: String
+chartStyle =
+  "width:var(--kitchensink-topicgraph-width,640px);"
+    <> "height:var(--kitchensink-topicgraph-height,480px);"
+
+-- | Inline view: the widget is only a positioning context for the toggle.
+inlineStyle :: String
+inlineStyle = "position:relative;width:640px;max-width:100%;"
+
+-- | Enlarged view: the widget covers the whole viewport. `--bg` is the
+-- page background of the stock stylesheets (`colors.css`); `Canvas` is the
+-- fallback for sites that do not define it.
+enlargedStyle :: String
+enlargedStyle =
+  "position:fixed;top:0;right:0;bottom:0;left:0;z-index:10000;"
+    <> "background:var(--bg,Canvas);"
+    <> "--kitchensink-topicgraph-width:100%;"
+    <> "--kitchensink-topicgraph-height:100vh;"
+
+toggleStyle :: String
+toggleStyle = "position:absolute;top:0.5em;right:0.5em;z-index:1;cursor:pointer;"
+
+-- | The DOM elements the ECharts instances of this widget are mounted on.
+chartSelector :: String
+chartSelector = ".kitchensink-topicgraph .echarts-ref"
 
 component
   :: forall query output m. MonadAff m
@@ -73,19 +116,38 @@ component =
     , render
     , eval: H.mkEval $ H.defaultEval
       { handleAction = handleAction
+      , initialize = Just Initialize
       }
     }
   where
 
-  initialState graph = {graph, focusedNode: Nothing, expandedSites: []}
+  initialState graph = {graph, focusedNode: Nothing, expandedSites: [], enlarged: false}
 
   render state =
     HH.div
-    [ HP.class_ $ HH.ClassName "kitchensink-topicgraph"
+    [ HP.classes $ map HH.ClassName $
+        if state.enlarged
+          then ["kitchensink-topicgraph", "kitchensink-topicgraph-enlarged"]
+          else ["kitchensink-topicgraph"]
+    , HP.style $ if state.enlarged then enlargedStyle else inlineStyle
     ]
-    [ case state.graph of
-        Nothing -> renderEmpty
-        Just graph -> renderGraph graph state.focusedNode state.expandedSites
+    case state.graph of
+      Nothing -> [ renderEmpty ]
+      Just graph ->
+        [ renderToggle state.enlarged
+        , renderGraph graph state.focusedNode state.expandedSites
+        ]
+
+  renderToggle enlarged =
+    HH.button
+    [ HP.class_ $ HH.ClassName "kitchensink-topicgraph-toggle"
+    , HP.type_ HP.ButtonButton
+    , HP.style toggleStyle
+    , HP.title $ if enlarged then "back to the inline view (Esc)" else "enlarge the graph to the whole window"
+    , HPA.pressed $ if enlarged then "true" else "false"
+    , HE.onClick \_ -> ToggleEnlarged
+    ]
+    [ HH.text $ if enlarged then "close" else "enlarge"
     ]
 
   renderEmpty =
@@ -101,13 +163,36 @@ component =
 
   renderGraph graph focusedNode expandedSites =
     HH.div_
-    [ HH.slot _ksgraph unit (ECharts.component ECharts.style640x480) (KSGraph.chartOptions graph focusedNode expandedSites) HandleGraphEvent
+    [ HH.slot _ksgraph unit (ECharts.component chartStyle) (KSGraph.chartOptions graph focusedNode expandedSites) HandleGraphEvent
     ]
 
   handleAction = case _ of
+    Initialize -> do
+      win <- H.liftEffect window
+      doc <- H.liftEffect $ Window.document win
+      void $ H.subscribe $ eventListener KET.keydown (HTMLDocument.toEventTarget doc)
+        \ev -> case map KE.key (KE.fromEvent ev) of
+          Just "Escape" -> Just LeaveEnlarged
+          _ -> Nothing
+      void $ H.subscribe $ eventListener (EventType "resize") (Window.toEventTarget win)
+        \_ -> Just ViewportResized
     HandleGraphEvent ev -> do
       let event = KSGraph.runExcept (KSGraph.decodeEvent ev)
       traverse_ onClick event
+    ToggleEnlarged -> do
+      st0 <- H.get
+      setEnlarged (not st0.enlarged)
+    LeaveEnlarged -> do
+      st0 <- H.get
+      when st0.enlarged $ setEnlarged false
+    ViewportResized ->
+      H.liftEffect $ resizeChartsIn chartSelector
+
+  -- The state change re-renders the widget (new size on the chart zone)
+  -- before the bind continues, so the chart re-measures the resized zone.
+  setEnlarged enlarged = do
+    H.modify_ _ { enlarged = enlarged }
+    H.liftEffect $ resizeChartsIn chartSelector
 
   onClick (KSGraph.ClickedNode node) = onNodeClicked node
   onClick _ = pure unit
