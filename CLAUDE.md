@@ -11,7 +11,7 @@ hs/           Haskell sources (the whole tool: library + 2 executables)
 purs/         PureScript frontend widgets (graphexplorer, search-box, kitchen-sink-compat)
 scaffolding/  Templates + shell scripts to bootstrap a new site
 website-src/  Kitchen-Sink sources for the project website (doubles as a fixture)
-scripts/      Dev helpers exposed as "commands" in the dev-server UI
+scripts/      Dev helpers (smoke test, publish, scaffold checks, JS bundling), run from a terminal
 ```
 
 ## Build & run
@@ -99,7 +99,7 @@ The pipeline is `Site → [Target] → bytes`, and both `produce` and `serve` re
   - `Engine.Runtime.Engine` is the four-function seam shared by every mode: `execLoadSite`, `execLoadMetaExtradata`, `evalTargets`, `execProduceTarget`. `Produce.run` just folds all targets through it; `Serve.run` builds the same `Engine` and hands it to a web app.
   - `Engine.Runtime.Runtime` adds dev-server concerns: fsnotify watch with debounce, a `BackgroundVal (Site ext)` that gets swapped on reload, a fan-out watch queue backing long-poll auto-reload, prometheus counters, and an optional proxy runtime.
   - `Engine.OnTheFly` serves a request by evaluating targets *for that request* and matching on `destinationUrl` — nothing is written to disk in serve mode.
-  - `Engine.Api` / `Engine.Handlers` — servant API. `DevApi` adds `/dev/watch`, `/dev/targets`, `/dev/produce`, `/dev/publish`, `/dev/commands`, `/dev/command`, `/dev/reload` on top of the `/api` proxy and the raw on-the-fly handler. The `commands` array in `kitchen-sink.json` is what `/dev/commands` exposes (the `scripts/*.sh` above).
+  - `Engine.Api` / `Engine.Handlers` — servant API. `DevApi` adds `/dev/watch`, `/dev/targets`, `/dev/produce`, `/dev/publish`, `/dev/reload` on top of the `/api` proxy and the raw on-the-fly handler. The former `commands` array of `kitchen-sink.json` (script buttons, `/dev/commands` + `/dev/command`) was removed; a config that still carries the key loads and the key is ignored.
   - `Engine.MultiSite` + `MultiSiteConfig` — JSON-configured multi-tenant serving with per-domain TLS/SNI and proxy directives. The stanzas are the Generic-derived aeson encodings of the `MultiSiteConfig` types: sum types are `{"tag": ..., "contents": ...}` objects (see the multisite check in `scripts/smoke-test.sh` for a minimal file). A `.dhall` config is rejected with a message.
 
 The DEV vs SERVE distinction is a metadata swap, not a separate code path: `Serve.run` builds `prodengine`, then `devengine = prodengine { execLoadMetaExtradata = loadDevModeExtraData … }`, which injects `autoreload.js` / `add-dev-route.js` / echarts into every page's headers.

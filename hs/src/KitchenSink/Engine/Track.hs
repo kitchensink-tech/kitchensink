@@ -13,7 +13,6 @@ import Prod.Tracer (Tracer (..))
 import System.FSNotify qualified as FSNotify
 
 import KitchenSink.Core.Build.Trace qualified as Build
-import KitchenSink.Engine.Config (Command)
 import KitchenSink.Engine.SiteLoader as SiteLoader
 import KitchenSink.Prelude
 
@@ -38,7 +37,6 @@ data DevServerTrack ext
     | TargetBuilt ByteString Int64
     | Loading (SiteLoader.LogMsg ext)
     | BlogTargetTrace Build.Trace
-    | CommandRan Command String
     deriving (Show)
 
 blogTargetTracer :: Tracer IO (DevServerTrack ext) -> Build.Tracer

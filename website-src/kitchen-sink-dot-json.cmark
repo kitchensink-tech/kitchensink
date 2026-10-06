@@ -55,11 +55,7 @@ As the time of writing this article, `kitchen-sink.json` supports the following 
 - `menu` (optional): an array of entries shown in the header of every layout, after the home link. Each entry has a `label` and a `url` and, optionally, `children`: an array of `{label, url}` links rendered as a sub-menu (one level only). URLs follow the same rule as `homeLink.icon`: a root-relative URL follows the `basePath`, other URLs are left alone. The list carries a `site-menu` class (`site-submenu` for the sub-menus). Leave `menu` out to render nothing.
 - `footer` (optional): an object rendered at the bottom of every layout, with two optional fields. `columns` is an array of `{heading, links}` objects (`heading` is optional, `links` is an array of `{label, url}`), and `legal` is a line of text shown below the columns (e.g., a copyright notice). The `<footer>` carries a `site-footer` class, with `footer-columns`, `footer-column` and `footer-legal` inside. Leave `footer` out (or give it neither `columns` nor `legal`) to render nothing.
 - `twitterLogin` (optional): the Twitter handle for the website, which may differ from the Twitter handle of individual authors
-- `commands`: an array of json objects containing:
-  - a  `display` for the text on the web
-  - a  `handle` that must be unique across command and gives a command name, this value is used as a query-param (suggestion: a lower-kebab-case word)
-  - a  `exe` as a path to a script that is executable from the webserver
-- `publishScript` (deprecated, use a command instead): an historical "blessed" command. This is documented only if you ever encounter a kitchen-sink.json with this field, the support for this field will be removed in the feature.
+- `publishScript` (optional, deprecated): the path to a script that the dev-server runs when its `/dev/publish` route is called. This is documented only if you ever encounter a kitchen-sink.json with this field, the support for this field will be removed in the future.
 - `api` (required,experimental): asks kitchen-sink, __when run in DEV mode__, to proxy `/api`-prefixed requests to an `[host,port]` destination
   - the proper type is an Aeson-encoded Haskell datatype (i.e., using a level of JSON-object containing `tag` and `contents` keys)
   - values can either be
@@ -77,9 +73,6 @@ An example of kitchen-sink.json
 { "title": "Kitchen Sink Default Page"
 , "publishURL": "https://kitchensink.github.io"
 , "twitterLogin": "lucasdicioccio"
-, "commands":
-  [ {"display": "publish to github", "handle": "publish", "exe": "./scripts/publish.sh" }
-  ]
 , "api": {"tag": "SlashApiProxy", "contents": ["localhost", 3000] }
 , "linkedSites":
   [ {"baseURL": "https://dicioccio.fr/", "siteTitle": "Lucas' blog.", "siteType": "kitchen-sink"}
@@ -88,8 +81,10 @@ An example of kitchen-sink.json
 }
 ```
 
-The `publishScript` here is very simple (switches to the output dir, git-add
-and commit everything, git pushes).
+Earlier versions had a `commands` key, listing scripts that the dev-server
+exposed as buttons. This feature is gone: a `kitchen-sink.json` that still has
+a `commands` key keeps loading and the key is ignored (you can delete it). Run
+your scripts from a terminal instead.
 
 # specifying a special-location
 
