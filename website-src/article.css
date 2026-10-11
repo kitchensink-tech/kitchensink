@@ -176,9 +176,14 @@ p.callout-title {
   color: var(--accent);
 }
 
-p.callout-body {
-  margin: 0;
+div.callout-body {
   color: var(--ink-soft);
+}
+div.callout-body > :first-child {
+  margin-top: 0;
+}
+div.callout-body > :last-child {
+  margin-bottom: 0;
 }
 
 div.callout-tip {
@@ -239,9 +244,15 @@ details[open] > summary.faq-question::before {
   content: "\2212";
 }
 
-p.faq-answer {
+div.faq-answer {
   margin: 0.6em 0 0;
   color: var(--ink-soft);
+}
+div.faq-answer > :first-child {
+  margin-top: 0;
+}
+div.faq-answer > :last-child {
+  margin-bottom: 0;
 }
 
 /*~~ pricing / comparison table ~~~~~~~~~~~~~*/

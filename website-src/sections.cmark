@@ -147,7 +147,10 @@ listings, `documentation` for [technical documentation](/documentation-layout.ht
 (a sidebar table of contents and previous/next links between pages), and
 `corporate` for [landing pages](/corporate-layout.html) (wide sections instead
 of a reading column, no byline/date/topics), composed from the
-[corporate components](/corporate-components.html) tramaj library. Overall, except for index,
+[corporate components](/corporate-components.html) tramaj library, and
+`not-found` for the page a web server shows for a missing URL (always written
+to `/404.html` whatever the source file is named, `noindex` by default, and
+left out of the sitemap, the feeds and the article listings). Overall, except for index,
 topics, documentation and corporate, the layout of content does not
 change significantly besides the HTML-nesting (which then allows you to modify
 CSS or hijack DOM elements for single-page apps).
@@ -284,14 +287,14 @@ interleave prose and admonitions freely by writing several `main-content`
 and `callout` sections one after another.
 
 `title` is optional and defaults to a capitalized version of `kind`. `body`
-is plain text (no markdown rendering, for now).
+is rendered as markdown, like a `main-content.cmark` section.
 
 __example__
 
     =base:callout.json
     {"kind": "warning"
     ,"title": "Heads up"
-    ,"body": "This behavior may change in a future release."
+    ,"body": "This behavior _may_ change in a [future release](/wishlist.html)."
     }
 
 :::
@@ -303,7 +306,8 @@ __example__
 A list of question/answer pairs, rendered as an accordion (`<details>`
 elements, no JavaScript needed). Like `callout`, `faq` sections render in
 file order relative to `main-content` and `callout` sections, and you can
-have several of them in one article.
+have several of them in one article. Questions are plain text; answers are
+rendered as markdown, like a `main-content.cmark` section.
 
 __example__
 

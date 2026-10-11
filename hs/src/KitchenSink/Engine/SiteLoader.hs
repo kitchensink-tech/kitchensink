@@ -410,7 +410,7 @@ loadSite vars pathPrefix extras trace dir = do
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".md", ".cmark"]]
     imagesM paths =
         traverse (loadImage trace)
-            $ [dir </> p | p <- paths, takeExtension p `List.elem` [".jpg", ".jpeg", ".png"]]
+            $ [dir </> p | p <- paths, takeExtension p `List.elem` [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".avif", ".ico"]]
     cssM paths =
         traverse (loadCss trace)
             $ [dir </> p | p <- paths, takeExtension p `List.elem` [".css"]]

@@ -212,7 +212,7 @@ siteTargets execRoot prefix extra site = allTargets
 
     seoTargets :: [Target]
     seoTargets =
-        [ rootDataTarget urlPrefix prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) articleTargets) "sitemap.txt"
+        [ rootDataTarget urlPrefix prefix (Text.unlines $ fmap (\x -> publishBaseURL extra <> x) $ fmap (destinationUrl . destination . fst) $ List.filter ((/= NotFoundPage) . layoutNameFor . snd) articleTargets) "sitemap.txt"
         , rootDataTarget urlPrefix prefix (atomFeedContent articleTargets) "atom.xml"
         ]
 
@@ -251,7 +251,11 @@ siteTargets execRoot prefix extra site = allTargets
 
     articleTarget :: Sourced (Article [Text]) -> Target
     articleTarget (Sourced loc@(FileSource path) art) =
-        let u = destHtml urlPrefix prefix loc
+        let u = case layoutNameFor art of
+                -- whatever the source file is named: the name static hosts
+                -- and web servers conventionally look for
+                NotFoundPage -> destRootDataFile urlPrefix prefix "404.html"
+                _ -> destHtml urlPrefix prefix loc
             j = destJsonDataFile urlPrefix prefix (path <> ".json") -- todo:unify
             t = destTextDataFile urlPrefix prefix (path <> ".text") -- todo:unify
             tgtSummary = TargetSummary ArticleTarget (articleTitle art) (articleCompactSummary art) (summarizePreamble <$> articlePreambleData art) (summarizeTopic <$> articleTopicData art) (summarizeGlossary <$> articleGlossaryData art) (summarizeHashTags $ analyzeArticle art)
@@ -383,6 +387,7 @@ siteTargets execRoot prefix extra site = allTargets
         , (PublishedArticle, articleLayout)
         , (DocumentationPage, documentationLayout)
         , (CorporatePage, corporateLayout)
+        , (NotFoundPage, notFoundLayout)
         , (IndexPage, indexLayout)
         ]
 
@@ -574,6 +579,39 @@ siteTargets execRoot prefix extra site = allTargets
                                 , const $ pure $ searchBox urlPrefix
                                 ]
                         , wrap (div_ [class_ "main corporate-layout"])
+                            $ wrap article_
+                            $ mconcat
+                                [ assembleMain urlPrefix
+                                ]
+                        , const $ pure $ siteFooter extra
+                        ]
+                ]
+
+    {- | @not-found@: the page a web server answers with for a missing URL,
+    always produced as @\/404.html@. Only the page's own sections between the
+    site-wide menu and footer; it is left out of the sitemap, the feeds and
+    the article listings, and is @noindex@ unless its build-info says
+    otherwise.
+    -}
+    notFoundLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    notFoundLayout dloc jsondloc txtdloc =
+        htmldoc
+            $ mconcat
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
+                , htmlbody
+                    $ mconcat
+                        [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
+                            $ mconcat
+                                [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
+                                , const $ pure $ searchBox urlPrefix
+                                ]
+                        , wrap (div_ [class_ "main"])
                             $ wrap article_
                             $ mconcat
                                 [ assembleMain urlPrefix

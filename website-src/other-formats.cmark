@@ -50,7 +50,7 @@ KitchenSink copies `.ogg`, `flac`, `.wav`, `.midi`, and `.mp3` files under `/vid
 
 ## images
 
-KitchenSink copies `.jpg`, `.jpeg`, and `.png` files under `/images`.
+KitchenSink copies `.jpg`, `.jpeg`, `.png`, `.gif`, `.svg`, `.webp`, `.avif`, and `.ico` files under `/images`.
 
 ## documents
 

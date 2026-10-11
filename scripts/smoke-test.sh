@@ -102,6 +102,7 @@ produce() {
 # 1. A freshly bootstrapped site (the embedded scaffolding).
 scaffold="${workdir}/scaffold"
 "${KITCHEN_SINK}" init --dir "${scaffold}" > /dev/null
+printf '<svg xmlns="http://www.w3.org/2000/svg"/>\n' > "${scaffold}/src/mark.svg"
 produce scaffold "${scaffold}/src" "${scaffold}/www"
 www="${scaffold}/www"
 check_file "${www}/index.html"
@@ -111,6 +112,17 @@ check_grep "<entry" "${www}/atom.xml"
 check_file "${www}/sitemap.txt"
 check_json '.paths | length > 0' "${www}/json/paths.json"
 check_file "${www}/topics/some-topic.html"
+# vector images are images too
+check_file "${www}/images/mark.svg"
+# the not-found layout: /404.html, noindex, kept out of the sitemap and of the listings
+check_grep 'content="noindex, follow"' "${www}/404.html"
+check_no_grep "404" "${www}/sitemap.txt"
+check_no_grep "Page not found" "${www}/index.html"
+# page metadata follows the layout: an article is an article, the home page a page of the site
+check_grep 'property="og:type" content="article"' "${www}/first-article.html"
+check_grep '"@type":"BlogPosting"' "${www}/first-article.html"
+check_grep 'property="og:type" content="website"' "${www}/index.html"
+check_no_grep 'BlogPosting' "${www}/index.html"
 # no documentation page, hence no documentation search index
 if [ -e "${www}/json/doc-search.json" ]; then
   echo "  FAIL scaffold has a json/doc-search.json without documentation pages"
@@ -284,6 +296,13 @@ check_grep '<footer class="site-footer"><div class="footer-columns"><div class="
 check_grep '<p class="footer-legal">Kitchen-Sink is open source.</p>' "${web}/features.html"
 check_file "${web}/features.html"
 check_file "${web}/sections-templating.html"
+# callout bodies and faq answers are rendered as markdown
+check_grep '<div class="callout-body"><p>.*<strong>markdown</strong>' "${web}/wishlist.html"
+check_grep '<div class="faq-answer"><p>Yes, <em>answers</em>' "${web}/wishlist.html"
+# a corporate landing page is a page of the site, not a blog post
+check_grep 'property="og:type" content="website"' "${web}/corporate-layout.html"
+check_grep '"@type":"WebPage"' "${web}/corporate-layout.html"
+check_file "${web}/404.html"
 check_grep "<entry" "${web}/atom.xml"
 check_grep "/index.html" "${web}/sitemap.txt"
 check_json '.paths | length > 0' "${web}/json/paths.json"
