@@ -26,6 +26,7 @@ import KitchenSink.Core.Build.Site ()
 import KitchenSink.Core.Build.Target (DestinationLocation, OutputPrefix, Url, destination, destinationUrl)
 import KitchenSink.Core.Build.Target qualified as Core
 import KitchenSink.Core.Section hiding (Section)
+import KitchenSink.Core.Section qualified as CoreSection
 import KitchenSink.Prelude
 
 import KitchenSink.Core.Assembler.Sections
@@ -188,21 +189,30 @@ renderContentSection urlPrefix s
         rendered <- renderSection s
         pure $ section_ [class_ "main-section"] $ toHtmlRaw @Text (prefixRootRelativeLinks urlPrefix $ extract' rendered)
     | isCallout s = do
-        calloutSection <- jsonSection @CalloutData s
-        pure $ calloutHtml (extract calloutSection)
+        c <- extract <$> jsonSection @CalloutData s
+        body <- renderCMarkSnippet urlPrefix (calloutBody c)
+        pure $ calloutHtml c body
     | isFaq s = do
-        faqSection <- jsonSection @FaqData s
-        pure $ faqHtml (extract faqSection)
+        d <- extract <$> jsonSection @FaqData s
+        answers <- traverse (renderCMarkSnippet urlPrefix . answer) (items d)
+        pure $ faqHtml (List.zip (items d) answers)
     | isPricing s = do
         pricingSection <- jsonSection @PricingTableData s
         pure $ pricingHtml (extract pricingSection)
     | otherwise = CoreAssembler.Assembler $ Left (CoreAssembler.UnsupportedConversionFormat (sectionFormat s))
 
-calloutHtml :: CalloutData -> Lucid.Html ()
-calloutHtml c =
+-- | Renders a markdown snippet carried by a JSON payload (a callout body, a
+-- faq answer) the same way a `main-content.cmark` section is rendered.
+renderCMarkSnippet :: UrlPrefix -> Text -> Assembler (Lucid.Html ())
+renderCMarkSnippet urlPrefix txt = do
+    rendered <- renderCMark (CoreSection.Section MainContent Cmark (Text.lines txt))
+    pure $ toHtmlRaw @Text (prefixRootRelativeLinks urlPrefix $ extract' rendered)
+
+calloutHtml :: CalloutData -> Lucid.Html () -> Lucid.Html ()
+calloutHtml c body =
     div_ [class_ ("callout callout-" <> calloutKind c)] $ do
         p_ [class_ "callout-title"] (toHtml $ fromMaybe (calloutDefaultTitle $ calloutKind c) (calloutTitle c))
-        p_ [class_ "callout-body"] (toHtml $ calloutBody c)
+        div_ [class_ "callout-body"] body
 
 calloutDefaultTitle :: Text -> Text
 calloutDefaultTitle "note" = "Note"
@@ -212,16 +222,17 @@ calloutDefaultTitle "important" = "Important"
 calloutDefaultTitle "danger" = "Danger"
 calloutDefaultTitle other = other
 
-faqHtml :: FaqData -> Lucid.Html ()
-faqHtml d =
+-- | Each item comes with its already-rendered answer.
+faqHtml :: [(FaqItem, Lucid.Html ())] -> Lucid.Html ()
+faqHtml renderedItems =
     div_ [class_ "faq"] $ do
-        mconcat [faqItemHtml i | i <- items d]
+        mconcat [faqItemHtml i a | (i, a) <- renderedItems]
 
-faqItemHtml :: FaqItem -> Lucid.Html ()
-faqItemHtml i =
+faqItemHtml :: FaqItem -> Lucid.Html () -> Lucid.Html ()
+faqItemHtml i renderedAnswer =
     details_ [class_ "faq-item"] $ do
         summary_ [class_ "faq-question"] (toHtml $ question i)
-        p_ [class_ "faq-answer"] (toHtml $ answer i)
+        div_ [class_ "faq-answer"] renderedAnswer
 
 -- | Renders as an actual `<table>`: one column per plan, one row per
 -- feature. A plan's `values` are matched to `pricingFeatures` positionally;
@@ -372,28 +383,43 @@ metaheaders mh art = do
     let modifiedTime = case preamble >>= updated of
             Just x -> Just x
             Nothing -> preamble >>= date
+    let layoutName = layoutNameFor art
     let robotsContent = case buildinfo art >>= robots of
             Just x -> x
-            Nothing -> case publicationStatus =<< buildinfo art of
-                Just Upcoming -> "noindex, nofollow"
-                Just Archived -> "noindex, nofollow"
-                Just Public -> "index, follow"
-                Nothing -> "index, follow"
+            Nothing
+                | layoutName == NotFoundPage -> "noindex, follow"
+                | otherwise -> case publicationStatus =<< buildinfo art of
+                    Just Upcoming -> "noindex, nofollow"
+                    Just Archived -> "noindex, nofollow"
+                    Just Public -> "index, follow"
+                    Nothing -> "index, follow"
+    -- an article is described as a piece of writing (author, dates); any
+    -- other page (home, landing page, listing...) as a page of the site
+    let isArticleLike = isArticleLikeLayout layoutName
+    let ogType = if isArticleLike then "article" else "website" :: Text
+    let blogPostingLd p =
+            [ Just $ "@type" .= ("BlogPosting" :: Text)
+            , Just $ "mainEntityOfPage" .= object ["@type" .= ("WebPage" :: Text), "@id" .= urlForPage]
+            , Just $ "headline" .= title p
+            , fmap (\d -> "datePublished" .= fmtUTC d) (date p)
+            , Just $ "author" .= object ["@type" .= ("Person" :: Text), "name" .= author p]
+            ]
+    let webPageLd p =
+            [ Just $ "@type" .= ("WebPage" :: Text)
+            , Just $ "url" .= urlForPage
+            , Just $ "name" .= title p
+            ]
     let jsonLd =
             flip fmap preamble $ \p ->
                 object
                     $ catMaybes
-                        [ Just $ "@context" .= ("https://schema.org" :: Text)
-                        , Just $ "@type" .= ("BlogPosting" :: Text)
-                        , Just $ "mainEntityOfPage" .= object ["@type" .= ("WebPage" :: Text), "@id" .= urlForPage]
-                        , Just $ "headline" .= title p
-                        , fmap (\x -> "description" .= compactSummary x) summary
-                        , fmap (\link -> "image" .= [urlForImage link]) (topic >>= imageLink)
-                        , fmap (\d -> "datePublished" .= fmtUTC d) (date p)
-                        , fmap (\d -> "dateModified" .= fmtUTC d) modifiedTime
-                        , Just $ "author" .= object ["@type" .= ("Person" :: Text), "name" .= author p]
-                        , Just $ "publisher" .= object ["@type" .= ("Organization" :: Text), "name" .= baseTitle extra]
-                        ]
+                    $ [Just $ "@context" .= ("https://schema.org" :: Text)]
+                        <> (if isArticleLike then blogPostingLd p else webPageLd p)
+                        <> [ fmap (\x -> "description" .= compactSummary x) summary
+                           , fmap (\link -> "image" .= [urlForImage link]) (topic >>= imageLink)
+                           , fmap (\d -> "dateModified" .= fmtUTC d) modifiedTime
+                           , Just $ "publisher" .= object ["@type" .= ("Organization" :: Text), "name" .= baseTitle extra]
+                           ]
     pure
         $ mconcat
         $ catMaybes
@@ -412,7 +438,7 @@ metaheaders mh art = do
             , (\x -> meta_ [name_ "twitter:site", content_ $ "@" <> x]) <$> twitterSiteLogin extra
             , (\x -> meta_ [name_ "twitter:creator", content_ $ "@" <> x]) <$> (twitter =<< social)
             , fmap (\x -> meta_ [property_ "twitter:description", content_ $ compactSummary x]) summary
-            , Just $ meta_ [name_ "type", property_ "og:type", content_ "article"]
+            , Just $ meta_ [name_ "type", property_ "og:type", content_ ogType]
             , Just $ meta_ [name_ "title", property_ "og:title", content_ titleTxt]
             , Just $ meta_ [property_ "og:site_name", content_ $ baseTitle extra]
             , Just $ meta_ [name_ "url", property_ "og:url", content_ $ urlForPage]
@@ -495,7 +521,7 @@ isPublishedArticle art = isPublic
         Nothing -> True
 
 isListableArticle :: Article [Text] -> Bool
-isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingTemplate, HashTagListingTemplate])
+isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingTemplate, HashTagListingTemplate, NotFoundPage])
 
 shouldShowStatsForArticle :: Article [Text] -> Bool
 shouldShowStatsForArticle art =

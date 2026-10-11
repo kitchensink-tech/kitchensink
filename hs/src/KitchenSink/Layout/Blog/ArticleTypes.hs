@@ -26,6 +26,7 @@ data ArticleLayout
     | DocumentationPage
     | CorporatePage
     | DynamicPage
+    | NotFoundPage
     deriving (Show, Eq)
 
 {- | Layouts that never get an ordinary static article target: the
@@ -36,6 +37,22 @@ site by dedicated targets instead, and 'DynamicPage' is request-time-only
 -}
 isSpecialLayout :: ArticleLayout -> Bool
 isSpecialLayout l = l `List.elem` [TopicListingTemplate, HashTagListingTemplate, GlossaryPage, DynamicPage]
+
+{- | Layouts whose page is a piece of writing (with an author and, usually, a
+date), as opposed to a page of the site itself (home page, landing page,
+listing, application...). The page metadata (OpenGraph type, JSON-LD) follows
+this split. An unknown layout or an unreadable build-info renders with the
+default article layout, hence counts as one.
+-}
+isArticleLikeLayout :: ArticleLayout -> Bool
+isArticleLikeLayout l = case l of
+    PublishedArticle -> True
+    UpcomingArticle -> True
+    ArchivedArticle -> True
+    DocumentationPage -> True
+    UnknownLayout _ -> True
+    ErrorLayout _ -> True
+    _ -> False
 
 layoutNameFor :: Article [Text] -> ArticleLayout
 layoutNameFor art =
@@ -60,6 +77,7 @@ effectiveLayout Public "listing" = VariousListing
 effectiveLayout Public "documentation" = DocumentationPage
 effectiveLayout Public "corporate" = CorporatePage
 effectiveLayout Public "dynamic" = DynamicPage
+effectiveLayout Public "not-found" = NotFoundPage
 effectiveLayout Public t = UnknownLayout t
 effectiveLayout Upcoming "article" = UpcomingArticle
 effectiveLayout Upcoming "application" = SinglePageApp

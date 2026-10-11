@@ -98,4 +98,5 @@ destinationFileName relPath
     | relPath == "topics.cmark.tmpl" = "topics.cmark"
     | relPath == "hashtags.cmark.tmpl" = "hashtags.cmark"
     | relPath == "newpage.cmark.tmpl" = "first-article.cmark"
+    | relPath == "404.cmark.tmpl" = "404.cmark"
     | otherwise = takeFileName relPath

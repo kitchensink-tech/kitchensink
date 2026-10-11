@@ -45,7 +45,7 @@ A whishlist, which actually is a todolist.
 =base:callout.json
 {"kind": "tip"
 ,"title": "New!"
-,"body": "Callout/admonition sections just landed. This box is one, authored via a callout.json section interleaved with main-content sections; kind can be note, tip, warning, important/danger, or anything else (unstyled fallback). The body is plain text for now, no markdown rendering yet."
+,"body": "Callout/admonition sections just landed. This box is one, authored via a callout.json section interleaved with main-content sections; kind can be note, tip, warning, important/danger, or anything else (unstyled fallback). The body is rendered as **markdown**, see the [sections reference](/sections.html)."
 }
 
 =base:main-content.cmark
@@ -54,7 +54,7 @@ Main-content and callout sections render in the order they appear in the source 
 
 =base:faq.json
 {"items":
-  [ {"question": "Does a faq section support markdown in answers?", "answer": "Not yet, same plain-text limitation as callout bodies."}
+  [ {"question": "Does a faq section support markdown in answers?", "answer": "Yes, _answers_ and callout bodies are both rendered as markdown; questions and callout titles stay plain text."}
   , {"question": "Can I have more than one faq section per article?", "answer": "Yes, they render in file order just like callouts and main-content."}
   ]
 }

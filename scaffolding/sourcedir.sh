@@ -9,6 +9,7 @@ cp -v "scaffolding/glossary.cmark.tmpl" "${path}/glossary.cmark"
 cp -v "scaffolding/topics.cmark.tmpl" "${path}/topics.cmark"
 cp -v "scaffolding/hashtags.cmark.tmpl" "${path}/hashtags.cmark"
 cp -v "scaffolding/newpage.cmark.tmpl" "${path}/first-article.cmark"
+cp -v "scaffolding/404.cmark.tmpl" "${path}/404.cmark"
 
 cp -v "scaffolding/js/add-dev-route.js" "${path}/add-dev-route.js"
 cp -v "scaffolding/js/autoreload.js" "${path}/autoreload.js"
