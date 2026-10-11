@@ -14,6 +14,7 @@ import KitchenSink.Core.Assembler.Sections
 import KitchenSink.Core.Build.Target (Sourced (..), runAssembler)
 import KitchenSink.Core.Section
 import KitchenSink.Layout.Blog.Analyses.ArticleInfos (HashTagInfo, analyzeArticle, hashtagInfos)
+import KitchenSink.Layout.Blog.ArticleTypes (isArticleLikeLayout, layoutNameFor)
 import KitchenSink.Layout.Blog.Extensions (Article, Assembler, Target)
 import KitchenSink.Prelude
 
@@ -28,6 +29,10 @@ data TopicStats = TopicStats
 allTopicNames :: TopicStats -> [TopicName]
 allTopicNames = Map.keys . byTopic
 
+-- | Topics and hashtags index the articles only: a page of the site itself
+-- (home page, landing page, application...) is not listed under its topics,
+-- same rule as the article listings and the feeds. 'knownTargets' has
+-- every page.
 buildTopicStats :: [Sourced (Article [Text])] -> (Sourced (Article [Text]) -> Target ()) -> TopicStats
 buildTopicStats arts mkTarget =
     TopicStats indexByTopic indexByHashTag [(mkTarget sa, a) | sa@(Sourced _ a) <- arts]
@@ -36,6 +41,7 @@ buildTopicStats arts mkTarget =
         Map.fromListWith (<>)
             $ [ (top, [(mkTarget s, art)])
               | s@(Sourced _ art) <- arts
+              , isArticleLikeLayout (layoutNameFor art)
               , top <- getTopicNames art
               ]
 
@@ -43,6 +49,7 @@ buildTopicStats arts mkTarget =
         Map.fromListWith (<>)
             $ [ (tag, [(mkTarget s, art)])
               | s@(Sourced _ art) <- arts
+              , isArticleLikeLayout (layoutNameFor art)
               , tag <- getHashtagNames art
               ]
 

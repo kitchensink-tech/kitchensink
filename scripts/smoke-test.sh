@@ -103,6 +103,56 @@ produce() {
 scaffold="${workdir}/scaffold"
 "${KITCHEN_SINK}" init --dir "${scaffold}" > /dev/null
 printf '<svg xmlns="http://www.w3.org/2000/svg"/>\n' > "${scaffold}/src/mark.svg"
+# a business page built from the scaffolded corporate components, and a blog listing
+cat > "${scaffold}/src/company.cmark" <<'CMARK'
+=base:build-info.json
+{"layout":"corporate"}
+
+=base:preamble.json
+{"author":"Smoke Test","title":"Acme company page","date":"2085-01-01T00:00:00Z"}
+
+=base:topic.json
+{"topics":["some topic"],"keywords":[]}
+
+=base:summary.cmark
+A company page.
+
+=base:dataset.json page
+{ "hero": {"title": "Acme", "subtitle": "Things, done.", "actions": [], "image": {"src": "/images/mark.svg", "alt": "Acme"}}
+, "split": {"title": "Why", "body": "Because.", "image": {"src": "/images/mark.svg", "alt": "Why"}}
+, "logos": [{"src": "/images/mark.svg", "alt": "A customer"}]
+, "contact": {"email": "hello@example.invalid"}
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.page
+.(import("corporate/hero", {"title": $d.hero.title, "subtitle": $d.hero.subtitle, "actions": $d.hero.actions, "image": $d.hero.image}).rendered,
+  import("corporate/split", {"title": $d.split.title, "body": $d.split.body, "image": $d.split.image, "side": "left"}).rendered,
+  import("corporate/logo-strip", {"logos": $d.logos}).rendered,
+  import("corporate/contact-details", {"details": $d.contact}).rendered)
+
+=base:main-css.css
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/navigation.css";
+@import "/css/corporate.css";
+CMARK
+cat > "${scaffold}/src/blog.cmark" <<'CMARK'
+=base:build-info.json
+{"layout":"blog"}
+
+=base:preamble.json
+{"author":"Smoke Test","title":"Acme blog"}
+
+=base:main-content.cmark
+# Blog
+
+=base:main-css.css
+@import "/css/colors.css";
+@import "/css/article.css";
+@import "/css/articles-listing.css";
+@import "/css/navigation.css";
+CMARK
 produce scaffold "${scaffold}/src" "${scaffold}/www"
 www="${scaffold}/www"
 check_file "${www}/index.html"
@@ -123,6 +173,22 @@ check_grep 'property="og:type" content="article"' "${www}/first-article.html"
 check_grep '"@type":"BlogPosting"' "${www}/first-article.html"
 check_grep 'property="og:type" content="website"' "${www}/index.html"
 check_no_grep 'BlogPosting' "${www}/index.html"
+# the corporate components shipped by `init`, with their optional parts
+check_grep '<img class="hero-image" src="/images/mark.svg" alt="Acme">' "${www}/company.html"
+check_grep 'class="split split-image-left"' "${www}/company.html"
+check_grep '<div class="logo-strip"><img src="/images/mark.svg" alt="A customer"></div>' "${www}/company.html"
+check_grep '<a href="mailto:hello@example.invalid">' "${www}/company.html"
+check_no_grep 'contact-phone' "${www}/company.html"
+# a page of the site is not an article: out of the listings and of the feeds, even with a date and a topic
+check_no_grep "Acme company page" "${www}/index.html"
+check_no_grep "Acme company page" "${www}/topics/some-topic.html"
+check_no_grep "company.html" "${www}/atom.xml"
+check_grep "company.html" "${www}/sitemap.txt"
+# the blog layout: the articles, without the index page's graph
+check_grep 'class="articles-listing"' "${www}/blog.html"
+check_grep 'href="/first-article.html"' "${www}/blog.html"
+check_no_grep 'echartzone' "${www}/blog.html"
+check_no_grep "Acme blog" "${www}/index.html"
 # no documentation page, hence no documentation search index
 if [ -e "${www}/json/doc-search.json" ]; then
   echo "  FAIL scaffold has a json/doc-search.json without documentation pages"

@@ -6,7 +6,9 @@
     map($ctx.actions, (a) =>
       .a(class: branch("button", eq($a.style, "secondary"), "button secondary"),
          href: $a.href,
-         $a.label))))
+         $a.label))),
+  branch("", has($ctx, "image"),
+    .img(class: "hero-image", src: $ctx.image.src, alt: $ctx.image.alt)))
 
 =base:library.tramaj-lib feature-grid
 .div(class: "feature-grid",
@@ -50,3 +52,35 @@
     .div(class: "corp-footer-column",
       .h2($c.heading),
       .ul(map($c.links, (l) => .li(.a(href: $l.href, $l.label)))))))
+
+=base:library.tramaj-lib split
+.div(class: branch("split", has($ctx, "side"), branch("split", eq($ctx.side, "left"), "split split-image-left")),
+  .div(class: "split-text",
+    .h2($ctx.title),
+    .p($ctx.body)),
+  .img(class: "split-image", src: $ctx.image.src, alt: $ctx.image.alt))
+
+=base:library.tramaj-lib contact-details
+.div(class: "contact-details",
+  branch("", has($ctx.details, "address"),
+    .div(class: "contact-block contact-address",
+      .h3("Address"),
+      .p(map($ctx.details.address, (line) => .span(class: "contact-line", $line))))),
+  branch("", has($ctx.details, "phone"),
+    .div(class: "contact-block contact-phone",
+      .h3("Phone"),
+      .p(.a(href: "tel:" <> $ctx.details.phone.number, $ctx.details.phone.label)))),
+  branch("", has($ctx.details, "email"),
+    .div(class: "contact-block contact-email",
+      .h3("Email"),
+      .p(.a(href: "mailto:" <> $ctx.details.email, $ctx.details.email)))),
+  branch("", has($ctx.details, "hours"),
+    .div(class: "contact-block contact-hours",
+      .h3("Opening hours"),
+      .dl(map($ctx.details.hours, (h) => .div(.dt($h.days), .dd($h.hours)))))))
+
+=base:library.tramaj-lib logo-strip
+.div(class: "logo-strip",
+  map($ctx.logos, (l) =>
+    branch(.img(src: $l.src, alt: $l.alt), has($l, "href"),
+      .a(href: $l.href, .img(src: $l.src, alt: $l.alt)))))
