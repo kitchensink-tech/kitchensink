@@ -148,9 +148,14 @@ listings, `documentation` for [technical documentation](/documentation-layout.ht
 `corporate` for [landing pages](/corporate-layout.html) (wide sections instead
 of a reading column, no byline/date/topics), composed from the
 [corporate components](/corporate-components.html) tramaj library, and
+`blog` for the listing of a blog that is not the home page (the page's own
+content, then the published `article` pages, newest first), and
 `not-found` for the page a web server shows for a missing URL (always written
 to `/404.html` whatever the source file is named, `noindex` by default, and
-left out of the sitemap, the feeds and the article listings). Overall, except for index,
+left out of the sitemap, the feeds and the article listings). The layout is
+not tied to the file name: `index.cmark` can be a `corporate` home page next
+to a `blog.cmark` listing. Only `article` and `documentation` pages appear in
+the article listings (index, topics, hashtags) and in the Atom feeds. Overall, except for index,
 topics, documentation and corporate, the layout of content does not
 change significantly besides the HTML-nesting (which then allows you to modify
 CSS or hijack DOM elements for single-page apps).

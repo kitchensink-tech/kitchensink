@@ -42,17 +42,19 @@ pre {  border-left: 4px double coral;  margin-left: 1em;  padding-left: 1em;}
 =base:summary.cmark
 
 A small tramaj component library for the `corporate` article layout: hero,
-feature grid, pricing table, call to action, testimonial strip and footer
-columns, each driven by a `dataset.json` cell instead of hand-written HTML.
+feature grid, image and text split, pricing table, call to action,
+testimonial strip, logo strip, contact details and footer columns, each
+driven by a `dataset.json` cell instead of hand-written HTML.
 
 =base:main-content.cmark
 
 `corporate.cmark-tramaj` is a `.cmark-tramaj` library file (see
 [tramaj sections](/sections-templating.html) for what that extension means
 and how cross-file imports resolve). It has no page of its own; every
-article imports from it as `corporate/<name>`, most visibly the
+article imports from it as `corporate/<name>` (`kitchen-sink init` copies it
+into a new site, next to `corporate.css`), most visibly the
 [corporate layout example](/corporate-layout.html), which composes its
-whole body from the six components documented below.
+whole body from six of the components documented below.
 
 Each component is a single `library.tramaj-lib` template rooted at one
 element, called from a page's own `main-content.tramaj-doc` section with
@@ -62,8 +64,9 @@ fields listed under it — nothing more, since tramaj has
 alignment and conditional styling all have to be either decided by the
 data author ahead of time (e.g. `pricing-table`'s `rows[].values` line up
 with `plans` positionally because the dataset says so, not because the
-template computes it) or reduced to the handful of comparisons `branch`
-and `eq` can express (`hero`'s `style: "secondary"` switch).
+template computes it) or reduced to the handful of comparisons `branch`,
+`eq` and `has` can express (`hero`'s `style: "secondary"` switch, or a block
+that only shows when its field is given).
 
 =base:main-content.cmark
 
@@ -71,7 +74,9 @@ and `eq` can express (`hero`'s `style: "secondary"` switch).
 
 Fields: `title` (string), `subtitle` (string), `actions` (array of
 `{label, href, style}`, where `style: "secondary"` renders as the outlined
-button and anything else — typically `"primary"` — as the filled one).
+button and anything else — typically `"primary"` — as the filled one), and
+an optional `image` (`{src, alt}`) shown under the buttons: pass it as
+`"image": $d.image` in the import.
 
     =base:dataset.json hero-data
     { "title": "Acme Cloud"
@@ -226,6 +231,96 @@ Fields: `testimonials` (array of `{quote, author}`).
 =base:main-content.tramaj-doc
 @d=$ctx.datasets.testimonials-data
 .div(class: "output", import("corporate/testimonial-strip", {"testimonials": $d.testimonials}).rendered)
+
+=base:main-content.cmark
+
+## split
+
+Fields: `title` (string), `body` (string), `image` (`{src, alt}`), and an
+optional `side`: the picture sits on the right of the text unless
+`side` is `"left"`. On narrow screens the two stack.
+
+    =base:dataset.json split-data
+    { "title": "Built for the people who do the work"
+    , "body": "No training day, no consultant: the team that owns the budget sets it up."
+    , "image": {"src": "/images/features-001-targetsizes-timeseries.png", "alt": "A dashboard"}
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.split-data
+    import("corporate/split", {"title": $d.title, "body": $d.body, "image": $d.image}).rendered
+
+=base:dataset.json split-data
+{ "title": "Built for the people who do the work"
+, "body": "No training day, no consultant: the team that owns the budget sets it up."
+, "image": {"src": "/images/features-001-targetsizes-timeseries.png", "alt": "A dashboard"}
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.split-data
+.div(class: "output", import("corporate/split", {"title": $d.title, "body": $d.body, "image": $d.image}).rendered)
+
+=base:main-content.cmark
+
+## logo-strip
+
+Fields: `logos` (array of `{src, alt}`, each with an optional `href` that
+makes the logo a link).
+
+    =base:dataset.json logos-data
+    { "logos":
+      [ {"src": "/images/logo.png", "alt": "Kitchen-Sink", "href": "/index.html"}
+      , {"src": "/images/favicon.png", "alt": "Another customer"}
+      ]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.logos-data
+    import("corporate/logo-strip", {"logos": $d.logos}).rendered
+
+=base:dataset.json logos-data
+{ "logos":
+  [ {"src": "/images/logo.png", "alt": "Kitchen-Sink", "href": "/index.html"}
+  , {"src": "/images/favicon.png", "alt": "Another customer"}
+  ]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.logos-data
+.div(class: "output", import("corporate/logo-strip", {"logos": $d.logos}).rendered)
+
+=base:main-content.cmark
+
+## contact-details
+
+Fields: `details`, an object whose own fields are all optional (a block
+only shows when its field is given): `address` (array of lines), `phone`
+(`{label, number}`: the text shown and the number dialled by the `tel:`
+link), `email` (string, also the `mailto:` link) and `hours` (array of
+`{days, hours}`). Pass the dataset as a whole, so that a missing field
+stays missing.
+
+    =base:dataset.json contact-data
+    { "address": ["Acme Cloud", "12 rue de l'Exemple", "75000 Paris"]
+    , "phone": {"label": "+33 1 23 45 67 89", "number": "+33123456789"}
+    , "email": "hello@example.invalid"
+    , "hours": [{"days": "Mon-Fri", "hours": "9:00-18:00"}, {"days": "Sat", "hours": "10:00-13:00"}]
+    }
+
+    =base:main-content.tramaj-doc
+    @d=$ctx.datasets.contact-data
+    import("corporate/contact-details", {"details": $d}).rendered
+
+=base:dataset.json contact-data
+{ "address": ["Acme Cloud", "12 rue de l'Exemple", "75000 Paris"]
+, "phone": {"label": "+33 1 23 45 67 89", "number": "+33123456789"}
+, "email": "hello@example.invalid"
+, "hours": [{"days": "Mon-Fri", "hours": "9:00-18:00"}, {"days": "Sat", "hours": "10:00-13:00"}]
+}
+
+=base:main-content.tramaj-doc
+@d=$ctx.datasets.contact-data
+.div(class: "output", import("corporate/contact-details", {"details": $d}).rendered)
 
 =base:main-content.cmark
 

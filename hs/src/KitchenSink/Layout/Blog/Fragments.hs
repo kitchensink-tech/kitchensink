@@ -520,8 +520,11 @@ isPublishedArticle art = isPublic
         Just Public -> True
         Nothing -> True
 
+-- | Whether a page belongs in the article listings and in the feeds: only a
+-- piece of writing does, not a page of the site itself (home page, landing
+-- page, application, listing...).
 isListableArticle :: Article [Text] -> Bool
-isListableArticle art = not (layoutNameFor art `List.elem` [IndexPage, TopicListingTemplate, HashTagListingTemplate, NotFoundPage])
+isListableArticle art = isArticleLikeLayout (layoutNameFor art)
 
 shouldShowStatsForArticle :: Article [Text] -> Bool
 shouldShowStatsForArticle art =
@@ -677,6 +680,14 @@ mainArticleLinks :: UrlPrefix -> [(Target a, Article [Text])] -> Lucid.Html ()
 mainArticleLinks urlPrefix targets =
     articleListing urlPrefix "all articles"
         $ List.filter (isListableArticle . snd)
+        $ sortByDate targets
+
+-- | The listing of a @blog@ page: the published articles proper, newest
+-- first (no documentation page, no upcoming or archived article).
+blogArticleLinks :: UrlPrefix -> [(Target a, Article [Text])] -> Lucid.Html ()
+blogArticleLinks urlPrefix targets =
+    articleListing urlPrefix "articles"
+        $ List.filter ((== PublishedArticle) . layoutNameFor . snd)
         $ sortByDate targets
 
 latestArticleLink :: UrlPrefix -> [(Target a, Article [Text])] -> Lucid.Html ()

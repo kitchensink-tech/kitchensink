@@ -388,6 +388,7 @@ siteTargets execRoot prefix extra site = allTargets
         , (DocumentationPage, documentationLayout)
         , (CorporatePage, corporateLayout)
         , (NotFoundPage, notFoundLayout)
+        , (BlogListing, blogLayout)
         , (IndexPage, indexLayout)
         ]
 
@@ -615,6 +616,38 @@ siteTargets execRoot prefix extra site = allTargets
                             $ wrap article_
                             $ mconcat
                                 [ assembleMain urlPrefix
+                                ]
+                        , const $ pure $ siteFooter extra
+                        ]
+                ]
+
+    {- | @blog@: the listing of a blog that is not the site's home page. The
+    page's own sections, then the published articles, newest first; unlike
+    @index@ there is no site map graph and no topics block.
+    -}
+    blogLayout ::
+        DestinationLocation ->
+        DestinationLocation ->
+        DestinationLocation ->
+        Article [Text] ->
+        Assembler LText.Text
+    blogLayout dloc jsondloc txtdloc =
+        htmldoc
+            $ mconcat
+                [ htmlhead (MetaHeaders extra dloc jsondloc txtdloc rootAtomDLoc) assembleStyle
+                , htmlbody
+                    $ mconcat
+                        [ wrap (nav_ [id_ "site-navigation", class_ "nav"])
+                            $ mconcat
+                                [ const $ pure $ homeLink extra
+                                , const $ pure $ siteMenu extra
+                                , const $ pure $ searchBox urlPrefix
+                                ]
+                        , wrap (div_ [class_ "main"])
+                            $ wrap article_
+                            $ mconcat
+                                [ assembleMain urlPrefix
+                                , const $ pure $ blogArticleLinks urlPrefix articleTargets
                                 ]
                         , const $ pure $ siteFooter extra
                         ]

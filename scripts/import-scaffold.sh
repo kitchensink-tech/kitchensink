@@ -12,6 +12,8 @@ cp -v ./website-src/index.css ./scaffolding/css
 cp -v ./website-src/navigation.css ./scaffolding/css
 cp -v ./website-src/tags.css ./scaffolding/css
 
+cp -v ./website-src/corporate.cmark-tramaj ./scaffolding
+
 cp -v ./website-src/add-dev-route.js ./scaffolding/js
 cp -v ./website-src/autoreload.js ./scaffolding/js
 cp -v ./website-src/doc-search.js ./scaffolding/js
@@ -27,5 +29,6 @@ cp -v ./website-src/topicgraph.js ./scaffolding/js
 cp -v ./scaffolding/kitchen-sink.json ./hs/scaffolding
 cp -v ./scaffolding/README.md ./hs/scaffolding
 cp -v ./scaffolding/*.tmpl ./hs/scaffolding
+cp -v ./scaffolding/*.cmark-tramaj ./hs/scaffolding
 cp -v ./scaffolding/js/*.js ./hs/scaffolding/js
 cp -v ./scaffolding/css/*.css ./hs/scaffolding/css

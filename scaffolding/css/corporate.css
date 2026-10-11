@@ -87,6 +87,100 @@
   flex-wrap: wrap;
 }
 
+.hero .hero-image {
+  display: block;
+  max-width: min(100%, 900px);
+  height: auto;
+  margin: 3em auto 0;
+  border-radius: var(--radius);
+}
+
+/* ~~ split: a picture next to a title and a paragraph ~~~~~~~~~~~~~~~~~~ */
+
+.split {
+  display: flex;
+  align-items: center;
+  gap: 3em;
+}
+
+.split.split-image-left {
+  flex-direction: row-reverse;
+}
+
+.split .split-text {
+  flex: 1 1 0;
+}
+
+.split .split-text h2 {
+  margin-top: 0;
+}
+
+.split .split-image {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 50%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+/* ~~ contact details ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.contact-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2em;
+}
+
+.contact-block h3 {
+  margin: 0 0 0.5em;
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.contact-block p {
+  margin: 0;
+}
+
+.contact-block .contact-line {
+  display: block;
+}
+
+.contact-block dl {
+  margin: 0;
+}
+
+.contact-block dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.contact-block dt {
+  font-weight: 700;
+}
+
+.contact-block dd {
+  margin: 0;
+}
+
+/* ~~ logo strip: client or partner logos ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+.logo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5em;
+}
+
+.logo-strip img {
+  display: block;
+  max-height: 3em;
+  width: auto;
+}
+
 /* ~~ buttons, used by the hero and the call-to-action ~~~~~~~~~~~~~~~~~~ */
 
 a.button {
@@ -207,5 +301,13 @@ a.button.secondary {
 
   .main.corporate-layout .main-section {
     padding: 2.5em 1em;
+  }
+
+  .split, .split.split-image-left {
+    flex-direction: column;
+  }
+
+  .split .split-image {
+    max-width: 100%;
   }
 }

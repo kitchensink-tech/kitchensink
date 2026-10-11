@@ -27,6 +27,7 @@ data ArticleLayout
     | CorporatePage
     | DynamicPage
     | NotFoundPage
+    | BlogListing
     deriving (Show, Eq)
 
 {- | Layouts that never get an ordinary static article target: the
@@ -78,6 +79,7 @@ effectiveLayout Public "documentation" = DocumentationPage
 effectiveLayout Public "corporate" = CorporatePage
 effectiveLayout Public "dynamic" = DynamicPage
 effectiveLayout Public "not-found" = NotFoundPage
+effectiveLayout Public "blog" = BlogListing
 effectiveLayout Public t = UnknownLayout t
 effectiveLayout Upcoming "article" = UpcomingArticle
 effectiveLayout Upcoming "application" = SinglePageApp
