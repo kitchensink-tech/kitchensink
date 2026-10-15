@@ -448,11 +448,30 @@ within the same site, never across a networked location.
 # Notes and limitations
 
 Text interpolation goes through the language's display rules: a string
-interpolates raw, an integral number drops its `.0`, and anything else falls
+interpolates raw, a number is written by its type, and anything else falls
 back to a compact JSON encoding. In `.tramaj-doc` mode an element's node is
 left as-is — its text and attribute values keep whatever type they evaluated
 to (a number stays a number) — and it is KitchenSink's HTML renderer, not the
-language, that turns them into display strings on the way out.
+language, that turns them into display strings on the way out, with the same
+rules as `str`.
+
+Numbers come in two types, integers and floats, told apart by how they are
+written: `3` is an integer, `3.0` and `3e0` are floats. That holds for a
+literal in a program and for a number in a `=base:dataset.json` cell alike
+(KitchenSink reads datasets with tramaj's own JSON reader, which keeps the
+difference), and a `.sql` dataset of a dynamic page gives an `INTEGER` column
+as an integer and a `REAL` one as a float. Nothing converts between the two:
+
+- a whole-valued float displays with its fraction, so `` `$x` `` and `str($x)`
+  write `1.0` for the float `1.0`, where an integer `1` writes `1`;
+- `eq(1, 1.0)` is `false`;
+- `lt`, `lte`, `gt` and `gte` over an integer and a float are a type error
+  rather than a comparison, so compare a float with a float literal
+  (`gt($price, 0.0)`, not `gt($price, 0)`);
+- `has` and `lookup` take an integer index.
+
+A `.tramaj-json` section answering `format = "json"` keeps the distinction in
+the JSON it is rewritten to, so a float stays `1.0` there too.
 
 String literals do have escape sequences now: `\n`, `\t`, `\r`, `\\`, `\"`,
 `` \` ``, `\0` and a braced `\u{1F600}` for an arbitrary code point, so a `"`

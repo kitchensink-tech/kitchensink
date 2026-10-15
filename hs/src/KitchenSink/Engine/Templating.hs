@@ -23,6 +23,12 @@ their own right.
 Both receive the same context, 'buildContext', which is the @kitchensink@
 record Dhall sections get, reachable as @$ctx.datasets@, @$ctx.vars@,
 @$ctx.file@, @$ctx.sectionNum@ and @$ctx.pathPrefix@.
+
+Values crossing into and out of tramaj are "Tramaj.Json" values, not aeson
+ones: tramaj has two number types (an integer, and a float written with a
+fraction or an exponent, @1@ and @1.0@ being two different values), which an
+'Aeson.Value' cannot tell apart. The datasets the context carries are read
+with tramaj's own 'Tramaj.Json.jsonParser' for that reason.
 -}
 module KitchenSink.Engine.Templating (
     TemplatingError (..),
@@ -33,23 +39,21 @@ module KitchenSink.Engine.Templating (
     renderNodeHtml,
 ) where
 
-import Data.Aeson qualified as Aeson
-import Data.ByteString.Lazy qualified as LByteString
 import Data.Char (isAlphaNum)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Scientific qualified as Scientific
 import Data.Text qualified as Text
-import Data.Text.Encoding qualified as Text
 import Data.Text.Lazy qualified as LText
 import Lucid qualified
 import Lucid.Base qualified as Lucid
 import Data.Void (Void)
 import Text.Megaparsec (ParseErrorBundle, errorBundlePretty)
-import Prelude (Double, Integer, (&&), (||))
+import Prelude (Integer, (&&), (||))
 
 import Tramaj.Ast (Program)
 import Tramaj.Eval qualified as Templating
+import Tramaj.Json (Json (..))
+import Tramaj.Json qualified as Json
 import Tramaj.Node (Node (..), NodeAttribute (..))
 import Tramaj.Node qualified as Templating
 import Tramaj.Parser qualified as Templating
@@ -68,20 +72,21 @@ data TemplatingError
 no schema inference round trip, so there is no way for the datasets to silently
 degrade into an error string.
 -}
-buildContext :: FilePath -> Integer -> Text -> [(Text, Text)] -> Map Name Aeson.Value -> Aeson.Value
+buildContext :: FilePath -> Integer -> Text -> [(Text, Text)] -> Map Name Json -> Json
 buildContext path sectionNum pathPrefix vars datasets =
-    Aeson.object
-        [ ("file", Aeson.toJSON (Text.pack path))
-        , ("sectionNum", Aeson.toJSON sectionNum)
-        , ("pathPrefix", Aeson.toJSON pathPrefix)
-        , ("datasets", Aeson.toJSON datasets)
-        , ("vars", Aeson.toJSON (Map.fromList vars))
-        ]
+    JObject
+        $ Map.fromList
+            [ ("file", JString (Text.pack path))
+            , ("sectionNum", JInt sectionNum)
+            , ("pathPrefix", JString pathPrefix)
+            , ("datasets", JObject datasets)
+            , ("vars", JObject (fmap JString (Map.fromList vars)))
+            ]
 
 -- | Expression-rooted mode: the section body evaluates to a JSON value. A
 -- program whose root instead evaluated to a document is accepted too, folded
 -- to its normative JSON representation ("Tramaj.Node"'s @nodeToJson@).
-evalJsonSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Program, Aeson.Value)
+evalJsonSection :: Templating.LibraryTable -> Json -> Text -> Either TemplatingError (Program, Json)
 evalJsonSection libtable ctx body = do
     prog <- adaptParse (Templating.parseProgram body)
     out <- adaptEval (Templating.evalProgram Templating.Concrete libtable ctx prog)
@@ -93,7 +98,7 @@ evalJsonSection libtable ctx body = do
 -- | Element-rooted mode: the section body evaluates to a document tree, which
 -- this renders as HTML. A program whose root evaluated to a plain value
 -- instead of a document is accepted too, wrapped as a lone text node.
-evalDocSection :: Templating.LibraryTable -> Aeson.Value -> Text -> Either TemplatingError (Program, Text)
+evalDocSection :: Templating.LibraryTable -> Json -> Text -> Either TemplatingError (Program, Text)
 evalDocSection libtable ctx body = do
     prog <- parseLibrarySection body
     out <- adaptEval (Templating.evalProgram Templating.Concrete libtable ctx prog)
@@ -153,28 +158,19 @@ attributeHtml (NAttr k v) = [Lucid.makeAttribute k (displayValue v)]
 attributeHtml (NAction event key payload) =
     [ Lucid.makeAttribute "data-ks-action-event" event
     , Lucid.makeAttribute "data-ks-action-key" key
-    , Lucid.makeAttribute "data-ks-action-payload" (encodeJsonText payload)
+    , Lucid.makeAttribute "data-ks-action-payload" (Json.stringify payload)
     ]
 
-encodeJsonText :: Aeson.Value -> Text
-encodeJsonText = Text.decodeUtf8 . LByteString.toStrict . Aeson.encode
-
-{- | A best-effort rendering of a JSON scalar\/structure to display text, used
-for an 'NText' value and an ordinary attribute's value. Mirrors tramaj's own
-@str@ builtin closely enough for a demonstrator (a plain string passes
-through unchanged, @null@\/booleans render as their literal spelling), but
-does not attempt to reproduce its ECMAScript-exact number formatting since
-that logic is internal to "Tramaj.Eval" and not exported.
+{- | The display text of a value, used for an 'NText' value and an ordinary
+attribute's value. It is tramaj's own @str@ rendering ("Tramaj.Json"'s
+writer, with a number written by its type: @1@ for an integer, @1.0@ for a
+whole-valued float), except that @null@ displays as nothing and a string
+passes through unquoted.
 -}
-displayValue :: Aeson.Value -> Text
-displayValue Aeson.Null = ""
-displayValue (Aeson.Bool b) = if b then "true" else "false"
-displayValue (Aeson.String s) = s
-displayValue (Aeson.Number n) =
-    case Scientific.floatingOrInteger n of
-        Right (i :: Integer) -> Text.pack (show i)
-        Left (_ :: Double) -> Text.pack (show n)
-displayValue v = Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode v
+displayValue :: Json -> Text
+displayValue JNull = ""
+displayValue (JString s) = s
+displayValue v = Json.stringify v
 
 isVoidElement :: Text -> Bool
 isVoidElement tag = tag `elem` voidElements
