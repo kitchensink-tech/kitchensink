@@ -152,7 +152,7 @@ library
                     , prodapi-web >= 0.1.0 && < 0.2
                     , prodapi-proxy >= 0.2.0 && < 0.3
                     , stm >= 2.5.3 && < 2.6
-                    , tramaj-hs >= 0.3.0 && < 0.4
+                    , tramaj-hs >= 0.4.0 && < 0.5
                     , tls >= 2.0.6 && < 2.1
                     , http-types >= 0.12.6 && < 0.13
                     , wai >= 3.2.5 && < 3.3

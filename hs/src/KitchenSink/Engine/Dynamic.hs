@@ -45,10 +45,6 @@ module KitchenSink.Engine.Dynamic (
 ) where
 
 import Control.Exception (SomeException, bracket, throwIO, try)
-import Data.Aeson (Value)
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Key qualified as Key
-import Data.Aeson.KeyMap qualified as KeyMap
 import Data.ByteString.Base64 qualified as Base64
 import Data.ByteString.Lazy qualified as LByteString
 import Data.Int (Int64)
@@ -58,11 +54,12 @@ import Data.Map.Strict qualified as Map
 import Data.Maybe (isNothing)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
+import Tramaj.Json (Json (..))
 import Database.SQLite3 (ColumnIndex (..), Database, ParamIndex (..), SQLData (..), SQLOpenFlag (..), SQLVFS (..), Statement, StepResult (..))
 import Database.SQLite3 qualified as SQLite3
 import Network.HTTP.Types (status200, status500)
 import Network.Wai qualified as Wai
-import Prelude (Double, id, negate, (&&), (+), (-), (<), (>), (>=), (||))
+import Prelude (id, toInteger, (&&), (+), (-), (>=), (||))
 
 import KitchenSink.Core.Assembler (runAssembler)
 import KitchenSink.Core.Assembler.Sections.Json (json)
@@ -248,21 +245,24 @@ renderDynamicPage dsCfg pg routeParams mIdent req =
             Left err -> throwIO $ DynamicPageError (Text.pack (show err))
             Right (_, html) -> pure html
 
-withRequestContext :: Value -> Value -> Value
-withRequestContext reqVal (Aeson.Object obj) = Aeson.Object (KeyMap.insert "request" reqVal obj)
+withRequestContext :: Json -> Json -> Json
+withRequestContext reqVal (JObject obj) = JObject (Map.insert "request" reqVal obj)
 withRequestContext _ other = other
 
-requestContext :: Wai.Request -> Map Text Text -> Maybe Identity -> Value
+requestContext :: Wai.Request -> Map Text Text -> Maybe Identity -> Json
 requestContext req params mIdent =
-    Aeson.object
-        [ ("method", Aeson.toJSON (Text.decodeUtf8 (Wai.requestMethod req)))
-        , ("path", Aeson.toJSON (Text.decodeUtf8 (Wai.rawPathInfo req)))
-        , ("params", Aeson.toJSON params)
-        , ("query", Aeson.toJSON (queryMap req))
-        , ("form", Aeson.object []) -- GET-only in this first cut; see module docs
-        , ("cookies", Aeson.toJSON (cookieMap req))
-        , ("user", maybe Aeson.Null (\(Identity u) -> Aeson.toJSON u) mIdent)
-        ]
+    JObject
+        $ Map.fromList
+            [ ("method", JString (Text.decodeUtf8 (Wai.requestMethod req)))
+            , ("path", JString (Text.decodeUtf8 (Wai.rawPathInfo req)))
+            , ("params", strings params)
+            , ("query", strings (queryMap req))
+            , ("form", JObject Map.empty) -- GET-only in this first cut; see module docs
+            , ("cookies", strings (cookieMap req))
+            , ("user", maybe JNull (\(Identity u) -> JString u) mIdent)
+            ]
+  where
+    strings = JObject . fmap JString
 
 queryMap :: Wai.Request -> Map Text Text
 queryMap req =
@@ -298,7 +298,7 @@ openReadOnly path = do
 -- SELECT (e.g. an INSERT) still runs against a read-only connection, so
 -- sqlite itself rejects it at `step` time: the caught exception surfaces as
 -- the page's error, with no partial HTML written.
-runDataset :: Database -> Int -> BlobMode -> Map Text Text -> Text -> IO Value
+runDataset :: Database -> Int -> BlobMode -> Map Text Text -> Text -> IO Json
 runDataset db rowCapN blobMode bindings sqlText =
     -- 'bracket', not a plain prepare/finalize pair: a write attempt against
     -- the read-only connection throws mid-'step' (see 'collectRows'), and an
@@ -308,7 +308,7 @@ runDataset db rowCapN blobMode bindings sqlText =
     bracket (SQLite3.prepare db sqlText) SQLite3.finalize $ \stmt -> do
         bindNamedFromMap stmt bindings
         rows <- collectRows stmt rowCapN blobMode
-        pure (Aeson.toJSON rows)
+        pure (JArray rows)
 
 bindNamedFromMap :: Statement -> Map Text Text -> IO ()
 bindNamedFromMap stmt bindings = do
@@ -328,7 +328,7 @@ stripSigil t = case Text.uncons t of
     Just (c, rest) | c == ':' || c == '@' || c == '$' -> Just rest
     _ -> Nothing
 
-collectRows :: Statement -> Int -> BlobMode -> IO [Value]
+collectRows :: Statement -> Int -> BlobMode -> IO [Json]
 collectRows stmt cap blobMode = go 0
   where
     go n
@@ -341,31 +341,26 @@ collectRows stmt cap blobMode = go 0
                     v <- rowValue stmt blobMode
                     (v :) <$> go (n + 1)
 
-rowValue :: Statement -> BlobMode -> IO Value
+rowValue :: Statement -> BlobMode -> IO Json
 rowValue stmt blobMode = do
     ColumnIndex count <- SQLite3.columnCount stmt
     let idxs = [ColumnIndex i | i <- [0 .. count - 1]]
     pairs <- traverse (\i -> (,) <$> columnKey stmt i <*> (sqlDataToJson blobMode <$> SQLite3.column stmt i)) idxs
-    pure $ Aeson.Object $ KeyMap.fromList [(Key.fromText k, v) | (k, v) <- pairs]
+    pure $ JObject $ Map.fromList pairs
 
 columnKey :: Statement -> ColumnIndex -> IO Text
 columnKey stmt i = maybe (Text.pack (show i)) id <$> SQLite3.columnName stmt i
 
-sqlDataToJson :: BlobMode -> SQLData -> Value
-sqlDataToJson _ (SQLInteger i) = integerJson i
-sqlDataToJson _ (SQLFloat d) = Aeson.toJSON (d :: Double)
-sqlDataToJson _ (SQLText t) = Aeson.toJSON t
-sqlDataToJson BlobBase64 (SQLBlob b) = Aeson.toJSON (Text.decodeUtf8 (Base64.encode b) :: Text)
-sqlDataToJson BlobOmit (SQLBlob _) = Aeson.Null
-sqlDataToJson _ SQLNull = Aeson.Null
-
--- | Integers beyond 2^53 lose precision once round-tripped through a JS (or
--- any IEEE-754-double-backed) JSON consumer, so they are rendered as
--- strings instead, same convention as e.g. protobuf-JSON's int64 mapping.
-integerJson :: Int64 -> Value
-integerJson i
-    | i > maxSafeInteger || i < negate maxSafeInteger = Aeson.toJSON (Text.pack (show i))
-    | otherwise = Aeson.toJSON (i :: Int64)
-  where
-    maxSafeInteger :: Int64
-    maxSafeInteger = 9007199254740992 -- 2^53
+{- | A column value as the tramaj value a template reads. sqlite's own
+storage classes map onto tramaj's two number types one to one: an @INTEGER@
+is an integer (tramaj's integers are signed 64-bit, like sqlite's, so none is
+out of range) and a @REAL@ a float, so a @REAL@ holding @3.0@ stays the float
+@3.0@ (it displays as @3.0@ and compares unequal to the integer @3@).
+-}
+sqlDataToJson :: BlobMode -> SQLData -> Json
+sqlDataToJson _ (SQLInteger i) = JInt (toInteger (i :: Int64))
+sqlDataToJson _ (SQLFloat d) = JFloat d
+sqlDataToJson _ (SQLText t) = JString t
+sqlDataToJson BlobBase64 (SQLBlob b) = JString (Text.decodeUtf8 (Base64.encode b))
+sqlDataToJson BlobOmit (SQLBlob _) = JNull
+sqlDataToJson _ SQLNull = JNull

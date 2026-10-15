@@ -4,9 +4,7 @@
 module KitchenSink.Engine.SiteLoader (module KitchenSink.Core.Build.Site, loadSite, LogMsg (..)) where
 
 import Control.Exception (throwIO)
-import Data.Aeson (FromJSON (..), withObject, (.:))
 import Data.Aeson qualified as Aeson
-import Data.Aeson.Types qualified as Aeson.Types
 import Data.ByteString.Lazy qualified as LByteString
 import Data.List qualified as List
 import Data.Map (Map)
@@ -24,6 +22,8 @@ import Prelude (Integer, ioError, succ, userError, (&&), (||))
 import Control.Monad (foldM)
 import qualified Tramaj.Ast
 import qualified Tramaj.Eval
+import Tramaj.Json (Json (..))
+import qualified Tramaj.Json
 
 import Control.Monad.State
 
@@ -142,21 +142,30 @@ to, plus its @contents@.
 -}
 data SectionEvalResult
     = TextContents Text [Text]
-    | JsonContents Aeson.Value
+    | -- | kept as a tramaj value so that a float stays a float (@1.0@, not
+      -- @1@) in the JSON the section is rewritten to
+      JsonContents Json
     deriving (Show)
 
-instance FromJSON SectionEvalResult where
-    parseJSON = withObject "SectionEvalResult" $ \obj -> do
-        format <- obj .: "format"
-        case format of
-            "json" -> JsonContents <$> obj .: "contents"
-            _ -> TextContents format <$> (obj .: "contents" >>= textContents)
-      where
-        -- a single string is accepted as well as an array of lines, since
-        -- writing `[ "…" ]` for a one-line result is pure noise
-        textContents :: Aeson.Value -> Aeson.Types.Parser [Text]
-        textContents (Aeson.String txt) = pure [txt]
-        textContents v = parseJSON v
+sectionEvalResult :: Json -> Either String SectionEvalResult
+sectionEvalResult (JObject obj) = do
+    format <- field "format"
+    contents <- field "contents"
+    case format of
+        JString "json" -> pure $ JsonContents contents
+        JString fmt -> TextContents fmt <$> textContents contents
+        _ -> Left "the \"format\" key must be a string"
+  where
+    field k = maybe (Left $ "missing key \"" <> Text.unpack k <> "\"") Right (Map.lookup k obj)
+    -- a single string is accepted as well as an array of lines, since
+    -- writing `[ "…" ]` for a one-line result is pure noise
+    textContents :: Json -> Either String [Text]
+    textContents (JString txt) = pure [txt]
+    textContents (JArray xs) = traverse textLine xs
+    textContents _ = Left "the \"contents\" key must be a string or an array of strings"
+    textLine (JString txt) = pure txt
+    textLine _ = Left "the \"contents\" array must hold strings only"
+sectionEvalResult _ = Left "expected an object with \"format\" and \"contents\" keys"
 
 data EvalEnv ext
     = EvalEnv
@@ -179,8 +188,15 @@ data EvalError
       DuplicateTemplatingLibrary Name FilePath
     deriving (Show, Exception)
 
+-- | tramaj values, not aeson ones: tramaj tells an integer from a float, and a
+-- dataset's @1.0@ must reach a template as a float
 type DatasetCells =
-    Map Name Aeson.Value
+    Map Name Json
+
+-- | The datasets as plain JSON, for the consumers that are not tramaj (mustache,
+-- a generator's stdin); there @1@ and @1.0@ are one number again.
+datasetsAeson :: DatasetCells -> Aeson.Value
+datasetsAeson = Aeson.toJSON . fmap Tramaj.Json.toAeson
 
 data EvalState = EvalState
     { sectionNumber :: Integer
@@ -212,7 +228,7 @@ recordTemplatingLibrary key x = modify f
     f st0 = st0{templatingLibraryTable = g (templatingLibraryTable st0) }
     g libtable = Map.insert key x libtable 
 
-insertDatasetContents :: Name -> Aeson.Value -> Eval ()
+insertDatasetContents :: Name -> Json -> Eval ()
 insertDatasetContents k val = modify f
   where
     f st0 = st0{datasets = Map.insert k val (datasets st0)}
@@ -236,7 +252,7 @@ sectionStep env x@(Section t fmt body) = do
         -- "KitchenSink.Engine.Dynamic"
         (Dataset _, Sql) -> pure x
         (_, Mustache) -> do
-            let jsonDataset = Aeson.toJSON st0.datasets
+            let jsonDataset = datasetsAeson st0.datasets
             let template = Mustache.compileTemplate "(section)" (Text.unlines body)
             case template of
                 Left err -> liftIO $ throwIO $ MustacheCompileError err
@@ -253,10 +269,10 @@ sectionStep env x@(Section t fmt body) = do
             let ctx = Templating.buildContext env.path st0.sectionNumber env.pathPrefix env.vars st0.datasets
             case Templating.evalJsonSection st0.templatingLibraryTable ctx (Text.unlines body) of
                 Left err -> liftIO $ throwIO $ TemplatingSectionError env.path err
-                Right (prog,jvalue) -> case Aeson.fromJSON jvalue of
-                    Aeson.Error err ->
+                Right (prog,jvalue) -> case sectionEvalResult jvalue of
+                    Left err ->
                         liftIO $ throwIO $ TemplatingResultJsonDecodeError env.path err
-                    Aeson.Success result -> do
+                    Right result -> do
                         recordTemplatingLibrary (Text.pack $ show $ st0.sectionNumber) prog
                         rewriteSection "tramaj-json" result
         (_, TramajDoc) -> do
@@ -274,15 +290,15 @@ sectionStep env x@(Section t fmt body) = do
                   recordTemplatingLibrary name prog
                   pure $ Section t TextHtml []
         (Dataset name, Json) -> do
-            case (Aeson.eitherDecode $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
+            case Tramaj.Json.jsonParser (Text.unlines body) of
                 Right v -> insertDatasetContents name v
                 Left err -> liftIO $ throwIO $ MalformedJSONDataset name err
             pure x
         (Dataset name, _) -> do
-            insertDatasetContents name (Aeson.String $ Text.unlines body)
+            insertDatasetContents name (JString $ Text.unlines body)
             pure x
         (GeneratorInstructions, Json) -> do
-            let jsonDataset = Aeson.toJSON st0.datasets
+            let jsonDataset = datasetsAeson st0.datasets
             case (Aeson.eitherDecode @GeneratorInstructionsData $ LByteString.fromStrict $ Text.encodeUtf8 $ Text.unlines body) of
                 Left err -> liftIO $ throwIO $ MalformedJSONGeneratorInstructions env.path err
                 Right gen ->
@@ -310,7 +326,7 @@ sectionStep env x@(Section t fmt body) = do
         case t of
             Dataset name -> insertDatasetContents name obj
             _ -> pure ()
-        pure $ Section t Json [Text.decodeUtf8 $ LByteString.toStrict $ Aeson.encode obj]
+        pure $ Section t Json [Tramaj.Json.stringify obj]
     rewriteSection backend (TextContents newFormat contents) =
         case newFormat of
             "cmark" -> pure $ Section t Cmark contents
