@@ -323,6 +323,9 @@ check_file "${web}/js/doc-search.js"
 check_json 'map(select(.url == "/documentation-layout.html#using-the-layout" and .heading == "Using the layout" and (.text | contains("build-info")))) | length == 1' "${web}/json/doc-search.json"
 check_json 'map(select(.heading == null)) | map(.url) == ["/getting-started.html", "/sections.html", "/sections-templating.html", "/other-formats.html", "/kitchen-sink-dot-json.html", "/layouts.html", "/corporate-components.html", "/documentation-layout.html", "/documentation-ordering.html", "/documentation-navigation.html", "/engine.html", "/development.html"]' "${web}/json/doc-search.json"
 check_file "${web}/gen/out/index.cmark__gen-git-head-sha.txt"
+# the output-directory listing does not need a website-www/ checkout (a fresh
+# worktree has none): a missing directory is reported, not a failed target
+check_json 'type == "array"' "${web}/gen/out/features.cmark__tree-site-output-cmark.json"
 # the corporate layout: wide sections (hero, feature grid, pricing, CTA,
 # testimonials), the site menu and footer, but no byline/date/topics/glossary.
 # Every one of those sections is now rendered by the corporate.cmark-tramaj
