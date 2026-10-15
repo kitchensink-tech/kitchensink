@@ -363,8 +363,8 @@ enough to edit technical articles without ever leaving my editor as illustrated 
 }
 
 =generator:cmd.json
-{"cmd":"tree"
-,"args":["-J", "website-www"]
+{"cmd":"bash"
+,"args":["./website-scripts/tree-json.sh", "website-www"]
 ,"target":"tree-site-output-cmark.json"
 }
 
