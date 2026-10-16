@@ -2,8 +2,9 @@ module Test.Main where
 
 import Prelude
 
-import Data.Array (elem)
+import Data.Array (concatMap, elem, filter)
 import Data.Foldable (for_)
+import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class.Console (log)
@@ -11,6 +12,7 @@ import Effect.Exception (throw)
 
 import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph(..))
 import KitchenSink.Layout.Blog.Analyses.SiteGraph as KS
+import KSGraph as KSGraph
 import Main (mergeExternalGraph)
 
 siteA :: String
@@ -71,3 +73,36 @@ main = do
   assert "rust links only across the two remote sites" $
     Tuple (nsA "topic:rust") (nsB "topic:rust") `elem` edgesOf afterB
       && not (Tuple "topic:rust" (nsB "topic:rust") `elem` edgesOf afterB)
+
+  searchTests (mergeExternalGraph [] siteA local remote)
+
+-- | Ids of the chart nodes drawn opaque (and labelled) for `keyword`.
+highlighted :: TopicGraph -> String -> Array String
+highlighted graph keyword =
+  map _.id
+    $ filter (\n -> n.itemStyle.opacity == 1.0 && n.label.show)
+    $ concatMap _.data (KSGraph.chartOptions graph Nothing [] keyword).options.series
+
+opaque :: TopicGraph -> String -> Array String
+opaque graph keyword =
+  map _.id
+    $ filter (\n -> n.itemStyle.opacity == 1.0)
+    $ concatMap _.data (KSGraph.chartOptions graph Nothing [] keyword).options.series
+
+searchTests :: TopicGraph -> Effect Unit
+searchTests graph = do
+  let nsA k = siteA <> "::" <> k
+  assert "search matches topics on every site, ignoring case" $
+    highlighted graph " HASKELL " == ["topic:haskell", nsA "topic:haskell"]
+  assert "search matches hashtags by URL, and articles" $
+    highlighted graph "fp" == ["#fp", nsA "#fp"]
+      && highlighted graph "post" == ["article:/post.html", nsA "article:/post.html"]
+  assert "search matches external sites by URL" $
+    highlighted graph "b.example" == ["site:" <> siteB]
+  assert "blank keyword: every node opaque, none labelled" $
+    opaque graph "" == allIds && opaque graph "  " == allIds
+      && highlighted graph "" == []
+  assert "no match: every node faded" $
+    opaque graph "zzz-no-match" == []
+  where
+  allIds = case graph of TopicGraph g -> map (\(Tuple k _) -> k) g.nodes
