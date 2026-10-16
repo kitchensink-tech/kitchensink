@@ -26,6 +26,8 @@ import Data.Array (concat, elem)
 import Data.Lens (view, toArrayOf, traversed, to, filtered)
 import Data.Lens.Fold (anyOf)
 import Data.Number as Number
+import Data.String as String
+import Data.String.Pattern (Pattern(..))
 
 import KitchenSink.Layout.Blog.Analyses.SiteGraph (TopicGraph, _TopicGraph)
 import KitchenSink.Layout.Blog.Analyses.SiteGraph as KS
@@ -92,12 +94,21 @@ type Series =
   { name :: String
   , type :: String
   , layout :: String
-  , data :: Array { id :: String, name :: String, category :: Int , symbol :: String , symbolSize :: Number }
+  , data :: Array
+      { id :: String
+      , name :: String
+      , category :: Int
+      , symbol :: String
+      , symbolSize :: Number
+      , itemStyle :: { opacity :: Number }
+      , label :: { show :: Boolean }
+      }
   , links :: Array { source :: String, target:: String }
   , categories :: Array { name::String }
   , roam :: Boolean
   , draggable :: Boolean
   , label :: { position :: String }
+  , lineStyle :: { opacity :: Number }
   , force :: { repulsion :: Int }
   }
 
@@ -111,9 +122,34 @@ type Options =
 -- `graph` (see `Main.purs`'s click-to-expand handling). It only drives the
 -- node's rendering (a filled circle once expanded vs. a hollow triangle
 -- before); the actual fetch+merge state lives in `Main`'s component state.
-chartOptions :: TopicGraph -> Maybe Node -> Array String -> ECharts.Input Options
-chartOptions graph focusedNode expandedExternalSites =
+--
+-- `keyword` highlights the nodes whose key or URL contains it (ignoring
+-- case): they are enlarged and labelled, every other node and edge is
+-- faded. An empty (or blank) keyword is no search: the normal rendering.
+-- Article titles are not part of `topicsgraph.json`, so they can't be
+-- searched.
+chartOptions :: TopicGraph -> Maybe Node -> Array String -> String -> ECharts.Input Options
+chartOptions graph focusedNode expandedExternalSites keyword =
   let
+    needle :: String
+    needle = String.toLower (String.trim keyword)
+
+    searching :: Boolean
+    searching = needle /= ""
+
+    isMatch :: String -> String -> Boolean
+    isMatch key name =
+      searching && (contains key || contains name)
+      where
+      contains s = String.contains (Pattern needle) (String.toLower s)
+
+    -- Opacity and label of a node with this key and name.
+    highlight :: String -> String -> { itemStyle :: { opacity :: Number }, label :: { show :: Boolean } }
+    highlight key name
+      | isMatch key name = { itemStyle: { opacity: 1.0 }, label: { show: true } }
+      | searching = { itemStyle: { opacity: 0.15 }, label: { show: false } }
+      | otherwise = { itemStyle: { opacity: 1.0 }, label: { show: false } }
+
     isSelection :: String -> Boolean
     isSelection n1id = maybe false (\n2 -> n2.id == n1id) focusedNode
     
@@ -128,13 +164,20 @@ chartOptions graph focusedNode expandedExternalSites =
     
     imageSymbol :: String -> String -> String
     imageSymbol url n1id
-      | isSelection n1id || isSelectionNeighbor n1id = "image://" <> url
+      | isSelection n1id || isSelectionNeighbor n1id || isMatch n1id url = "image://" <> url
       | otherwise = "circle"
 
-    selectionSize :: String -> Number -> Number
-    selectionSize n1id default
+    -- `name` is only used to tell search matches, which are drawn at
+    -- least at the size of a selection neighbour.
+    selectionSize :: String -> String -> Number -> Number
+    selectionSize n1id name default
       | isSelection n1id = 35.0
       | isSelectionNeighbor n1id = 30.0
+      | otherwise = searchSize n1id name default
+
+    searchSize :: String -> String -> Number -> Number
+    searchSize n1id name default
+      | isMatch n1id name = max 20.0 default
       | otherwise = default
 
     articleSize :: Int -> String -> Number
@@ -157,34 +200,48 @@ chartOptions graph focusedNode expandedExternalSites =
     externalSiteSize :: String -> Number
     externalSiteSize _ = 15.0
 
-    echartNode (Tuple key node) = case node of
+    echartNode (Tuple key node) =
+      let
+        n = baseNode key node
+        h = highlight key n.name
+      in
+        { id: n.id
+        , name: n.name
+        , category: n.category
+        , symbol: n.symbol
+        , symbolSize: n.symbolSize
+        , itemStyle: h.itemStyle
+        , label: h.label
+        }
+
+    baseNode key node = case node of
       KS.ArticleNode url n ->
         { id: key
         , name: url
         , category: 0
         , symbol: "rect"
-        , symbolSize: selectionSize key $ articleSize n key
+        , symbolSize: selectionSize key url $ articleSize n key
         }
       KS.TopicNode _ _ ->
         { id: key
         , name: key
         , category: 1
         , symbol: "diamond"
-        , symbolSize: selectionSize key $ topicSize key
+        , symbolSize: selectionSize key key $ topicSize key
         }
-      KS.HashTagNode url n ->
+      KS.HashTagNode url _ ->
         { id: key
         , name: url
         , category: 2
         , symbol: "rect"
-        , symbolSize: selectionSize key $ hashtagSize key
+        , symbolSize: selectionSize key url $ hashtagSize key
         }
       KS.ImageNode url ->
         { id: key
         , name: url
         , category: 3
         , symbol: imageSymbol url key
-        , symbolSize: selectionSize key $ imageSize key
+        , symbolSize: selectionSize key url $ imageSize key
         }
       KS.ExternalKitchenSinkSiteNode url ->
         { id: key
@@ -194,7 +251,7 @@ chartOptions graph focusedNode expandedExternalSites =
         -- spliced into `graph`.
         , category: 4
         , symbol: if url `elem` expandedExternalSites then "circle" else "triangle"
-        , symbolSize: externalSiteSize key
+        , symbolSize: searchSize key url $ externalSiteSize key
         }
 
     echartEdge (Tuple source target) = {source, target}
@@ -222,6 +279,10 @@ chartOptions graph focusedNode expandedExternalSites =
         , draggable: true
         , label: {
             position: "right"
+          }
+        -- 0.5 is the echarts default.
+        , lineStyle: {
+            opacity: if searching then 0.1 else 0.5
           }
         , force: {
             repulsion: 100

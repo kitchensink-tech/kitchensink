@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Affjax.Web as AX
-import Data.Array (elem, (\\), (:))
+import Data.Array (concatMap, elem, filter, (\\), (:))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Either (Either(..))
 import Data.Traversable (traverse_)
@@ -76,6 +76,7 @@ data Action
   | ToggleEnlarged
   | LeaveEnlarged
   | ViewportResized
+  | SetKeyword String
 
 -- | The chart zone reads its size from two CSS custom properties, so the
 -- same `Halogen.ECharts` component (whose style string is fixed once at
@@ -90,6 +91,19 @@ chartStyle =
 inlineStyle :: String
 inlineStyle = "position:relative;width:640px;max-width:100%;"
 
+-- | The toolbar row above the chart (search input, enlarge toggle).
+toolbarHeight :: String
+toolbarHeight = "2.5em"
+
+toolbarStyle :: String
+toolbarStyle =
+  "height:" <> toolbarHeight <> ";display:flex;align-items:center;"
+    -- room for the enlarge toggle, positioned over the right of this row
+    <> "padding-right:6em;box-sizing:border-box;"
+
+searchStyle :: String
+searchStyle = "flex:1 1 auto;min-width:0;max-width:20em;margin-left:0.5em;"
+
 -- | Enlarged view: the widget covers the whole viewport. `--bg` is the
 -- page background of the stock stylesheets (`colors.css`); `Canvas` is the
 -- fallback for sites that do not define it.
@@ -98,7 +112,7 @@ enlargedStyle =
   "position:fixed;top:0;right:0;bottom:0;left:0;z-index:10000;"
     <> "background:var(--bg,Canvas);"
     <> "--kitchensink-topicgraph-width:100%;"
-    <> "--kitchensink-topicgraph-height:100vh;"
+    <> "--kitchensink-topicgraph-height:calc(100vh - " <> toolbarHeight <> ");"
 
 toggleStyle :: String
 toggleStyle = "position:absolute;top:0.5em;right:0.5em;z-index:1;cursor:pointer;"
@@ -121,7 +135,7 @@ component =
     }
   where
 
-  initialState graph = {graph, focusedNode: Nothing, expandedSites: [], enlarged: false}
+  initialState graph = {graph, focusedNode: Nothing, expandedSites: [], enlarged: false, keyword: ""}
 
   render state =
     HH.div
@@ -134,9 +148,25 @@ component =
     case state.graph of
       Nothing -> [ renderEmpty ]
       Just graph ->
-        [ renderToggle state.enlarged
-        , renderGraph graph state.focusedNode state.expandedSites
+        [ renderToolbar
+        , renderToggle state.enlarged
+        , renderGraph graph state.focusedNode state.expandedSites state.keyword
         ]
+
+  renderToolbar =
+    HH.div
+    [ HP.class_ $ HH.ClassName "kitchensink-topicgraph-toolbar"
+    , HP.style toolbarStyle
+    ]
+    [ HH.input
+      [ HP.class_ $ HH.ClassName "kitchensink-topicgraph-search"
+      , HP.type_ HP.InputSearch
+      , HP.placeholder "highlight nodes matching..."
+      , HPA.label "highlight the graph nodes whose name or URL contains this text"
+      , HP.style searchStyle
+      , HE.onValueInput SetKeyword
+      ]
+    ]
 
   renderToggle enlarged =
     HH.button
@@ -161,9 +191,9 @@ component =
       ]
     ]
 
-  renderGraph graph focusedNode expandedSites =
+  renderGraph graph focusedNode expandedSites keyword =
     HH.div_
-    [ HH.slot _ksgraph unit (ECharts.component chartStyle) (KSGraph.chartOptions graph focusedNode expandedSites) HandleGraphEvent
+    [ HH.slot _ksgraph unit (ECharts.component chartStyle) (KSGraph.chartOptions graph focusedNode expandedSites keyword) HandleGraphEvent
     ]
 
   handleAction = case _ of
@@ -187,6 +217,8 @@ component =
       when st0.enlarged $ setEnlarged false
     ViewportResized ->
       H.liftEffect $ resizeChartsIn chartSelector
+    SetKeyword keyword ->
+      H.modify_ _ { keyword = keyword }
 
   -- The state change re-renders the widget (new size on the chart zone)
   -- before the bind continues, so the chart re-measures the resized zone.
@@ -235,7 +267,7 @@ component =
         H.modify_ _ { focusedNode = Just node }
       else do
         H.modify_ _ { focusedNode = Just node }
-        mMerged <- H.liftAff $ fetchAndMergeExternalGraph siteUrl st0.graph
+        mMerged <- H.liftAff $ fetchAndMergeExternalGraph st0.expandedSites siteUrl st0.graph
         case mMerged of
           Nothing -> pure unit
           Just merged ->
@@ -249,11 +281,11 @@ component =
 -- the local graph. `Nothing` on any failure (network error, decode error,
 -- or no local graph loaded yet) — the caller leaves the graph untouched in
 -- that case.
-fetchAndMergeExternalGraph :: String -> Maybe TopicGraph -> Aff (Maybe TopicGraph)
-fetchAndMergeExternalGraph siteUrl mLocal = do
+fetchAndMergeExternalGraph :: Array String -> String -> Maybe TopicGraph -> Aff (Maybe TopicGraph)
+fetchAndMergeExternalGraph expandedSites siteUrl mLocal = do
   mRemote <- getGraph (stripTrailingSlash siteUrl)
   pure $ case mLocal, mRemote of
-    Just local, Just remote -> Just (mergeExternalGraph siteUrl local remote)
+    Just local, Just remote -> Just (mergeExternalGraph expandedSites siteUrl local remote)
     _, _ -> Nothing
 
 -- | Splices a remote site's topic graph into the local one:
@@ -265,9 +297,14 @@ fetchAndMergeExternalGraph siteUrl mLocal = do
 --     edges to the remote graph's own "roots" (nodes that are nobody's
 --     edge target in the remote graph, typically its topics), so the
 --     merged graph reads as one connected component instead of a
---     disconnected island next to the site node that was expanded.
-mergeExternalGraph :: String -> TopicGraph -> TopicGraph -> TopicGraph
-mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
+--     disconnected island next to the site node that was expanded;
+--   * every remote topic or hashtag gets an edge to the topic or hashtag
+--     with the exact same key already in the graph, whether local or from
+--     a site merged earlier (`expandedSites`), so the graph shows where
+--     sites share areas of expertise. Each site keeps its own node (and so
+--     its own page on click); only the edge is shared.
+mergeExternalGraph :: Array String -> String -> TopicGraph -> TopicGraph -> TopicGraph
+mergeExternalGraph expandedSites siteUrl (TopicGraph local) (TopicGraph remote) =
   let
     ns k = siteUrl <> "::" <> k
 
@@ -280,11 +317,25 @@ mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
 
     localSiteKey = "site:" <> siteUrl
     connectingEdges = map (\r -> Tuple localSiteKey r) roots
+
+    localKeys = map fst local.nodes
+    -- The keys an identical topic or hashtag can have in `local`: its bare
+    -- key on the local site, namespaced on each already-merged site.
+    sameKeys k = filter (_ `elem` localKeys) (k : map (\s -> s <> "::" <> k) expandedSites)
+    sharedEdges =
+      concatMap (\(Tuple k _) -> map (\l -> Tuple l (ns k)) (sameKeys k))
+        (filter (isTopicOrHashTag <<< snd) remote.nodes)
   in
     TopicGraph
       { nodes: local.nodes <> remoteNodes
-      , edges: local.edges <> remoteEdges <> connectingEdges
+      , edges: local.edges <> remoteEdges <> connectingEdges <> sharedEdges
       }
+
+isTopicOrHashTag :: KS.Node -> Boolean
+isTopicOrHashTag = case _ of
+  KS.TopicNode _ _ -> true
+  KS.HashTagNode _ _ -> true
+  _ -> false
 
 stripTrailingSlash :: String -> String
 stripTrailingSlash u = fromMaybe u (String.stripSuffix (Pattern "/") u)
