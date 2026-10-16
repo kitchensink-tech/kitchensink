@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Affjax.Web as AX
-import Data.Array (elem, (\\), (:))
+import Data.Array (concatMap, elem, filter, (\\), (:))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Either (Either(..))
 import Data.Traversable (traverse_)
@@ -235,7 +235,7 @@ component =
         H.modify_ _ { focusedNode = Just node }
       else do
         H.modify_ _ { focusedNode = Just node }
-        mMerged <- H.liftAff $ fetchAndMergeExternalGraph siteUrl st0.graph
+        mMerged <- H.liftAff $ fetchAndMergeExternalGraph st0.expandedSites siteUrl st0.graph
         case mMerged of
           Nothing -> pure unit
           Just merged ->
@@ -249,11 +249,11 @@ component =
 -- the local graph. `Nothing` on any failure (network error, decode error,
 -- or no local graph loaded yet) — the caller leaves the graph untouched in
 -- that case.
-fetchAndMergeExternalGraph :: String -> Maybe TopicGraph -> Aff (Maybe TopicGraph)
-fetchAndMergeExternalGraph siteUrl mLocal = do
+fetchAndMergeExternalGraph :: Array String -> String -> Maybe TopicGraph -> Aff (Maybe TopicGraph)
+fetchAndMergeExternalGraph expandedSites siteUrl mLocal = do
   mRemote <- getGraph (stripTrailingSlash siteUrl)
   pure $ case mLocal, mRemote of
-    Just local, Just remote -> Just (mergeExternalGraph siteUrl local remote)
+    Just local, Just remote -> Just (mergeExternalGraph expandedSites siteUrl local remote)
     _, _ -> Nothing
 
 -- | Splices a remote site's topic graph into the local one:
@@ -265,9 +265,14 @@ fetchAndMergeExternalGraph siteUrl mLocal = do
 --     edges to the remote graph's own "roots" (nodes that are nobody's
 --     edge target in the remote graph, typically its topics), so the
 --     merged graph reads as one connected component instead of a
---     disconnected island next to the site node that was expanded.
-mergeExternalGraph :: String -> TopicGraph -> TopicGraph -> TopicGraph
-mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
+--     disconnected island next to the site node that was expanded;
+--   * every remote topic or hashtag gets an edge to the topic or hashtag
+--     with the exact same key already in the graph, whether local or from
+--     a site merged earlier (`expandedSites`), so the graph shows where
+--     sites share areas of expertise. Each site keeps its own node (and so
+--     its own page on click); only the edge is shared.
+mergeExternalGraph :: Array String -> String -> TopicGraph -> TopicGraph -> TopicGraph
+mergeExternalGraph expandedSites siteUrl (TopicGraph local) (TopicGraph remote) =
   let
     ns k = siteUrl <> "::" <> k
 
@@ -280,11 +285,25 @@ mergeExternalGraph siteUrl (TopicGraph local) (TopicGraph remote) =
 
     localSiteKey = "site:" <> siteUrl
     connectingEdges = map (\r -> Tuple localSiteKey r) roots
+
+    localKeys = map fst local.nodes
+    -- The keys an identical topic or hashtag can have in `local`: its bare
+    -- key on the local site, namespaced on each already-merged site.
+    sameKeys k = filter (_ `elem` localKeys) (k : map (\s -> s <> "::" <> k) expandedSites)
+    sharedEdges =
+      concatMap (\(Tuple k _) -> map (\l -> Tuple l (ns k)) (sameKeys k))
+        (filter (isTopicOrHashTag <<< snd) remote.nodes)
   in
     TopicGraph
       { nodes: local.nodes <> remoteNodes
-      , edges: local.edges <> remoteEdges <> connectingEdges
+      , edges: local.edges <> remoteEdges <> connectingEdges <> sharedEdges
       }
+
+isTopicOrHashTag :: KS.Node -> Boolean
+isTopicOrHashTag = case _ of
+  KS.TopicNode _ _ -> true
+  KS.HashTagNode _ _ -> true
+  _ -> false
 
 stripTrailingSlash :: String -> String
 stripTrailingSlash u = fromMaybe u (String.stripSuffix (Pattern "/") u)
