@@ -52,7 +52,7 @@ Pre-processing sections with tramaj, which replaced the removed Dhall-sections.
 data half, a HAML-like block syntax for structure, and a deliberately tiny set
 of builtins. KitchenSink embeds its Haskell implementation, `tramaj-hs`, as a
 section pre-processor. A
-[playground](/playground.html) hosted on this site lets you try the language
+[playground](https://lucasdicioccio.github.io/tramaj/playground.html) on the tramaj site lets you try the language
 itself, outside of any KitchenSink section.
 
 Tramaj replaced Dhall as the section pre-processor: `dhall` and `dhall-json`

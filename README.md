@@ -8,7 +8,7 @@ Kitchen-Sink is @lucasdicioccio's static-site generator.
 **Live demo: [kitchensink-tech.github.io](https://kitchensink-tech.github.io/)** —
 this whole site is built with Kitchen-Sink and doubles as the main example of
 the input format. Also worth a look:
-[the in-browser templating playground](https://kitchensink-tech.github.io/playground.html)
+[the in-browser templating playground](https://lucasdicioccio.github.io/tramaj/playground.html)
 (try the `tramaj` templating language without installing anything) and
 [how Kitchen-Sink compares to other static-site generators](https://kitchensink-tech.github.io/comparison.html).
 
