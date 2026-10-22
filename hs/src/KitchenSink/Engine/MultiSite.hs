@@ -18,9 +18,11 @@ import Data.Maybe (catMaybes)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Time.Clock (getCurrentTime)
+import Data.Word (Word8)
 import Network.HTTP.Client qualified as Http
 import Network.HTTP.Client.TLS (newTlsManagerWith)
 import Network.HTTP.ReverseProxy qualified as WaiProxy
+import Network.HTTP.Types.Header (HeaderName)
 import Network.HTTP.Types.Status (status404)
 import Network.TLS qualified as TLS
 import Network.Wai qualified as Wai
@@ -39,7 +41,7 @@ import Servant
 import System.Directory (doesFileExist)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
-import Prelude (id, (&&))
+import Prelude (id, (&&), (<=), (>=))
 
 import KitchenSink.Core.Build.Target (Target)
 import KitchenSink.Engine.Config (ApiProxyConfig (..), Prefix, RewriteRule (..), SlashApiProxyDirective (..), TransportSecurity (..))
@@ -139,7 +141,7 @@ run cmd = do
                 (Just (_, fallbackApp), apps, Right creds) -> do
                     print $ Map.keys apps
                     tlsSettings <- loadTLSSettings creds
-                    let multiapp = ProdProxy.routeApplication apps fallbackApp
+                    let multiapp = stripHostPort (ProdProxy.routeApplication apps fallbackApp)
                     healthRt <- Prod.alwaysReadyRuntime tracePrint
                     let status = pure ("ok" :: Text)
                     init <- Prod.initialize healthRt
@@ -193,6 +195,30 @@ run cmd = do
                 case x of
                     Left _ -> pure $ Nothing
                     Right c -> pure $ Just $ TLS.Credentials [c]
+
+{- | Drops the port from the Host header before routing on it: a client
+talking to a non-default port sends @Host: example.com:8443@, and the
+application map is keyed by bare domain names. An IPv6 literal (@[::1]@,
+@[::1]:80@) keeps its brackets.
+-}
+stripHostPort :: Wai.Application -> Wai.Application
+stripHostPort app req rsp =
+    app req{Wai.requestHeaderHost = fmap dropPort req.requestHeaderHost, Wai.requestHeaders = fmap dropHeaderPort req.requestHeaders} rsp
+  where
+    dropHeaderPort :: (HeaderName, ByteString.ByteString) -> (HeaderName, ByteString.ByteString)
+    dropHeaderPort (hn, v)
+        | hn == "host" = (hn, dropPort v)
+        | otherwise = (hn, v)
+
+    dropPort :: ByteString.ByteString -> ByteString.ByteString
+    dropPort h =
+        let (name, port) = ByteString.breakEnd (== 58) h -- ':'
+         in if not (ByteString.null name) && not (ByteString.null port) && ByteString.all isDigit port
+                then ByteString.init name
+                else h
+
+    isDigit :: Word8 -> Bool
+    isDigit w = w >= 48 && w <= 57
 
 loadMetadata :: SiteInfo -> IO MetaData
 loadMetadata config = do
