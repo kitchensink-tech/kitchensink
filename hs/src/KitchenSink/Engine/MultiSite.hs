@@ -14,7 +14,7 @@ import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NEList
 import Data.Map.Strict qualified as Map
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Time.Clock (getCurrentTime)
@@ -44,6 +44,7 @@ import System.IO (hPutStrLn, stderr)
 import Prelude (id, (&&), (<=), (>=))
 
 import KitchenSink.Core.Build.Target (Target)
+import KitchenSink.Engine.Acme (Acme, AcmeOptions, acmeSniCredentials, runAcme, servesDomain, setupAcmeOrExit, withAcmeChallenges)
 import KitchenSink.Engine.Config (ApiProxyConfig (..), Prefix, RewriteRule (..), SlashApiProxyDirective (..), TransportSecurity (..))
 import KitchenSink.Engine.Counters (timeItWithLabel)
 import KitchenSink.Engine.Diagnostics (reportDiagnostics)
@@ -67,6 +68,7 @@ data Args
     , tlsKeyFile :: Maybe FilePath
     , tlsCertFile :: Maybe FilePath
     , proxyingTimeout :: Maybe Int
+    , acmeOptions :: AcmeOptions
     }
     deriving (Generic, Show)
 
@@ -140,7 +142,8 @@ run cmd = do
                 (Nothing, _, _) -> print ("could not setup fallback app" :: Text)
                 (Just (_, fallbackApp), apps, Right creds) -> do
                     print $ Map.keys apps
-                    tlsSettings <- loadTLSSettings creds
+                    acme <- traverse (setupAcmeOrExit cmd.acmeOptions) (NEList.nonEmpty (List.nub (concatMap siteAcmeDomains cfg.services)))
+                    tlsSettings <- loadTLSSettings acme creds
                     let multiapp = stripHostPort (ProdProxy.routeApplication apps fallbackApp)
                     healthRt <- Prod.alwaysReadyRuntime tracePrint
                     let status = pure ("ok" :: Text)
@@ -154,8 +157,17 @@ run cmd = do
                                 (Proxy @MultiSiteApi)
                     let webapp = RequestLogger.logStdoutDev prodapiapp
                     let httpWarp = Warp.run <$> cmd.httpPort <*> pure webapp
+                    -- with ACME, the HTTPS server defaults to port 443: the
+                    -- only one the ACME server connects to for tls-alpn-01
+                    let httpsPort = cmd.httpsPort <|> fmap (const 443) acme
+                    let tlsWarpSettings = fmap (\port -> Warp.setPort port Warp.defaultSettings) httpsPort
                     let httpsWarp = WarpTLS.runTLS <$> tlsSettings <*> tlsWarpSettings <*> pure webapp
-                    let program = (,) <$> Concurrently (mio httpWarp) <*> Concurrently (mio httpsWarp)
+                    let renewer = fmap runAcme acme
+                    let program =
+                            (,,)
+                                <$> Concurrently (mio httpWarp)
+                                <*> Concurrently (mio httpsWarp)
+                                <*> Concurrently (mio renewer)
                     void $ runConcurrently program
   where
     -- NOTE that there appear to be some repetition in the fallback of TLS certificates.
@@ -166,10 +178,25 @@ run cmd = do
     -- The credential (a) serves as default when there is no SNI indication.
     -- Today these two situations are conflated and if you end up needing to
     -- separate the two for any reason, let me know.
-    loadTLSSettings :: ProdProxy.CredentialMap -> IO (Maybe WarpTLS.TLSSettings)
-    loadTLSSettings creds = do
+    loadTLSSettings :: Maybe Acme -> ProdProxy.CredentialMap -> IO (Maybe WarpTLS.TLSSettings)
+    loadTLSSettings acme creds = do
         fallback <- loadDefaultCredentials
-        pure $ bundleTLSSettings creds =<< fallback
+        pure $ case acme of
+            Nothing -> bundleTLSSettings creds =<< fallback
+            Just a -> Just $ acmeTLSSettings a creds fallback
+
+    -- Certificate files win over ACME for a name listed in both; a name
+    -- with neither gets the fallback files (--tlsCertFile/--tlsKeyFile) if
+    -- any, else the certificate of the first ACME domain.
+    acmeTLSSettings :: Acme -> ProdProxy.CredentialMap -> Maybe TLS.Credentials -> WarpTLS.TLSSettings
+    acmeTLSSettings acme creds fallback =
+        withAcmeChallenges acme (WarpTLS.tlsSettingsSni sni)
+      where
+        sni :: Maybe TLS.HostName -> IO TLS.Credentials
+        sni name = case name of
+            Just n | Just c <- Map.lookup n creds -> pure c
+            Just n | servesDomain acme n -> acmeSniCredentials acme name
+            _ -> maybe (acmeSniCredentials acme Nothing) pure fallback
 
     bundleTLSSettings :: ProdProxy.CredentialMap -> TLS.Credentials -> Maybe WarpTLS.TLSSettings
     bundleTLSSettings creds fallback = do
@@ -177,11 +204,6 @@ run cmd = do
         key <- cmd.tlsKeyFile
         let base = WarpTLS.tlsSettings cert key
         pure $ ProdProxy.withTLSCredentialMap creds fallback base
-
-    tlsWarpSettings :: Maybe Warp.Settings
-    tlsWarpSettings = do
-        port <- cmd.httpsPort
-        pure $ Warp.setPort port Warp.defaultSettings
 
     loadDefaultCredentials :: IO (Maybe TLS.Credentials)
     loadDefaultCredentials = do
@@ -446,3 +468,12 @@ siteTLSTriplet cfg = do
     tlsCert s = case s.certificate of
         NoCertificates -> Nothing
         CertificateFileSource x -> Just x
+        AcmeCertificate -> Nothing
+
+-- | The domains of a site whose certificate comes from ACME.
+siteAcmeDomains :: SiteStanza -> [Text]
+siteAcmeDomains cfg = do
+    t <- cfg.tls
+    case t.certificate of
+        AcmeCertificate -> fromMaybe [cfg.domain] t.sniDomains
+        _ -> []

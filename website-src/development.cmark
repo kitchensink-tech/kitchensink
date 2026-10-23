@@ -69,7 +69,10 @@ built binary instead:
   what they answer: `serve` in SERVE mode over HTTP and HTTPS, `serve` in DEV
   mode (its `/dev` API and the auto-reload script), and `multisite` with two
   virtual hosts, each with its own certificate (SNI), an `/api` reverse proxy
-  and the fallback for unknown hosts. It needs `openssl`, `curl`, `jq` and
+  and the fallback for unknown hosts. It also runs both with ACME
+  certificates (tls-alpn-01) stored by a previous run, against an ACME server
+  that cannot be reached, which checks the HTTPS side of ACME but not an
+  actual exchange with an ACME server. It needs `openssl`, `curl`, `jq` and
   `python3`.
 
 The HTTP checks of `daemon-test.sh` live in `scripts/daemon-check.sh`, which
