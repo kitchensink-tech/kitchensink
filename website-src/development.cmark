@@ -58,6 +58,29 @@ Both the engine code, the frontend helpers code, and the KitchenSink
 documentation (this site) sources are in a same repository out of simplicity: a
 feature can be added and documented in a same commit.
 
+# testing
+
+There is no unit-test suite. Two scripts at the repository root check the
+built binary instead:
+
+- `bash scripts/smoke-test.sh` runs `produce` on a freshly scaffolded site and
+  on this website, and checks the files it writes.
+- `bash scripts/daemon-test.sh` starts the daemons on local ports and checks
+  what they answer: `serve` in SERVE mode over HTTP and HTTPS, `serve` in DEV
+  mode (its `/dev` API and the auto-reload script), and `multisite` with two
+  virtual hosts, each with its own certificate (SNI), an `/api` reverse proxy
+  and the fallback for unknown hosts. It needs `openssl`, `curl`, `jq` and
+  `python3`.
+
+The HTTP checks of `daemon-test.sh` live in `scripts/daemon-check.sh`, which
+only needs an address. Point it at a deployed daemon, for example a VM that a
+[salmon](https://github.com/lucasdicioccio/salmon) graph has just
+provisioned, to check the deployment:
+
+```
+bash scripts/daemon-check.sh --host example.com --title "My site" https://203.0.113.7
+```
+
 # code organization and basic concepts
 
 At this point, the code grew mostly organically and suffers from arbitrary
