@@ -24,9 +24,7 @@ requestedPath :: Request -> RequestedPath
 requestedPath = RequestedPath . rawPathInfo
 
 data DevServerTrack ext
-    = ProducedBuild
-    | PublishedBuild String
-    | WatchAdded Text (Maybe Text)
+    = WatchAdded Text (Maybe Text)
     | WatchRejected (Maybe Text) (Maybe Text)
     | WatchLeft (Maybe Text) WatchResult
     | FileWatch FSNotify.Event

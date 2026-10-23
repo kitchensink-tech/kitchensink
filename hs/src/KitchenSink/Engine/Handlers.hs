@@ -4,34 +4,25 @@
 
 module KitchenSink.Engine.Handlers where
 
-import Control.Concurrent.Async (mapConcurrently_)
 import Control.Monad.IO.Class (liftIO)
-import Data.IORef (atomicModifyIORef', newIORef, readIORef)
 import Data.Maybe (isJust)
-import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Typeable (Typeable)
 import Network.HTTP.Types (status404)
 import Network.Wai as Wai
 import Prod.Background as Background
-import Prod.Prometheus (timeIt)
 import Prod.Proxy qualified as ProdProxy
 import Prod.Status
 import Prod.Status qualified as Prod
 import Prod.Tracer
 import Prometheus qualified as Prometheus
 import Servant
-import System.Process (proc, readCreateProcess)
-import Prelude (id, unlines)
 
 import KitchenSink.Core.Build.Target (destination, destinationUrl)
-import KitchenSink.Core.Build.Trace as Build
 import KitchenSink.Engine.Api
-import KitchenSink.Engine.Config
 import KitchenSink.Engine.Counters (Counters (..))
 import KitchenSink.Engine.OnTheFly
 import KitchenSink.Engine.Runtime
-import KitchenSink.Engine.SiteBuilder
 import KitchenSink.Engine.SiteLoader (Site)
 import KitchenSink.Engine.Track (DevServerTrack (..), RequestedPath (..), WatchResult (..))
 import KitchenSink.Prelude
@@ -63,47 +54,6 @@ handleDevListTargets engine rt = liftIO $ do
     let tgts = evalTargets engine meta site
     pure $ [destinationUrl $ destination tgt | tgt <- tgts]
 
-handleDevProduce :: (Show ext, Typeable ext) => Engine ext -> Runtime ext -> Handler DevTextOutput
-handleDevProduce engine rt = liftIO $ do
-    site <- readBackgroundVal (liveSite rt)
-    extra <- execLoadMetaExtradata engine
-    let tgts = evalTargets engine extra site
-    log <- newIORef []
-    let traceTargets item = do
-            let blogTracer = contramap BlogTargetTrace $ (traceDev rt)
-            atomicModifyIORef' log (\items -> (item : items, ()))
-            runTracer blogTracer item
-    let go tgt = do
-            Prometheus.withLabel (time_singlebuild $ counters rt) (destinationUrl $ destination tgt) $ \m -> timeIt id m $ produceTarget traceTargets tgt
-    timeIt time_fullbuild (counters rt)
-        $ mapConcurrently_ go tgts
-    Prometheus.incCounter $ cnt_rebuilds $ counters rt
-    runTracer (traceDev rt) ProducedBuild
-    let collateLogs = Text.pack . unlines . fmap show :: [Build.Trace] -> Text
-    DevTextOutput . collateLogs <$> readIORef log
-
-handleDevPublish :: Config -> Runtime ext -> Handler DevTextOutput
-handleDevPublish config rt =
-    case publishScript config of
-        Just path -> runPublishScript path
-        Nothing -> pure $ DevTextOutput "no publish-script configured"
-  where
-    runPublishScript path = liftIO $ do
-        out <- timeIt time_publishing (counters rt) $ do
-            procOut <- readCreateProcess (proc path []) ""
-            seq (length procOut) $ pure procOut
-        Prometheus.incCounter $ cnt_publishs $ counters rt
-        runTracer (traceDev rt) (PublishedBuild out)
-        pure (DevTextOutput $ Text.pack out)
-
-handleDevForceReload :: Runtime ext -> Handler (Maybe ForceReloadStatus)
-handleDevForceReload rt = do
-    (_, worked) <- liftIO $ do
-        Prometheus.incCounter $ cnt_forceReloads $ counters rt
-        reloadSite rt
-    let status = if worked then Just ForceReloaded else Nothing
-    pure status
-
 handleProxyApi :: Runtime ext -> Application
 handleProxyApi rt = case prodproxyRuntime rt of
     Nothing ->
@@ -112,13 +62,10 @@ handleProxyApi rt = case prodproxyRuntime rt of
         ProdProxy.handleProxy proxyrt
 
 -- works with two configured engines: one for all of dev stuff and one in serve mode (for producing files)
-serveDevApi :: forall ext. (Show ext, Typeable ext) => Config -> Engine ext -> Engine ext -> Runtime ext -> Server DevApi
-serveDevApi config devengine prodengine rt =
+serveDevApi :: forall ext. (Show ext, Typeable ext) => Engine ext -> Runtime ext -> Server DevApi
+serveDevApi devengine rt =
     handleDevWatch devengine rt
         :<|> handleDevListTargets devengine rt
-        :<|> handleDevProduce prodengine rt
-        :<|> handleDevPublish config rt
-        :<|> handleDevForceReload rt
         :<|> coerce (handleProxyApi rt)
         :<|> coerce (handleOnTheFlyProduction (findTarget devengine readSite (traceDev rt)) (ontheflyCounters rt.counters) (traceDev rt))
   where

@@ -102,8 +102,7 @@ instance FromJSON AuthConfig
 instance ToJSON AuthConfig
 
 data Config = Config
-    { publishScript :: Maybe FilePath
-    , api :: ApiProxyConfig
+    { api :: ApiProxyConfig
     , datasources :: Maybe (Map Text DatasourceConfig)
     -- ^ request-time dynamic pages (@kitchen-sink serve --dynamic@); see
     -- "KitchenSink.Engine.Dynamic"

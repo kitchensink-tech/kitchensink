@@ -1,3 +1,19 @@
+# Unreleased
+
+## Removed
+
+- The `publishScript` key of `kitchen-sink.json` and the `/dev/publish`
+  route, the `/dev/produce` and `/dev/reload` routes, and the
+  `add-dev-route.js` script that drew the `produce` and `reload` buttons in
+  dev mode (it is no longer injected, nor scaffolded by `init`). Run
+  `kitchen-sink produce` from a terminal to write the site; the dev-server
+  already reloads on every source change. A `kitchen-sink.json` that still has
+  a `publishScript` key keeps loading; the key is ignored. The
+  `ks_single_build_time`, `ks_fullbuild_time`, `ks_publish_time`,
+  `ks_rebuilds`, `ks_publishes` and `ks_forceReloads` metrics, which only
+  these routes fed, are gone too.
+- `scripts/publish.sh` (the repository's own publishing helper).
+
 # 0.2.0.0
 
 A major version per the PVP: a configuration feature and its dev-server

@@ -238,18 +238,6 @@ To use the dev-server mode, use `--servMode DEV`. That is, the full-command to r
 
 `kitchen-sink serve --srcDir website-src --outDir website-www --servMode DEV --port 7655`
 
-### one-time commands
-
-In addition to the above auto-reload script. The default executable's layout insert some buttons to get one-click.
-
-- the `produce` button will regenerate the whole HTML output
-- the `publish` button will call the `publishScript` command in the [kitchen-sink.json file](/kitchen-sink-dot-json.html) . As a data-point, I use [this publish-script](/gen/out/features.cmark__cat-publish-script) for this documentation site.
-
-<video width="640" height="480" controls>
-  <source src="/videos/one-time-commands-001-produce.mp4" type="video/mp4">
-  <source src="/videos/one-time-commands-001-produce.webm" type="video/webm">
-</video>
-
 ### API-proxy mode
 
 KitchenSink, when acting as a server, will proxy calls on the `/api` route to a
@@ -281,19 +269,13 @@ Which means the server inherits a number of features; among which a number of
 available on [this
 extract](/gen/out/features.cmark__gen-local-server-metrics.txt). Thus, rather
 than bragging how much Kitchen-Sink is fast, you get to see for yourself
-directly (e.g., with the `blog_fullbuild_time` counters in the Prometheus
+directly (e.g., with the `ks_ontheflybuild_time` counters in the Prometheus
 summary). Other usages would be to track how fast you add content to articles
 by collecting and storing the counters. For instance, the following picture is a screenshot of a Prometheus timeseries showing the size of the article
 while editing this paragraph (screenshot is made using [a Firefox extension I
 built](https://dicioccio.fr/prometheus-monitor.html))
 
 ![a timeseries graph showing the `blog_targets_sizes` prometheus counter](/images/features-001-targetsizes-timeseries.png)
-
-=generator:cmd.json
-{"cmd":"cat"
-,"args":["scripts/publish.sh"]
-,"target":"cat-publish-script"
-}
 
 =generator:cmd.json
 {"cmd":"curl"
