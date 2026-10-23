@@ -90,10 +90,9 @@ Generating files from pipelines is mundane, and I wrote KitchenSink to support
 some advanced features that help me stay "in the flow" while writing article
 contents.
 
-Among the `scaffolding` source files, some two interesting JavaScript files
-exist only for the support of the live-server: `autoreload.js` and
-`add-dev-route.js`.  Their respective name may change in future versions but
-the feature will be maintained.
+Among the `scaffolding` source files, one interesting JavaScript file exists
+only for the support of the live-server: `autoreload.js`.  Its name may change
+in future versions but the feature will be maintained.
 
 ## The `autoreload.js` script
 
@@ -113,17 +112,10 @@ For now the server-id information is passed in a query parameter as we cannot
 pass a bunch of informations in a HTTP-get at reload times (alternatives are
 some form of storage on the client-side -- we'll eventually get there).
 
-## The `add-dev-route.js` script
-
-Another nicety is that we can trigger a full-rebuild of the website without
-leaving one's preview browser. The gain is little but there is some
-satisfaction to press a button on an interface and see your website being
-generated or published.
-
-Upon loading, the `add-dev-route.js` script creates two buttons in the
-`#navigation` bar (i.e., the layout has to cooperate a bit, we'll change that a
-bit later): `produce` writes the whole site to the output directory and
-`reload` forces the server to reload the sources.
+Earlier versions also injected an `add-dev-route.js` script that drew
+`produce`, `reload` and `publish` buttons in the navigation bar. They are gone:
+run `kitchen-sink produce` from a terminal to write the site to disk; the
+dev-server already reloads the sources on every filesystem change.
 
 ## Metrics because why not
 

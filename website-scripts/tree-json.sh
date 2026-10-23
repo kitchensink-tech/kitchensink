@@ -4,7 +4,7 @@
 #   tree-json.sh <dir>
 #
 # The listing of the output directory (website-www/, the gitignored checkout
-# scripts/publish.sh pushes) only exists where the site was built and published
+# of the published site) only exists where the site was built and published
 # before: a fresh clone or worktree has none. A missing directory is reported
 # in the listing instead of failing the generator, so the site still builds.
 set -u

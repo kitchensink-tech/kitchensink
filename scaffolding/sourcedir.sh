@@ -11,7 +11,6 @@ cp -v "scaffolding/hashtags.cmark.tmpl" "${path}/hashtags.cmark"
 cp -v "scaffolding/newpage.cmark.tmpl" "${path}/first-article.cmark"
 cp -v "scaffolding/404.cmark.tmpl" "${path}/404.cmark"
 
-cp -v "scaffolding/js/add-dev-route.js" "${path}/add-dev-route.js"
 cp -v "scaffolding/js/autoreload.js" "${path}/autoreload.js"
 cp -v "scaffolding/js/doc-search.js" "${path}/doc-search.js"
 cp -v "scaffolding/js/echart-histogram.js" "${path}/echart-histogram.js"

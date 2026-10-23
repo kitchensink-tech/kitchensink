@@ -96,7 +96,7 @@ run cmd = do
     let devengine = prodengine{execLoadMetaExtradata = loadDevModeExtraData kitchensinkFilePath}
     ksconfig <- loadJSONFile @Config kitchensinkFilePath >>= maybe (error "couldn't load kitchensink.json") pure
     kswebapp <- case cmd.servMode of
-        DEV -> runDev ksconfig devengine prodengine srcPath
+        DEV -> runDev ksconfig devengine srcPath
         SERVE -> runServe ksconfig prodengine srcPath
 
     let webapp = RequestLogger.logStdoutDev kswebapp
@@ -122,7 +122,7 @@ run cmd = do
         key <- cmd.tlsKeyFile
         pure $ WarpTLS.tlsSettings cert key
 
-    runDev ksconfig devengine prodengine path = do
+    runDev ksconfig devengine path = do
         let apiStatus = pure ("ok" :: Text)
         healthRt <- Prod.alwaysReadyRuntime tracePrint
         rt <- initDevServerRuntime ksconfig devengine path tracePrint
@@ -132,7 +132,7 @@ run cmd = do
                     init
                     apiStatus
                     (statusPage <> versionsSection [("prodapi", Paths_prodapi_core.version)] <> metricsSection "js/metrics.js")
-                    (serveDevApi ksconfig devengine prodengine rt)
+                    (serveDevApi devengine rt)
                     (Proxy @DevApi)
         pure $ withDynamicRouting ksconfig rt webapp
 
@@ -196,7 +196,6 @@ loadDevModeExtraData path = do
     jsReloadExtraHeaders :: Text -> Article ext [Text] -> Assembler ext (Lucid.Html ())
     jsReloadExtraHeaders prefix _ =
         let js1 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/autoreload.js")] ""
-            js2 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/add-dev-route.js")] ""
             js3 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/echarts.min.js")] ""
             js5 = Lucid.termRawWith "script" [type_ "text/javascript", src_ (prefix <> "/js/echart-histogram.js")] ""
-         in pure (js1 *> js2 *> js3 *> js5)
+         in pure (js1 *> js3 *> js5)
