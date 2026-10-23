@@ -2,7 +2,8 @@
 #
 # Integration test of the daemon path: starts `serve --servMode SERVE`,
 # `serve --servMode DEV` and `multisite` (two virtual hosts with their own TLS
-# certificates, SNI, a fallback, and an /api reverse proxy) on local ports,
+# certificates, SNI, a fallback, and an /api reverse proxy), then serve and
+# multisite with ACME certificates (stored, no ACME server) on local ports,
 # and runs scripts/daemon-check.sh against each of them. Where
 # scripts/smoke-test.sh looks at the files `produce` writes, this looks at what
 # the daemons answer over HTTP and HTTPS.
@@ -184,6 +185,93 @@ if wait_http multisite "http://127.0.0.1:${ms_http}/index.html"; then
       failures=$((failures + 1))
       ;;
   esac
+fi
+
+# 4. ACME (tls-alpn-01), without an ACME server: the certificate manager
+# serves what a previous run stored (<acmeStateDir>/<domain>/{key,certificate}.pem),
+# so the certificates of the private CA stand in for ACME ones, and the ACME
+# directory points at a closed local port. What is checked: the flags, the
+# HTTPS server presenting the managed certificates (serve, and multisite mixing
+# file and ACME certificates), the acme-tls/1 protocol being taken over, and a
+# domain the ACME server cannot be reached for not stopping the daemon. What
+# is not: an actual ACME exchange (see the acme-not-a-joke test suites).
+echo "== ACME (tls-alpn-01, stored certificates)"
+no_acme=$(free_port)
+acme_state="${workdir}/acme-state"
+for name in alpha.test beta.test; do
+  mkdir -p "${acme_state}/${name}"
+  cp "${tls}/${name}.key" "${acme_state}/${name}/key.pem"
+  cp "${tls}/${name}.pem" "${acme_state}/${name}/certificate.pem"
+done
+
+acme_http=$(free_port)
+acme_https=$(free_port)
+start serve-acme "${KITCHEN_SINK}" serve --srcDir "${workdir}/alpha/src" --servMode SERVE \
+  --httpPort "${acme_http}" --httpsPort "${acme_https}" \
+  --acmeDomain alpha.test --acmeContact certmaster@alpha.test \
+  --acmeDirectory "http://127.0.0.1:${no_acme}/" --acmeStateDir "${acme_state}"
+if wait_http serve-acme "https://127.0.0.1:${acme_https}/index.html" --resolve "alpha.test:${acme_https}:127.0.0.1" -k; then
+  run_check --title "Site alpha" --host alpha.test --cacert "${tls}/ca.pem" "https://127.0.0.1:${acme_https}"
+  # a client asking for acme-tls/1 gets a challenge certificate or nothing,
+  # never the site certificate: there is no pending challenge, so nothing
+  subject=$(openssl s_client -connect "127.0.0.1:${acme_https}" -servername alpha.test -alpn acme-tls/1 < /dev/null 2> /dev/null \
+    | openssl x509 -noout -subject 2> /dev/null || true)
+  if [ -z "${subject}" ]; then
+    echo "  ok   acme-tls/1 handshake without a pending challenge gets no certificate"
+  else
+    echo "  FAIL acme-tls/1 handshake got: ${subject}"
+    failures=$((failures + 1))
+  fi
+fi
+if ! grep -q "alpha.test: serving the stored certificate" "${workdir}/serve-acme.log"; then
+  echo "  FAIL serve-acme did not load the stored certificate, last lines of serve-acme.log:"
+  tail -n 20 "${workdir}/serve-acme.log" | sed 's/^/    /'
+  failures=$((failures + 1))
+fi
+
+# --acmeDomain without --acmeDirectory is refused at startup
+if "${KITCHEN_SINK}" serve --srcDir "${workdir}/alpha/src" --servMode SERVE \
+  --httpsPort "$(free_port)" --acmeDomain alpha.test > "${workdir}/acme-nodir.log" 2>&1; then
+  echo "  FAIL --acmeDomain without --acmeDirectory was accepted"
+  failures=$((failures + 1))
+elif grep -q "acmeDirectory" "${workdir}/acme-nodir.log"; then
+  echo "  ok   --acmeDomain without --acmeDirectory is refused"
+else
+  echo "  FAIL --acmeDomain without --acmeDirectory: unexpected output"
+  sed 's/^/    /' "${workdir}/acme-nodir.log"
+  failures=$((failures + 1))
+fi
+
+# multisite: alpha keeps its certificate files, beta's certificate comes from
+# ACME, and gamma.test (ACME, nothing stored, ACME server unreachable) has no
+# certificate yet: the daemon keeps serving the other two.
+acme_stanza() {
+  jq --argjson tls "$1" '.tls = [$tls]'
+}
+ms_acme_beta=$(site_stanza beta '{"tag":"NoProxying"}' | acme_stanza '{"sniDomains":["beta.test","gamma.test"],"certificate":{"tag":"AcmeCertificate"}}')
+jq -n --argjson a "$(site_stanza alpha '{"tag":"NoProxying"}')" --argjson b "${ms_acme_beta}" \
+  '{ services: [$a, $b], fallback: { tag: "FallbackWithOminousError" } }' > "${workdir}/sites-acme.json"
+ms_acme_http=$(free_port)
+ms_acme_https=$(free_port)
+start multisite-acme "${KITCHEN_SINK}" multisite --configFile "${workdir}/sites-acme.json" \
+  --httpPort "${ms_acme_http}" --httpsPort "${ms_acme_https}" \
+  --acmeContact certmaster@beta.test \
+  --acmeDirectory "http://127.0.0.1:${no_acme}/" --acmeStateDir "${acme_state}"
+if wait_http multisite-acme "http://127.0.0.1:${ms_acme_http}/index.html"; then
+  run_check --host alpha.test --cacert "${tls}/ca.pem" --title "Site alpha" "https://127.0.0.1:${ms_acme_https}"
+  run_check --host beta.test --cacert "${tls}/ca.pem" --title "Site beta" "https://127.0.0.1:${ms_acme_https}"
+  for _ in $(seq 1 60); do
+    if grep -q "gamma.test: no certificate" "${workdir}/multisite-acme.log"; then break; fi
+    sleep 0.5
+  done
+  if grep -q "gamma.test: no certificate" "${workdir}/multisite-acme.log"; then
+    echo "  ok   an unreachable ACME server is reported and retried, not fatal"
+    run_check --host beta.test --cacert "${tls}/ca.pem" --title "Site beta" "https://127.0.0.1:${ms_acme_https}"
+  else
+    echo "  FAIL no ACME failure reported for gamma.test, last lines of multisite-acme.log:"
+    tail -n 20 "${workdir}/multisite-acme.log" | sed 's/^/    /'
+    failures=$((failures + 1))
+  fi
 fi
 
 if [ "${failures}" -ne 0 ]; then

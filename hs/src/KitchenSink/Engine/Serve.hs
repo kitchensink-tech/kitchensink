@@ -6,7 +6,9 @@
 module KitchenSink.Engine.Serve where
 
 import Control.Concurrent.Async (Concurrently (..))
-import Data.Maybe (fromMaybe)
+import Control.Monad (when)
+import Data.List.NonEmpty qualified as NonEmpty
+import Data.Maybe (fromMaybe, isJust)
 import Data.Time.Clock (getCurrentTime)
 import Lucid as Lucid
 import Lucid.Base qualified as Lucid
@@ -20,9 +22,12 @@ import Prod.Background (readBackgroundVal)
 import Prod.Status
 import Prod.Tracer
 import Servant
-import Prelude (Read, error)
+import System.Exit (exitFailure)
+import System.IO (hPutStrLn, stderr)
+import Prelude (Read, error, (&&), (||))
 
 import KitchenSink.Core.Assembler (Assembler)
+import KitchenSink.Engine.Acme (AcmeOptions, acmeTlsSettings, runAcme, setupAcmeOrExit)
 import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Diagnostics (reportDiagnostics)
@@ -56,10 +61,17 @@ data Args
     , tlsKeyFile :: Maybe FilePath
     , tlsCertFile :: Maybe FilePath
     , dynamic :: Bool
+    , acmeDomains :: [Text]
+    -- ^ when non-empty, certificates for these domains come from ACME (tls-alpn-01)
+    , acmeOptions :: AcmeOptions
     }
 
 run :: Args -> IO ()
 run cmd = do
+    when (not (null cmd.acmeDomains) && (isJust cmd.tlsCertFile || isJust cmd.tlsKeyFile)) $ do
+        hPutStrLn stderr "--acmeDomain and --tlsCertFile/--tlsKeyFile are exclusive: certificates come either from ACME or from files"
+        exitFailure
+    acme <- traverse (setupAcmeOrExit cmd.acmeOptions) (NonEmpty.nonEmpty cmd.acmeDomains)
     let srcPath = cmd.srcDir
     let kitchensinkFilePath = kitshenSinkJsonFilePath cmd.srcDir cmd.ksFile
     serveMetadata <- loadServeModeExtraData kitchensinkFilePath
@@ -89,21 +101,26 @@ run cmd = do
 
     let webapp = RequestLogger.logStdoutDev kswebapp
     let httpWarp = Warp.run <$> cmd.httpPort <*> pure webapp
+    -- with ACME, the HTTPS server defaults to port 443: the only one the
+    -- ACME server connects to for tls-alpn-01 challenges
+    let httpsPort = cmd.httpsPort <|> fmap (const 443) acme
+    let tlsSettings = fmap acmeTlsSettings acme <|> fileTlsSettings
+    let tlsWarpSettings = fmap (\port -> Warp.setPort port Warp.defaultSettings) httpsPort
     let httpsWarp = WarpTLS.runTLS <$> tlsSettings <*> tlsWarpSettings <*> pure webapp
+    let renewer = fmap runAcme acme
 
-    let program = (,) <$> Concurrently (mio httpWarp) <*> Concurrently (mio httpsWarp)
+    let program =
+            (,,)
+                <$> Concurrently (mio httpWarp)
+                <*> Concurrently (mio httpsWarp)
+                <*> Concurrently (mio renewer)
     void $ runConcurrently program
   where
-    tlsSettings :: Maybe WarpTLS.TLSSettings
-    tlsSettings = do
+    fileTlsSettings :: Maybe WarpTLS.TLSSettings
+    fileTlsSettings = do
         cert <- cmd.tlsCertFile
         key <- cmd.tlsKeyFile
         pure $ WarpTLS.tlsSettings cert key
-
-    tlsWarpSettings :: Maybe Warp.Settings
-    tlsWarpSettings = do
-        port <- cmd.httpsPort
-        pure $ Warp.setPort port Warp.defaultSettings
 
     runDev ksconfig devengine prodengine path = do
         let apiStatus = pure ("ok" :: Text)

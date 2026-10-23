@@ -8,6 +8,7 @@ module KitchenSink.Engine where
 import Options.Generic
 
 import Data.Text as Text
+import KitchenSink.Engine.Acme qualified as Acme
 import KitchenSink.Engine.Auth (hashPassword)
 import KitchenSink.Engine.Init qualified as Init
 import KitchenSink.Engine.MultiSite qualified as MultiSite
@@ -39,6 +40,10 @@ data Action
         , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
         , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
         , dynamic :: Bool <?> "opt-in to request-time dynamic pages (SQLPage-style routes/sql-datasets), see kitchen-sink.json's datasources"
+        , acmeDomain :: [Text] <?> "domain to obtain an ACME certificate for with tls-alpn-01 challenges (repeatable; HTTPS then defaults to port 443)"
+        , acmeContact :: [Text] <?> "contact of the ACME account, e.g. certmaster@example.com (repeatable)"
+        , acmeDirectory :: Maybe Text <?> "ACME server: letsencrypt | letsencrypt-staging | directory URL (required with ACME certificates)"
+        , acmeStateDir :: Maybe FilePath <?> "where the ACME account key, keys and certificates are stored (default: ./acme-state)"
         }
     | NewArticle
         { srcDir :: FilePath <?> "source directory"
@@ -54,6 +59,9 @@ data Action
         , tlsKeyFile :: Maybe FilePath <?> "tls-private-key"
         , tlsCertFile :: Maybe FilePath <?> "tls-certificate"
         , proxyingTimeout :: Maybe Int <?> "proxy-timeout-microsecs"
+        , acmeContact :: [Text] <?> "contact of the ACME account, e.g. certmaster@example.com (repeatable)"
+        , acmeDirectory :: Maybe Text <?> "ACME server: letsencrypt | letsencrypt-staging | directory URL (required with ACME certificates)"
+        , acmeStateDir :: Maybe FilePath <?> "where the ACME account key, keys and certificates are stored (default: ./acme-state)"
         }
     | HashPassword
         { password :: Text <?> "plaintext password to hash for kitchen-sink.json's auth.provider.users[].passwordHash (see KitchenSink.Engine.Auth)"
@@ -72,19 +80,21 @@ defaultMain = do
         Produce a b c vars d ->
             let (a', b', c', d') = coerce (a, b, c, d)
              in Produce.run (Produce.Args a' b' c' (parseVars (coerce vars)) d')
-        Serve a b c d vars e f g h i ->
+        Serve a b c d vars e f g h i acmeDoms contacts dir state ->
             let (a', b', c', d', e', f', g', h', i') = coerce (a, b, c, d, e, f, g, h, i)
-             in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h' i')
+             in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h' i' (coerce acmeDoms) (acmeOptions contacts dir state))
         NewArticle a b c d ->
             let (a', b', c', d') = coerce (a, b, c, d)
              in NewArticle.run (NewArticle.Args a' b' c' d')
-        MultiSite a vars b c d e f ->
+        MultiSite a vars b c d e f contacts dir state ->
             let (a', b', c', d', e', f') = coerce (a, b, c, d, e, f)
-             in MultiSite.run (MultiSite.Args a' (parseVars (coerce vars)) b' c' d' e' f')
+             in MultiSite.run (MultiSite.Args a' (parseVars (coerce vars)) b' c' d' e' f' (acmeOptions contacts dir state))
         HashPassword a -> do
             hashed <- hashPassword (coerce a)
             putStrLn (Text.unpack hashed)
   where
+    acmeOptions contacts dir state = Acme.AcmeOptions (coerce dir) (coerce contacts) (coerce state)
+
     parseVars :: [Text] -> [(Text, Text)]
     parseVars xs = fmap parseVar xs
 

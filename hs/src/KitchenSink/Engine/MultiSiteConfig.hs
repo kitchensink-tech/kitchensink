@@ -40,6 +40,10 @@ instance ToJSON CertificateFiles
 data CertificateSource
     = NoCertificates -- lazy way to force a {tag:/contents:} json serialization
     | CertificateFileSource CertificateFiles
+    | {- | obtained from the ACME server of the multisite command line
+      (--acmeDirectory), with tls-alpn-01 challenges, one per domain
+      -}
+      AcmeCertificate
     deriving (Generic, Show)
 instance FromJSON CertificateSource
 instance ToJSON CertificateSource

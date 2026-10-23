@@ -6,3 +6,9 @@ with-compiler: ghc-9.10.3
 -- the Hackage release does not break on newer GHCs).
 package kitchen-sink
     flags: +werror +purescript-bridge
+
+-- prodapi-proxy 0.2.0.0 caps tls < 2.1, but acme-not-a-joke-wai/-warp need
+-- tls >= 2.1.3 with crypton-x509 1.8 (hence tls 2.2). prodapi-proxy builds
+-- unchanged against tls 2.2: drop this once a Hackage revision of
+-- prodapi-proxy-0.2.0.0 relaxes its tls bound.
+allow-newer: prodapi-proxy:tls
