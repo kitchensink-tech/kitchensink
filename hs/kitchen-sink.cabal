@@ -1,6 +1,6 @@
 cabal-version:      3.4
 name:               kitchen-sink
-version:            0.1.0.0
+version:            0.2.0.0
 synopsis:           Static-site generator, dev server and API gateway
 description:
     Kitchen-Sink is a static-site generator and a dev/serve HTTP daemon (with
