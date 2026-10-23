@@ -146,7 +146,7 @@ can do the same, but in `serve` mode the same engine can also evaluate
 **per request**: opt-in with `--dynamic`, a route can query a SQL datasource
 declared in `kitchen-sink.json` and render a page from the result, in the
 spirit of [SQLPage](https://sql-page.com/). You can also [try tramaj directly
-in your browser](/playground.html) without installing anything.
+in your browser](https://lucasdicioccio.github.io/tramaj/playground.html) without installing anything.
 
 ### the dev server doubles as a small API gateway
 
