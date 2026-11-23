@@ -16,7 +16,7 @@ scripts/      Dev helpers (smoke test, scaffold checks, JS bundling), run from a
 
 ## Build & run
 
-All Haskell work happens in `hs/`. GHC 9.10.3 / cabal 3.12 (pinned via `with-compiler` in `cabal.project`); all dependencies (prodapi-*, purescript-bridge, prometheus-client, tramaj-hs) now come from Hackage, with PVP bounds in `kitchen-sink.cabal`.
+All Haskell work happens in `hs/`. GHC 9.10.3 / cabal 3.12 (pinned via `with-compiler` in `cabal.project`); all dependencies (prodapi-*, purescript-bridge, prometheus-client, tramaj-hs) now come from Hackage, with PVP bounds in `kitchen-sink.cabal`. The library targets aeson 2.3, crypton 2.x (`Data.ByteArray` from `ram`, not `memory`), tls 2.4+ and tramaj-hs 0.5; `cabal.project` carries `allow-newer` for prodapi-* and acme-not-a-joke*, whose Hackage releases still cap those below, until they are re-released.
 
 ```bash
 cd hs

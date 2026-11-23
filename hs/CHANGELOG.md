@@ -1,5 +1,19 @@
 # Unreleased
 
+## Changed
+
+- Ported to aeson 2.3, crypton 2.x, tls 2.4+ and tramaj-hs 0.5. The bounds
+  are now `aeson >=2.3.2 && <2.4`, `crypton >=2.2.5 && <2.4`,
+  `tls >=2.4.12 && <2.7`, `http-client-tls >=0.4 && <0.5` and
+  `tramaj-hs >=0.5 && <0.6`; `memory` is replaced by `ram` (crypton 2.x's
+  `Data.ByteArray`). These are major-version changes of dependencies whose
+  types the library exposes, so the next release is a major one (0.3.0.0).
+- prodapi-core/web/proxy and acme-not-a-joke(-wai/-warp), as released on
+  Hackage, still cap aeson, crypton, tls (and, through them, jose,
+  crypton-x509, http-client-tls) below these versions. `hs/cabal.project`
+  lifts their caps with `allow-newer` until they are released with wider
+  bounds; a downstream project needs the same stanza meanwhile.
+
 ## Removed
 
 - The `publishScript` key of `kitchen-sink.json` and the `/dev/publish`
