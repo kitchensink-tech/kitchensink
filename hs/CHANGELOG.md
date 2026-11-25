@@ -1,5 +1,15 @@
 # Unreleased
 
+## Added
+
+- `serve` (SERVE and DEV) and `multisite` also answer pages kitchen-sink
+  renders (articles from `.cmark`/`.md` sources, the index, topic and hashtag
+  listings) at their URL without the `.html` extension: `/foo` serves the same
+  page as `/foo.html`. The `.html` URL still wins when both exist, and raw
+  `.html` files copied from the source directory are not aliased. Generated
+  links, the sitemap and the atom feed keep the `.html` URLs, and `produce`
+  writes nothing extra (most static hosts already map `/foo` to `foo.html`).
+
 ## Changed
 
 - Ported to aeson 2.3, crypton 2.x, tls 2.4+ and tramaj-hs 0.5. The bounds

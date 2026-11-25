@@ -146,6 +146,10 @@ else
       expect_no_grep /index.html "/js/autoreload.js" "${tmp}/index.html"
     fi
   fi
+  # pages kitchen-sink renders are also served without their .html extension
+  if expect_status /index 200 "${tmp}/index"; then
+    expect_grep /index "<title>${title}" "${tmp}/index"
+  fi
   if expect_status /atom.xml 200 "${tmp}/atom.xml"; then
     expect_grep /atom.xml "<feed" "${tmp}/atom.xml"
   fi
@@ -158,6 +162,7 @@ else
     fi
   fi
   expect_status /no-such-page-for-daemon-check.html 404 "${tmp}/missing" || true
+  expect_status /no-such-page-for-daemon-check 404 "${tmp}/missing" || true
 
   if [ "${mode}" = dev ]; then
     if expect_status /dev/targets 200 "${tmp}/targets.json"; then
