@@ -10,13 +10,14 @@ import Data.ByteString.Lazy qualified as LByteString
 import Data.Int (Int64)
 import Data.List qualified as List
 import Data.Text.Encoding qualified as Text
+import Data.Bool ((&&))
 import Data.Typeable (Typeable)
 import Network.HTTP.Types (status200, status404)
 import Network.Wai as Wai
 import Prod.Tracer
 import Prometheus qualified as Prometheus
 
-import KitchenSink.Core.Build.Target (Target, destination, destinationUrl)
+import KitchenSink.Core.Build.Target (ProductionRule (..), Target, destination, destinationUrl, productionRule)
 import KitchenSink.Engine.Counters (Counters (..), timeItWithLabel)
 import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.SiteBuilder
@@ -41,8 +42,39 @@ findTarget engine loadSite track = \origpath -> do
     let indexPath = Text.encodeUtf8 (pathPrefix med) <> "/index.html"
     let path = if origpath == rootPath then indexPath else coerce origpath
     tgts <- evalTargets engine med <$> loadSite
-    let target = List.find (\tgt -> Text.encodeUtf8 (destinationUrl (destination tgt)) == path) tgts
-    pure (path, target)
+    let urlOf tgt = Text.encodeUtf8 (destinationUrl (destination tgt))
+    let exact = List.find (\tgt -> urlOf tgt == path) tgts
+    let extensionless = do
+            htmlPath <- extensionlessHtmlPath path
+            tgt <- List.find (\tgt -> isGeneratedPage tgt && urlOf tgt == htmlPath) tgts
+            pure (htmlPath, tgt)
+    pure $ case (exact, extensionless) of
+        (Just tgt, _) -> (path, Just tgt)
+        (Nothing, Just (htmlPath, tgt)) -> (htmlPath, Just tgt)
+        (Nothing, Nothing) -> (path, Nothing)
+
+{- | The @.html@ URL an extensionless request may stand for: @\/foo\/bar@
+stands for @\/foo\/bar.html@. Paths whose last segment is empty (a trailing
+slash) or already carries an extension stand for nothing else.
+-}
+extensionlessHtmlPath :: ByteString -> Maybe ByteString
+extensionlessHtmlPath path
+    | ByteString.null lastSegment = Nothing
+    | ByteString.elem '.' lastSegment = Nothing
+    | otherwise = Just (path <> ".html")
+  where
+    lastSegment = snd (ByteString.breakEnd (== '/') path)
+
+{- | Pages kitchen-sink renders itself (articles from @.cmark@\/@.md@ sources,
+and the listings built alongside them), as opposed to files copied verbatim
+from the source directory such as raw @.html@ files. Only these are also
+served at the URL without @.html@.
+-}
+isGeneratedPage :: Target ext a -> Bool
+isGeneratedPage tgt = case productionRule tgt of
+    ProduceAssembler _ -> True
+    ProduceGenerator _ -> False
+    ProduceFileCopy _ -> False
 
 data OnTheFlyCounters a
     = OnTheFlyCounters
