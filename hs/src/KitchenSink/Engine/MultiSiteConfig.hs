@@ -7,6 +7,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
 
 import KitchenSink.Engine.Config (ApiProxyConfig)
+import KitchenSink.Engine.ForwardAuth (ForwardAuthConfig)
 import KitchenSink.Engine.SiteConfig (SiteInfo)
 import KitchenSink.Prelude
 
@@ -62,6 +63,8 @@ data SiteStanza = SiteStanza
     , tls :: [TLSStanza]
     , site :: SourceStanza
     , api :: ApiProxyConfig
+    , forwardAuth :: Maybe ForwardAuthConfig
+    -- ^ absent or null: no auth check; see "KitchenSink.Engine.ForwardAuth"
     }
     deriving (Generic, Show)
 instance FromJSON SiteStanza

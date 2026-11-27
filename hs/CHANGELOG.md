@@ -9,6 +9,15 @@
   `.html` files copied from the source directory are not aliased. Generated
   links, the sitemap and the atom feed keep the `.html` URLs, and `produce`
   writes nothing extra (most static hosts already map `/foo` to `foo.html`).
+- Forward authentication (Traefik ForwardAuth / nginx `auth_request` style):
+  `serve --forwardAuthUrl <url>` (and `--forwardAuthHeader <name>`,
+  repeatable) and an optional per-site `forwardAuth` field in the `multisite`
+  configuration (`{url, responseHeaders, timeoutSeconds}`) check every
+  request with an external auth service first. A 2xx answer serves the
+  request (copying the named headers onto it), any other answer is relayed
+  to the client (status, `Location`, `Set-Cookie`, body), and an unreachable
+  service gives a 503. New module `KitchenSink.Engine.ForwardAuth`; the
+  `SiteStanza` record and `Serve.Args` gain a field.
 
 ## Changed
 

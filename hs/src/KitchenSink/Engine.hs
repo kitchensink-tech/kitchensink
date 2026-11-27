@@ -10,6 +10,7 @@ import Options.Generic
 import Data.Text as Text
 import KitchenSink.Engine.Acme qualified as Acme
 import KitchenSink.Engine.Auth (hashPassword)
+import KitchenSink.Engine.ForwardAuth (ForwardAuthConfig (..))
 import KitchenSink.Engine.Init qualified as Init
 import KitchenSink.Engine.MultiSite qualified as MultiSite
 import KitchenSink.Engine.NewArticle qualified as NewArticle
@@ -44,6 +45,8 @@ data Action
         , acmeContact :: [Text] <?> "contact of the ACME account, e.g. certmaster@example.com (repeatable)"
         , acmeDirectory :: Maybe Text <?> "ACME server: letsencrypt | letsencrypt-staging | directory URL (required with ACME certificates)"
         , acmeStateDir :: Maybe FilePath <?> "where the ACME account key, keys and certificates are stored (default: ./acme-state)"
+        , forwardAuthUrl :: Maybe Text <?> "auth service checked before serving every request (Traefik ForwardAuth / nginx auth_request style): 2xx serves, any other answer is relayed, unreachable gives a 503"
+        , forwardAuthHeader :: [Text] <?> "header copied from a 2xx forward-auth answer onto the request, e.g. X-Forwarded-User (repeatable)"
         }
     | NewArticle
         { srcDir :: FilePath <?> "source directory"
@@ -80,9 +83,10 @@ defaultMain = do
         Produce a b c vars d ->
             let (a', b', c', d') = coerce (a, b, c, d)
              in Produce.run (Produce.Args a' b' c' (parseVars (coerce vars)) d')
-        Serve a b c d vars e f g h i acmeDoms contacts dir state ->
+        Serve a b c d vars e f g h i acmeDoms contacts dir state authUrl authHeaders ->
             let (a', b', c', d', e', f', g', h', i') = coerce (a, b, c, d, e, f, g, h, i)
-             in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h' i' (coerce acmeDoms) (acmeOptions contacts dir state))
+                fwdAuth = (\u -> ForwardAuthConfig u (Just (coerce authHeaders)) Nothing) <$> coerce authUrl
+             in Serve.run (Serve.Args a' b' c' d' (parseVars (coerce vars)) e' f' g' h' i' (coerce acmeDoms) (acmeOptions contacts dir state) fwdAuth)
         NewArticle a b c d ->
             let (a', b', c', d') = coerce (a, b, c, d)
              in NewArticle.run (NewArticle.Args a' b' c' d')

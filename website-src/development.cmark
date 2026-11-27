@@ -72,8 +72,9 @@ built binary instead:
   and the fallback for unknown hosts. It also runs both with ACME
   certificates (tls-alpn-01) stored by a previous run, against an ACME server
   that cannot be reached, which checks the HTTPS side of ACME but not an
-  actual exchange with an ACME server. It needs `openssl`, `curl`, `jq` and
-  `python3`.
+  actual exchange with an ACME server. Last, it puts `serve` and `multisite`
+  behind a stub forward-auth service and checks the allowed, redirected and
+  auth-down (503) cases. It needs `openssl`, `curl`, `jq` and `python3`.
 
 The HTTP checks of `daemon-test.sh` live in `scripts/daemon-check.sh`, which
 only needs an address. Point it at a deployed daemon, for example a VM that a

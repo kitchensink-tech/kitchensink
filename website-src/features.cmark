@@ -222,6 +222,50 @@ files. With ACME, `multisite` serves HTTPS even without
 `--tlsCertFile`/`--tlsKeyFile`: a client asking for an unknown name then gets
 the certificate of the first ACME domain.
 
+### forward authentication
+
+Kitchen-Sink can ask an external authentication service before serving
+anything, the way Traefik's ForwardAuth or nginx's `auth_request` do. Single
+sign-on, passwords and sessions all live in that service (for instance
+[oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy/), Authelia,
+Pomerium, or a small service of your own); Kitchen-Sink only follows its
+verdict.
+
+`$ kitchen-sink serve --srcDir website-src --servMode SERVE --httpPort 7655 --forwardAuthUrl http://127.0.0.1:4180/oauth2/auth --forwardAuthHeader X-Forwarded-User`
+
+For every request, Kitchen-Sink first sends a `GET` to the `--forwardAuthUrl`
+with the headers of the original request (cookies, `Authorization`, ...) and
+`X-Forwarded-Method`, `X-Forwarded-Proto`, `X-Forwarded-Host` and
+`X-Forwarded-Uri` describing it. Redirects are not followed.
+
+- A `2xx` answer lets the request through. Each `--forwardAuthHeader <name>`
+  (repeatable) is copied from that answer onto the request; a header of that
+  name sent by the client is always dropped, so it cannot be forged.
+- Any other answer is returned to the client as is: status, headers (notably
+  `Location` and `Set-Cookie`) and body. A `302` to the login page of an
+  identity provider, or a `401` with a `WWW-Authenticate` challenge, just
+  work.
+- When the service cannot be reached or does not answer within 10 seconds,
+  the request fails with a `503`: nothing is served without a verdict.
+
+The check covers the whole site, in `SERVE` and `DEV` modes alike, including
+the `/api` proxy and the `/health`, `/status` and `/metrics` routes. Without
+`--forwardAuthUrl`, nothing changes.
+
+With `multisite`, each site of the JSON configuration can carry an optional
+`forwardAuth` field (absent or `null`: no check for that site):
+
+```json
+"forwardAuth":
+  { "url": "http://127.0.0.1:4180/oauth2/auth"
+  , "responseHeaders": ["X-Forwarded-User"]
+  , "timeoutSeconds": 10
+  }
+```
+
+`responseHeaders` and `timeoutSeconds` are optional (none and 10 seconds).
+There, `X-Forwarded-Host` carries the host name without its port.
+
 ### auto-reload
 
 The executable server has a special API route with a mechanism to wait for changes
