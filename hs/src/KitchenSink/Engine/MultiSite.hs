@@ -48,6 +48,7 @@ import KitchenSink.Engine.Acme (Acme, AcmeOptions, acmeSniCredentials, runAcme, 
 import KitchenSink.Engine.Config (ApiProxyConfig (..), Prefix, RewriteRule (..), SlashApiProxyDirective (..), TransportSecurity (..))
 import KitchenSink.Engine.Counters (timeItWithLabel)
 import KitchenSink.Engine.Diagnostics (reportDiagnostics)
+import KitchenSink.Engine.ForwardAuth (forwardAuthMiddleware, initForwardAuth)
 import KitchenSink.Engine.MultiSiteConfig
 import KitchenSink.Engine.OnTheFly (OnTheFlyCounters (..), findTarget, handleOnTheFlyProduction)
 import KitchenSink.Engine.Runtime (Engine (..))
@@ -270,7 +271,9 @@ buildSiteApplication rt cfg = do
         NoFiles -> pure Nothing
         KitchenSinkDirectorySource src ->
             Just <$> buildDirectorySourceApp rt src cfg
-    pure $ wrap <$> fullApp proxyApp ksApp
+    fwdAuth <- traverse (initForwardAuth rt.httpManager) cfg.forwardAuth
+    let withAuth app = maybe app (\fa -> forwardAuthMiddleware fa app) fwdAuth
+    pure $ wrap . withAuth <$> fullApp proxyApp ksApp
   where
     fullApp :: Maybe Wai.Application -> Maybe Wai.Application -> Maybe Wai.Application
     fullApp Nothing Nothing =

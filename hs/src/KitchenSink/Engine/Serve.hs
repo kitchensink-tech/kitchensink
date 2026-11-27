@@ -12,6 +12,7 @@ import Data.Maybe (fromMaybe, isJust)
 import Data.Time.Clock (getCurrentTime)
 import Lucid as Lucid
 import Lucid.Base qualified as Lucid
+import Network.HTTP.Client.TLS (newTlsManager)
 import Network.Wai.Handler.Warp as Warp
 import Network.Wai.Handler.WarpTLS qualified as WarpTLS
 import Network.Wai.Middleware.RequestLogger qualified as RequestLogger
@@ -32,6 +33,7 @@ import KitchenSink.Engine.Api
 import KitchenSink.Engine.Config
 import KitchenSink.Engine.Diagnostics (reportDiagnostics)
 import KitchenSink.Engine.Dynamic (dynamicMiddleware, dynamicOptionsFromConfig)
+import KitchenSink.Engine.ForwardAuth (ForwardAuthConfig, forwardAuthMiddleware, initForwardAuth)
 import KitchenSink.Engine.Handlers
 import KitchenSink.Engine.Runtime
 import KitchenSink.Engine.SiteBuilder (produceTarget)
@@ -64,6 +66,8 @@ data Args
     , acmeDomains :: [Text]
     -- ^ when non-empty, certificates for these domains come from ACME (tls-alpn-01)
     , acmeOptions :: AcmeOptions
+    , forwardAuth :: Maybe ForwardAuthConfig
+    -- ^ when set, every request is checked against this auth service first
     }
 
 run :: Args -> IO ()
@@ -72,6 +76,11 @@ run cmd = do
         hPutStrLn stderr "--acmeDomain and --tlsCertFile/--tlsKeyFile are exclusive: certificates come either from ACME or from files"
         exitFailure
     acme <- traverse (setupAcmeOrExit cmd.acmeOptions) (NonEmpty.nonEmpty cmd.acmeDomains)
+    fwdAuth <- case cmd.forwardAuth of
+        Nothing -> pure Nothing
+        Just cfg -> do
+            mgr <- newTlsManager
+            Just <$> initForwardAuth mgr cfg
     let srcPath = cmd.srcDir
     let kitchensinkFilePath = kitshenSinkJsonFilePath cmd.srcDir cmd.ksFile
     serveMetadata <- loadServeModeExtraData kitchensinkFilePath
@@ -99,7 +108,7 @@ run cmd = do
         DEV -> runDev ksconfig devengine srcPath
         SERVE -> runServe ksconfig prodengine srcPath
 
-    let webapp = RequestLogger.logStdoutDev kswebapp
+    let webapp = RequestLogger.logStdoutDev (maybe kswebapp (\fa -> forwardAuthMiddleware fa kswebapp) fwdAuth)
     let httpWarp = Warp.run <$> cmd.httpPort <*> pure webapp
     -- with ACME, the HTTPS server defaults to port 443: the only one the
     -- ACME server connects to for tls-alpn-01 challenges

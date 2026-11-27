@@ -3,7 +3,8 @@
 # Integration test of the daemon path: starts `serve --servMode SERVE`,
 # `serve --servMode DEV` and `multisite` (two virtual hosts with their own TLS
 # certificates, SNI, a fallback, and an /api reverse proxy), then serve and
-# multisite with ACME certificates (stored, no ACME server) on local ports,
+# multisite with ACME certificates (stored, no ACME server), then serve and
+# multisite behind a stub forward-auth service, on local ports,
 # and runs scripts/daemon-check.sh against each of them. Where
 # scripts/smoke-test.sh looks at the files `produce` writes, this looks at what
 # the daemons answer over HTTP and HTTPS.
@@ -272,6 +273,118 @@ if wait_http multisite-acme "http://127.0.0.1:${ms_acme_http}/index.html"; then
     tail -n 20 "${workdir}/multisite-acme.log" | sed 's/^/    /'
     failures=$((failures + 1))
   fi
+fi
+
+# 5. forward-auth: a stub auth service lets a request through when it carries
+# the cookie session=ok, and otherwise answers a 302 to a login page (with a
+# Set-Cookie and a body, which must reach the client as is). An auth URL on a
+# closed port must fail closed with a 503. Covered for serve (SERVE and DEV)
+# and for multisite (per-site forwardAuth field).
+echo "== forward-auth"
+auth=$(free_port)
+no_auth=$(free_port)
+cat > "${workdir}/auth-stub.py" << 'EOF_STUB'
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        method = self.headers.get("X-Forwarded-Method")
+        uri = self.headers.get("X-Forwarded-Uri")
+        if self.path == "/ready":
+            self.send_response(204); self.end_headers(); return
+        if not method or not uri:
+            self.send_response(400); self.end_headers(); return
+        if "session=ok" in (self.headers.get("Cookie") or ""):
+            self.send_response(200)
+            self.send_header("X-Forwarded-User", "alice")
+            self.end_headers()
+            return
+        proto = self.headers.get("X-Forwarded-Proto", "")
+        host = self.headers.get("X-Forwarded-Host", "")
+        body = b"login required\n"
+        self.send_response(302)
+        self.send_header("Location", "http://idp.test/login?rd=%s://%s%s" % (proto, host, uri))
+        self.send_header("Set-Cookie", "auth_state=pending; Path=/")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+HTTPServer(("127.0.0.1", int(sys.argv[1])), Handler).serve_forever()
+EOF_STUB
+start auth-stub python3 "${workdir}/auth-stub.py" "${auth}"
+wait_http auth-stub "http://127.0.0.1:${auth}/ready" || true
+
+# fa_check <label> <url> [curl args...]: the allow, deny-with-redirect cases
+fa_check() {
+  local label=$1 url=$2
+  shift 2
+  local code headers body
+  code=$(curl -s -o "${workdir}/fa-body" -w '%{http_code}' --max-time 10 -b "session=ok" "$@" "${url}/index.html" || true)
+  if [ "${code}" = "200" ] && grep -q "<title>" "${workdir}/fa-body"; then
+    echo "  ok   ${label}: allowed request gets the page"
+  else
+    echo "  FAIL ${label}: allowed request got ${code}"
+    failures=$((failures + 1))
+  fi
+  headers="${workdir}/fa-headers"
+  code=$(curl -s -D "${headers}" -o "${workdir}/fa-body" -w '%{http_code}' --max-time 10 "$@" "${url}/index.html" || true)
+  body=$(cat "${workdir}/fa-body")
+  if [ "${code}" = "302" ] \
+    && grep -qi '^location: http://idp.test/login?rd=http://.*/index.html' "${headers}" \
+    && grep -qi '^set-cookie: auth_state=pending' "${headers}" \
+    && [ "${body}" = "login required" ]; then
+    echo "  ok   ${label}: denied request gets the auth service's redirect, cookie and body"
+  else
+    echo "  FAIL ${label}: denied request got ${code}"
+    sed 's/^/    /' "${headers}"
+    failures=$((failures + 1))
+  fi
+}
+
+# fa_down <label> <url> [curl args...]: an unreachable auth service gives a 503
+fa_down() {
+  local label=$1 url=$2
+  shift 2
+  local code
+  code=$(curl -s -o "${workdir}/fa-body" -w '%{http_code}' --max-time 15 -b "session=ok" "$@" "${url}/index.html" || true)
+  if [ "${code}" = "503" ] && ! grep -q "<title>" "${workdir}/fa-body"; then
+    echo "  ok   ${label}: unreachable auth service fails closed (503)"
+  else
+    echo "  FAIL ${label}: unreachable auth service gave ${code}"
+    failures=$((failures + 1))
+  fi
+}
+
+fa_http=$(free_port)
+start serve-fa "${KITCHEN_SINK}" serve --srcDir "${workdir}/alpha/src" --servMode SERVE \
+  --httpPort "${fa_http}" --forwardAuthUrl "http://127.0.0.1:${auth}/check" --forwardAuthHeader X-Forwarded-User
+if wait_http serve-fa "http://127.0.0.1:${fa_http}/index.html"; then
+  fa_check "serve SERVE" "http://127.0.0.1:${fa_http}"
+fi
+
+fa_dev=$(free_port)
+start dev-fa "${KITCHEN_SINK}" serve --srcDir "${workdir}/beta/src" --outDir "${workdir}/beta/www-fa" --servMode DEV \
+  --httpPort "${fa_dev}" --forwardAuthUrl "http://127.0.0.1:${no_auth}/check"
+if wait_http dev-fa "http://127.0.0.1:${fa_dev}/index.html"; then
+  fa_down "serve DEV" "http://127.0.0.1:${fa_dev}"
+fi
+
+with_auth() {
+  jq --arg u "$1" '.forwardAuth = { url: $u, responseHeaders: ["X-Forwarded-User"], timeoutSeconds: 5 }'
+}
+jq -n --argjson a "$(site_stanza alpha '{"tag":"NoProxying"}' | with_auth "http://127.0.0.1:${auth}/check")" \
+  --argjson b "$(site_stanza beta '{"tag":"NoProxying"}' | with_auth "http://127.0.0.1:${no_auth}/check")" \
+  '{ services: [$a, $b], fallback: { tag: "FallbackWithOminousError" } }' > "${workdir}/sites-fa.json"
+ms_fa_http=$(free_port)
+start multisite-fa "${KITCHEN_SINK}" multisite --configFile "${workdir}/sites-fa.json" --httpPort "${ms_fa_http}"
+if wait_http multisite-fa "http://127.0.0.1:${ms_fa_http}/index.html"; then
+  fa_check "multisite alpha.test" "http://127.0.0.1:${ms_fa_http}" -H "Host: alpha.test"
+  fa_down "multisite beta.test" "http://127.0.0.1:${ms_fa_http}" -H "Host: beta.test"
+  run_check --host unknown.test --mode fallback "http://127.0.0.1:${ms_fa_http}"
 fi
 
 if [ "${failures}" -ne 0 ]; then
