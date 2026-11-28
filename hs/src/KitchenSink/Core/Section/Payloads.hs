@@ -45,10 +45,22 @@ data BuildInfoData = BuildInfoData
     -- ^ access policy for a dynamic page: @\"public\"@ (the default, when
     -- absent) or @\"required\"@, enforced before any @.sql@ dataset of the
     -- page runs; a dynamic-page-only setting, see "KitchenSink.Engine.Auth"
+    , externalLinks :: Maybe ExternalLinksData
+    -- ^ how the links of this page's cmark sections that point to another
+    -- host (@http(s)://@ or @//@) are rendered; absent means as written
     }
     deriving (Show, Eq, Generic)
 instance FromJSON BuildInfoData
 instance ToJSON BuildInfoData
+
+-- | The @externalLinks@ object of a build-info section.
+data ExternalLinksData = ExternalLinksData
+    { noreferrer :: Maybe Bool
+    -- ^ when @true@, external links get @rel=\"noreferrer\"@
+    }
+    deriving (Show, Eq, Generic)
+instance FromJSON ExternalLinksData
+instance ToJSON ExternalLinksData
 
 type TopicName = Text
 

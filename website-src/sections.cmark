@@ -3,6 +3,7 @@
 ,"publicationStatus":"Public"
 ,"group":"Writing pages"
 ,"order":10
+,"externalLinks":{"noreferrer":true}
 }
 
 =base:preamble.json
@@ -163,11 +164,22 @@ and Archived articles are treated slightly differently from Public articles in
 listing or in the home page: they are ranked lower and they do not carry a
 summary. A warning is also inserted on Upcoming and Archived articles.
 
+An optional `externalLinks` object controls how the links of the page's cmark
+sections (main content, summary, callout and faq bodies) that point to another
+host are rendered. With `{"noreferrer": true}`, every link whose target starts
+with `http://`, `https://` or `//` gets a `rel="noreferrer"` attribute, so the
+browser sends no `Referer` header when a reader follows it (this page uses it:
+the favicon link below carries the attribute). Relative links such as
+`/documentation-layout.html` and in-page anchors are left alone, and so are
+anchors written as raw HTML. Without the field (or with `false`), links are
+rendered as written.
+
 __example__
 
     =base:build-info.json
     {"layout":"article"
     ,"publicationStatus":"Public"
+    ,"externalLinks":{"noreferrer":true}
     }
 
 :::
