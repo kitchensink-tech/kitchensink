@@ -20,6 +20,7 @@ import Prelude ((&&), (+), (||), maxBound)
 
 import Text.Atom.Feed qualified as Atom
 
+import KitchenSink.Commonmark.BlogHTML (ExternalLinkPolicy (..))
 import KitchenSink.Core.Assembler (runAssembler)
 import KitchenSink.Core.Assembler qualified as CoreAssembler
 import KitchenSink.Core.Build.Site ()
@@ -154,7 +155,7 @@ assembleMain urlPrefix a = r <$> renderMainSections urlPrefix a
 -- and `pricing` sections (as their own widgets), in the order they appear in
 -- the source file.
 renderMainSections :: UrlPrefix -> Article [Text] -> Assembler [Lucid.Html ()]
-renderMainSections urlPrefix a = getSections a isRenderableContent >>= traverse (renderContentSection urlPrefix)
+renderMainSections urlPrefix a = getSections a isRenderableContent >>= traverse (renderContentSection (externalLinkPolicy a) urlPrefix)
   where
     isRenderableContent s = isMainContent s || isCallout s || isFaq s || isPricing s
 
@@ -183,18 +184,18 @@ prefixRootRelativeLinks urlPrefix html =
                         inserted = if isRootRelative then urlPrefix else ""
                      in before <> marker <> inserted <> go afterMarker
 
-renderContentSection :: UrlPrefix -> Section [Text] -> Assembler (Lucid.Html ())
-renderContentSection urlPrefix s
+renderContentSection :: ExternalLinkPolicy -> UrlPrefix -> Section [Text] -> Assembler (Lucid.Html ())
+renderContentSection policy urlPrefix s
     | isMainContent s = do
-        rendered <- renderSection s
+        rendered <- renderSectionWith policy s
         pure $ section_ [class_ "main-section"] $ toHtmlRaw @Text (prefixRootRelativeLinks urlPrefix $ extract' rendered)
     | isCallout s = do
         c <- extract <$> jsonSection @CalloutData s
-        body <- renderCMarkSnippet urlPrefix (calloutBody c)
+        body <- renderCMarkSnippet policy urlPrefix (calloutBody c)
         pure $ calloutHtml c body
     | isFaq s = do
         d <- extract <$> jsonSection @FaqData s
-        answers <- traverse (renderCMarkSnippet urlPrefix . answer) (items d)
+        answers <- traverse (renderCMarkSnippet policy urlPrefix . answer) (items d)
         pure $ faqHtml (List.zip (items d) answers)
     | isPricing s = do
         pricingSection <- jsonSection @PricingTableData s
@@ -203,9 +204,9 @@ renderContentSection urlPrefix s
 
 -- | Renders a markdown snippet carried by a JSON payload (a callout body, a
 -- faq answer) the same way a `main-content.cmark` section is rendered.
-renderCMarkSnippet :: UrlPrefix -> Text -> Assembler (Lucid.Html ())
-renderCMarkSnippet urlPrefix txt = do
-    rendered <- renderCMark (CoreSection.Section MainContent Cmark (Text.lines txt))
+renderCMarkSnippet :: ExternalLinkPolicy -> UrlPrefix -> Text -> Assembler (Lucid.Html ())
+renderCMarkSnippet policy urlPrefix txt = do
+    rendered <- renderCMarkWith policy (CoreSection.Section MainContent Cmark (Text.lines txt))
     pure $ toHtmlRaw @Text (prefixRootRelativeLinks urlPrefix $ extract' rendered)
 
 calloutHtml :: CalloutData -> Lucid.Html () -> Lucid.Html ()
@@ -510,6 +511,15 @@ buildinfo art =
         $ runAssembler
         $ json @() @BuildInfoData art isBuildInfo
 
+{- | How the links of an article's cmark sections that point to another host are
+rendered, from the @externalLinks@ of its build-info.
+-}
+externalLinkPolicy :: Article [Text] -> ExternalLinkPolicy
+externalLinkPolicy art =
+    case noreferrer =<< externalLinks =<< buildinfo art of
+        Just True -> NoReferrerExternalLinks
+        _ -> PlainExternalLinks
+
 isPublishedArticle :: Article [Text] -> Bool
 isPublishedArticle art = isPublic
   where
@@ -754,7 +764,7 @@ articleSummary urlPrefix art = when (isJust x) $ do
         maybe mempty (toHtmlRaw @Text . prefixRootRelativeLinks urlPrefix . extract') x
   where
     x :: Maybe (Section PreRenderedHtml)
-    x = fromRight Nothing $ runAssembler (lookupSection art isSummary >>= traverse renderSection)
+    x = fromRight Nothing $ runAssembler (lookupSection art isSummary >>= traverse (renderSectionWith (externalLinkPolicy art)))
 
 articleStats :: Article [Text] -> Lucid.Html ()
 articleStats art = do

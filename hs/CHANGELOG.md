@@ -2,6 +2,14 @@
 
 ## Added
 
+- A per-page `externalLinks` object in `=base:build-info.json`: with
+  `{"noreferrer": true}`, the links of that page's cmark sections (main
+  content, summary, callout and faq bodies) whose target starts with
+  `http://`, `https://` or `//` are rendered with `rel="noreferrer"`. Relative
+  links, anchors and raw HTML are left alone; without the field the output is
+  unchanged. `BuildInfoData` gains an `externalLinks` field, and
+  `renderSectionWith` / `renderCMarkWith` / `parseCMarkWith` take an
+  `ExternalLinkPolicy` (`KitchenSink.Commonmark.BlogHTML`).
 - `serve` (SERVE and DEV) and `multisite` also answer pages kitchen-sink
   renders (articles from `.cmark`/`.md` sources, the index, topic and hashtag
   listings) at their URL without the `.html` extension: `/foo` serves the same

@@ -5,6 +5,7 @@ import Commonmark qualified
 import Commonmark.Extensions qualified as CommonmarkE
 import Data.Text qualified as Text
 import Data.Text.Lazy qualified as LText
+import Data.Typeable (Typeable)
 import KitchenSink.Commonmark.HashTag qualified as CommonmarkE
 
 import KitchenSink.Commonmark.BlogHTML
@@ -34,7 +35,30 @@ dumpCMark (Section _ fmt _) =
     Assembler $ Left (UnsupportedConversionFormat fmt)
 
 parseCMark :: Section ext [Text] -> Assembler ext (Section ext Html)
-parseCMark (Section ty Cmark lines) = do
+parseCMark = parseCMarkWith PlainExternalLinks
+
+{- | Like 'parseCMark', with links to other hosts rendered according to the
+given policy.
+-}
+parseCMarkWith :: ExternalLinkPolicy -> Section ext [Text] -> Assembler ext (Section ext Html)
+parseCMarkWith PlainExternalLinks sec = parseCMarkAs @Html sec
+parseCMarkWith NoReferrerExternalLinks sec = fmap (fmap coerce) (parseCMarkAs @NoReferrerHtml sec)
+
+parseCMarkAs ::
+    forall html ext.
+    ( Commonmark.IsBlock html html
+    , Commonmark.IsInline html
+    , Commonmark.ToPlainText html
+    , CommonmarkE.HasHashTag html
+    , CommonmarkE.HasDiv html
+    , CommonmarkE.HasSpan html
+    , CommonmarkE.HasEmoji html
+    , CommonmarkE.HasQuoted html
+    , Typeable html
+    ) =>
+    Section ext [Text] ->
+    Assembler ext (Section ext html)
+parseCMarkAs (Section ty Cmark lines) = do
     let customSyntax =
             mconcat
                 [ CommonmarkE.hashtagSpec
@@ -49,12 +73,15 @@ parseCMark (Section ty Cmark lines) = do
     res <- Commonmark.commonmarkWith customSyntax "inline" (Text.unlines lines)
     case res of
         Left err -> Assembler $ Left (CommonMarkRenderingError err)
-        Right (html :: Html) -> Assembler $ Right $ Section ty InMemory html
-parseCMark (Section _ fmt _) = Assembler $ Left (UnsupportedConversionFormat fmt)
+        Right (html :: html) -> Assembler $ Right $ Section ty InMemory html
+parseCMarkAs (Section _ fmt _) = Assembler $ Left (UnsupportedConversionFormat fmt)
 
 renderCMark :: Section ext [Text] -> Assembler ext (Section ext PreRenderedHtml)
-renderCMark sec =
-    fmap (fmap r) $ parseCMark sec
+renderCMark = renderCMarkWith PlainExternalLinks
+
+renderCMarkWith :: ExternalLinkPolicy -> Section ext [Text] -> Assembler ext (Section ext PreRenderedHtml)
+renderCMarkWith policy sec =
+    fmap (fmap r) $ parseCMarkWith policy sec
   where
     r (html :: Html) =
         PreRenderedHtml

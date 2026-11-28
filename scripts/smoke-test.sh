@@ -299,6 +299,12 @@ check_file "${web}/sections-templating.html"
 # callout bodies and faq answers are rendered as markdown
 check_grep '<div class="callout-body"><p>.*<strong>markdown</strong>' "${web}/wishlist.html"
 check_grep '<div class="faq-answer"><p>Yes, <em>answers</em>' "${web}/wishlist.html"
+# externalLinks.noreferrer in build-info: external cmark links get rel=noreferrer,
+# relative ones do not, and pages without the field are unchanged
+check_grep '<a rel="noreferrer" href="https://www.w3.org/2005/10/howto-favicon">' "${web}/sections.html"
+check_grep '<a href="/documentation-layout.html">' "${web}/sections.html"
+check_no_grep 'rel="noreferrer" href="/' "${web}/sections.html"
+check_no_grep 'rel="noreferrer"' "${web}/features.html"
 # a corporate landing page is a page of the site, not a blog post
 check_grep 'property="og:type" content="website"' "${web}/corporate-layout.html"
 check_grep '"@type":"WebPage"' "${web}/corporate-layout.html"

@@ -4,10 +4,12 @@
 
 module KitchenSink.Commonmark.BlogHTML where
 
-import Commonmark (HasAttributes, IsBlock (..), IsInline, Rangeable, ToPlainText, addAttribute, htmlInline)
+import Commonmark (HasAttributes (..), IsBlock (..), IsInline, Rangeable, ToPlainText, addAttribute, htmlInline)
 import Commonmark qualified
 import Commonmark.Extensions (HasDiv, HasEmoji, HasQuoted, HasSpan)
+import Data.Foldable (any)
 import Data.Ord (min)
+import Data.Text qualified as Text
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding (decodeUtf8)
@@ -59,3 +61,66 @@ instance IsBlock Html Html where
 
 renderHtml :: Html -> TL.Text
 renderHtml = Commonmark.renderHtml . coerce
+
+-- | How the links of a cmark section that point to another host are rendered.
+data ExternalLinkPolicy
+    = -- | as written (the default)
+      PlainExternalLinks
+    | -- | with a @rel="noreferrer"@ attribute
+      NoReferrerExternalLinks
+    deriving (Show, Eq)
+
+{- | An absolute link to another host: @http://@, @https://@ or
+protocol-relative @//@. Relative links and in-page anchors are not external.
+-}
+isExternalLink :: Text -> Bool
+isExternalLink target =
+    any (`Text.isPrefixOf` Text.toLower target) ["http://", "https://", "//"]
+
+{- | 'Html' whose external links carry @rel="noreferrer"@; everything else is
+rendered exactly as 'Html' renders it.
+
+The cmark syntax Kitchen-Sink enables has no way to put attributes on a link,
+so a cmark link never carries a @rel@ of its own to merge with. Anchors written
+as raw HTML are passed through untouched, @rel@ included.
+-}
+newtype NoReferrerHtml = NoReferrerHtml Html
+    deriving (Show)
+    deriving (Semigroup)
+    deriving (Monoid)
+    deriving (HasAttributes) via Html
+    deriving (Rangeable) via Html
+    deriving (HasDiv) via Html
+    deriving (HasSpan) via Html
+    deriving (HasEmoji) via Html
+    deriving (HasQuoted) via Html
+    deriving (ToPlainText) via Html
+    deriving (HasHashTag) via Html
+
+instance IsInline NoReferrerHtml where
+    lineBreak = coerce (Commonmark.lineBreak @Html)
+    softBreak = coerce (Commonmark.softBreak @Html)
+    str = coerce (Commonmark.str @Html)
+    entity = coerce (Commonmark.entity @Html)
+    escapedChar = coerce (Commonmark.escapedChar @Html)
+    emph = coerce (Commonmark.emph @Html)
+    strong = coerce (Commonmark.strong @Html)
+    link target title (NoReferrerHtml ils)
+        | isExternalLink target = NoReferrerHtml $ addAttributes [("rel", "noreferrer")] base
+        | otherwise = NoReferrerHtml base
+      where
+        base = Commonmark.link target title ils
+    image = coerce (Commonmark.image @Html)
+    code = coerce (Commonmark.code @Html)
+    rawInline = coerce (Commonmark.rawInline @Html)
+
+instance IsBlock NoReferrerHtml NoReferrerHtml where
+    paragraph = coerce (paragraph @Html @Html)
+    plain = coerce (plain @Html @Html)
+    thematicBreak = coerce (thematicBreak @Html @Html)
+    blockQuote = coerce (blockQuote @Html @Html)
+    heading = coerce (heading @Html @Html)
+    rawBlock = coerce (rawBlock @Html @Html)
+    referenceLinkDefinition = coerce (referenceLinkDefinition @Html @Html)
+    list = coerce (list @Html @Html)
+    codeBlock = coerce (codeBlock @Html @Html)
